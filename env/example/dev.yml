@@ -1,0 +1,27 @@
+x-db-environment: &db-environment
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: life
+  POSTGRES_PASSWORD: life
+  POSTGRES_DB: life
+
+x-api-environment: &api-environment
+  <<: *db-environment
+  PORT: "8080"
+  SEED_ADMIN_EMAIL: admin@life.local
+  SEED_ADMIN_PASSWORD: admin123
+
+services:
+  db:
+    environment:
+      POSTGRES_USER: life
+      POSTGRES_PASSWORD: life
+      POSTGRES_DB: life
+
+  api:
+    environment:
+      <<: *api-environment
+
+  api-dev:
+    environment:
+      <<: *api-environment

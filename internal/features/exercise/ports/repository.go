@@ -1,0 +1,17 @@
+package ports
+
+import (
+	"github.com/google/uuid"
+
+	"github.com/ivan-ca97/life/pkg/types"
+
+	"github.com/ivan-ca97/life/internal/features/exercise/domain"
+)
+
+type ExerciseRepository interface {
+	Create(exercise *domain.Exercise) error
+	FindById(id, userId uuid.UUID) (*domain.Exercise, error)
+	List(userId uuid.UUID, params ListParams) (types.Page[domain.Exercise], error)
+	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Exercise, error)
+	Delete(id, userId uuid.UUID) error
+}

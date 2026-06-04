@@ -1,0 +1,70 @@
+version: "3"
+
+vars:
+  COMPOSE: docker compose -f docker/docker-compose.yml -f env/dev.yml
+
+tasks:
+  db:up:
+    desc: Start PostgreSQL
+    cmds:
+      - "{{.COMPOSE}} up db -d --wait"
+
+  db:stop:
+    desc: Stop PostgreSQL
+    cmds:
+      - "{{.COMPOSE}} stop db"
+
+  db:reset:
+    desc: Reset database (destroy data and recreate)
+    cmds:
+      - "{{.COMPOSE}} down -v"
+      - "{{.COMPOSE}} up db -d --wait"
+
+  db:psql:
+    desc: Open psql shell
+    cmds:
+      - "{{.COMPOSE}} exec db psql -U life -d life"
+
+  api:debug:
+    desc: Start API with Delve debugger
+    deps: [db:up]
+    cmds:
+      - "{{.COMPOSE}} up --build --force-recreate api-dev"
+
+  api:up:
+    desc: Start API and database in Docker
+    cmds:
+      - "{{.COMPOSE}} up --build -d api"
+
+  api:down:
+    desc: Stop API
+    cmds:
+      - "{{.COMPOSE}} down api api-dev"
+
+  down:
+    desc: Stop all Docker services
+    cmds:
+      - "{{.COMPOSE}} down"
+
+  down:reset:
+    desc: Stop all Docker services and destroy data
+    cmds:
+      - "{{.COMPOSE}} down -v"
+
+  build:
+    desc: Build all packages
+    cmds:
+      - go build ./...
+
+  setup:env:
+    desc: Create dev.yml from example
+    cmds:
+      - cp -n env/example/dev.yml env/dev.yml
+    status:
+      - test -f env/dev.yml
+
+  setup:init:
+    desc: Full setup (database + env)
+    cmds:
+      - task: setup:env
+      - task: db:up

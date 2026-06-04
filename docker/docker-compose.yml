@@ -1,0 +1,53 @@
+name: life
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: life-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - life-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U life -d life"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  api-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: server-debug
+    container_name: life-api-dev
+    command:
+      [
+        "dlv",
+        "exec",
+        "/bin/server",
+        "--headless",
+        "--listen=:2345",
+        "--api-version=2",
+        "--accept-multiclient",
+      ]
+    ports:
+      - "8080:8080"
+      - "2345:2345"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: server
+    container_name: life-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  life-pgdata:

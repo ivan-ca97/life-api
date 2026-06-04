@@ -1,0 +1,65 @@
+package handler
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/ivan-ca97/life/pkg/api"
+	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+
+	"github.com/ivan-ca97/life/internal/features/goal/ports"
+)
+
+type GoalHandler interface {
+	GetCurrent(r *http.Request) (*goalResponse, int, error)
+	Upsert(r *http.Request) (*goalResponse, int, error)
+}
+
+type goalHandler struct {
+	service ports.AuthorizedGoalService
+}
+
+var _ GoalHandler = (*goalHandler)(nil)
+
+func NewGoalHandler(service ports.AuthorizedGoalService) *goalHandler {
+	return &goalHandler{
+		service: service,
+	}
+}
+
+func (h *goalHandler) GetCurrent(r *http.Request) (*goalResponse, int, error) {
+	goal, err := h.service.GetCurrent(r.Context())
+	if err != nil {
+		return nil, 0, err
+	}
+	return goalFromDomain(goal), http.StatusOK, nil
+}
+
+func (h *goalHandler) Upsert(r *http.Request) (*goalResponse, int, error) {
+	request, err := api.DecodeBody[upsertGoalRequest](r)
+	if err != nil {
+		return nil, 0, err
+	}
+	params := ports.UpsertParams{
+		DailyCalories:        request.DailyCalories,
+		DailyProteinGrams:    request.DailyProteinGrams,
+		DailyCarbsGrams:      request.DailyCarbsGrams,
+		DailyFatGrams:        request.DailyFatGrams,
+		DailyFiberGrams:      request.DailyFiberGrams,
+		DailySteps:           request.DailySteps,
+		DailyExerciseMinutes: request.DailyExerciseMinutes,
+		TargetWeightKg:       request.TargetWeightKg,
+	}
+	if request.StartedAt != nil {
+		startedAt, err := time.Parse(time.RFC3339, *request.StartedAt)
+		if err != nil {
+			return nil, 0, cerr.NewBadRequestError("invalid started_at format, expected RFC3339")
+		}
+		params.StartedAt = &startedAt
+	}
+	goal, err := h.service.Upsert(r.Context(), params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return goalFromDomain(goal), http.StatusOK, nil
+}

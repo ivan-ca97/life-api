@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api:debug:up",
+      "type": "shell",
+      "command": "docker compose -f docker/docker-compose.yml -f env/dev.yml up --build -d --force-recreate api-dev",
+      "problemMatcher": []
+    },
+    {
+      "label": "api:debug:down",
+      "type": "shell",
+      "command": "docker compose -f docker/docker-compose.yml -f env/dev.yml stop api-dev",
+      "problemMatcher": []
+    }
+  ]
+}

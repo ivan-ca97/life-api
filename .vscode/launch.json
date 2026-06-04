@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Container",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "localhost",
+      "port": 2345,
+      "substitutePath": [
+        {
+          "from": "${workspaceFolder}",
+          "to": "/src"
+        }
+      ]
+    },
+    {
+      "name": "Launch & Debug Container",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "localhost",
+      "port": 2345,
+      "preLaunchTask": "api:debug:up",
+      "postDebugTask": "api:debug:down",
+      "substitutePath": [
+        {
+          "from": "${workspaceFolder}",
+          "to": "/src"
+        }
+      ]
+    }
+  ]
+}
