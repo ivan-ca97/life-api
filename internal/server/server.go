@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -28,7 +29,7 @@ type server struct {
 	port   int
 }
 
-func NewServer(database *gorm.DB, port int, version, seedEmail, seedPassword string) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword string) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
 	authorizer := auth.NewBinaryAuthorizationService()
@@ -43,8 +44,12 @@ func NewServer(database *gorm.DB, port int, version, seedEmail, seedPassword str
 	dailyFeature := daily.NewDailyFeature(database, authorizer, errorHandler)
 
 	router := chi.NewRouter()
+	origins := []string{"http://localhost:3000"}
+	if corsOrigins != "" {
+		origins = strings.Split(corsOrigins, ",")
+	}
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,

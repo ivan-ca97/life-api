@@ -36,10 +36,11 @@ func main() {
 		log.Fatalf("invalid PORT: %v", err)
 	}
 
+	corsOrigins := os.Getenv("CORS_ORIGINS")
 	seedEmail := os.Getenv("SEED_ADMIN_EMAIL")
 	seedPassword := os.Getenv("SEED_ADMIN_PASSWORD")
 
-	s, err := server.NewServer(database, port, version, seedEmail, seedPassword)
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
