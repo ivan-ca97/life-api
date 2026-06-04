@@ -28,3 +28,11 @@ func (s *summaryService) GetSummary(userId uuid.UUID, date time.Time) (*domain.D
 	}
 	return summary, nil
 }
+
+func (s *summaryService) GetSummaryRange(userId uuid.UUID, from, to time.Time) ([]domain.DailySummary, error) {
+	summaries, err := s.repository.GetDailySummaryRange(userId, from, to)
+	if err != nil {
+		return nil, err
+	}
+	return summaries, nil
+}

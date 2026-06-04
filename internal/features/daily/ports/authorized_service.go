@@ -9,4 +9,5 @@ import (
 
 type AuthorizedSummaryService interface {
 	GetSummary(ctx context.Context, date time.Time) (*domain.DailySummary, error)
+	GetSummaryRange(ctx context.Context, from, to time.Time) ([]domain.DailySummary, error)
 }

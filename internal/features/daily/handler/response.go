@@ -43,6 +43,10 @@ type summaryResponse struct {
 	Goals    *goalsSummaryResponse        `json:"goals,omitempty"`
 }
 
+type summaryRangeResponse struct {
+	Data []summaryResponse `json:"data"`
+}
+
 func summaryFromDomain(s *domain.DailySummary) *summaryResponse {
 	response := &summaryResponse{
 		Date: s.Date.Format("2006-01-02"),

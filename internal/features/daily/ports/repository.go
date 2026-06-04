@@ -10,4 +10,5 @@ import (
 
 type SummaryRepository interface {
 	GetDailySummary(userId uuid.UUID, date time.Time) (*domain.DailySummary, error)
+	GetDailySummaryRange(userId uuid.UUID, from, to time.Time) ([]domain.DailySummary, error)
 }
