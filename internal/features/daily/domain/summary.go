@@ -8,6 +8,8 @@ type DailySummary struct {
 	ExerciseSummary ExerciseSummary
 	WeightEntry     *WeightEntrySummary
 	Goals           *GoalsSummary
+	EstimatedBMR    *float64
+	CaloricBalance  *float64
 }
 
 type MealsSummary struct {

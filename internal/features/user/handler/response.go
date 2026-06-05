@@ -14,14 +14,25 @@ type userResponse struct {
 	Id        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
 	Active    bool      `json:"active"`
+	HeightCm  *int      `json:"height_cm,omitempty"`
+	BirthDate *string   `json:"birth_date,omitempty"`
+	Sex       *string   `json:"sex,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 func userFromDomain(u *domain.User) *userResponse {
+	var birthDate *string
+	if u.BirthDate != nil {
+		s := u.BirthDate.Format("2006-01-02")
+		birthDate = &s
+	}
 	return &userResponse{
 		Id:        u.Id,
 		Email:     u.Email,
 		Active:    u.Active,
+		HeightCm:  u.HeightCm,
+		BirthDate: birthDate,
+		Sex:       u.Sex,
 		CreatedAt: u.CreatedAt,
 	}
 }

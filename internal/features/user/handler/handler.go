@@ -2,8 +2,10 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ivan-ca97/life/pkg/api"
+	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 
 	"github.com/ivan-ca97/life/internal/features/user/ports"
 )
@@ -69,9 +71,20 @@ func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	var birthDate *time.Time
+	if request.BirthDate != nil {
+		t, err := time.Parse("2006-01-02", *request.BirthDate)
+		if err != nil {
+			return nil, 0, cerr.NewBadRequestError("birth_date must be in YYYY-MM-DD format")
+		}
+		birthDate = &t
+	}
 	params := ports.UpdateParams{
-		Email:    request.Email,
-		Password: request.Password,
+		Email:     request.Email,
+		Password:  request.Password,
+		HeightCm:  request.HeightCm,
+		BirthDate: birthDate,
+		Sex:       request.Sex,
 	}
 	user, err := h.service.Update(r.Context(), id, params)
 	if err != nil {

@@ -11,5 +11,8 @@ type User struct {
 	Email        string
 	PasswordHash string
 	Active       bool
+	HeightCm     *int
+	BirthDate    *time.Time
+	Sex          *string
 	CreatedAt    time.Time
 }

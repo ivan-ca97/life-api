@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,13 +47,22 @@ func (r *summaryRepository) GetDailySummary(userId uuid.UUID, date time.Time) (*
 		return nil, err
 	}
 
+	profile, err := r.getUserProfile(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	bmr := calculateBMR(profile, weightEntry, date)
+
 	summary := &domain.DailySummary{
 		Date:            date,
 		MealsSummary:    *mealsSummary,
 		ExerciseSummary: *exerciseSummary,
 		WeightEntry:     weightEntry,
 		Goals:           goals,
+		EstimatedBMR:    bmr,
 	}
+	applyCaloricBalance(summary)
 	return summary, nil
 }
 
@@ -77,6 +87,11 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 		return nil, err
 	}
 
+	profile, err := r.getUserProfile(userId)
+	if err != nil {
+		return nil, err
+	}
+
 	var summaries []domain.DailySummary
 	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
 		key := d.Format("2006-01-02")
@@ -90,9 +105,13 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 		if e, ok := exerciseMap[key]; ok {
 			summary.ExerciseSummary = e
 		}
+		var weightEntry *domain.WeightEntrySummary
 		if w, ok := weightMap[key]; ok {
 			summary.WeightEntry = &w
+			weightEntry = &w
 		}
+		summary.EstimatedBMR = calculateBMR(profile, weightEntry, d)
+		applyCaloricBalance(&summary)
 		summaries = append(summaries, summary)
 	}
 	return summaries, nil
@@ -266,6 +285,67 @@ func (r *summaryRepository) getWeightEntry(userId uuid.UUID, date time.Time) (*d
 		WeightKg:          result.WeightKg,
 		BodyFatPercentage: result.BodyFatPercentage,
 	}, nil
+}
+
+type userProfile struct {
+	HeightCm  *int
+	BirthDate *time.Time
+	Sex       *string
+}
+
+func (r *summaryRepository) getUserProfile(userId uuid.UUID) (*userProfile, error) {
+	var profile userProfile
+	err := r.db.
+		Table("users").
+		Select("height_cm, birth_date, sex").
+		Where("id = ?", userId).
+		Take(&profile).
+		Error
+	if err != nil {
+		return nil, cerr.NewInternalError("fetching user profile for BMR", err)
+	}
+	return &profile, nil
+}
+
+func calculateBMR(profile *userProfile, weight *domain.WeightEntrySummary, date time.Time) *float64 {
+	if weight == nil {
+		return nil
+	}
+
+	// Katch-McArdle: 370 + 21.6 × lean_mass_kg
+	if weight.BodyFatPercentage != nil {
+		leanMass := weight.WeightKg * (1 - *weight.BodyFatPercentage/100)
+		bmr := 370 + 21.6*leanMass
+		bmr = math.Round(bmr*100) / 100
+		return &bmr
+	}
+
+	// Mifflin-St Jeor fallback: 10×weight + 6.25×height - 5×age + offset
+	if profile.HeightCm != nil && profile.BirthDate != nil && profile.Sex != nil {
+		age := date.Year() - profile.BirthDate.Year()
+		if date.YearDay() < profile.BirthDate.YearDay() {
+			age--
+		}
+		bmr := 10*weight.WeightKg + 6.25*float64(*profile.HeightCm) - 5*float64(age)
+		if *profile.Sex == "male" {
+			bmr += 5
+		} else {
+			bmr -= 161
+		}
+		bmr = math.Round(bmr*100) / 100
+		return &bmr
+	}
+
+	return nil
+}
+
+func applyCaloricBalance(summary *domain.DailySummary) {
+	if summary.EstimatedBMR == nil {
+		return
+	}
+	balance := summary.MealsSummary.TotalCalories - (*summary.EstimatedBMR + summary.ExerciseSummary.TotalCaloriesBurned)
+	balance = math.Round(balance*100) / 100
+	summary.CaloricBalance = &balance
 }
 
 func (r *summaryRepository) getGoals(userId uuid.UUID) (*domain.GoalsSummary, error) {

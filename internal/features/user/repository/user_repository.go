@@ -108,6 +108,15 @@ func (r *userRepository) Update(id uuid.UUID, params ports.UpdateParams) (*domai
 	if params.Password != nil {
 		updates["password_hash"] = *params.Password
 	}
+	if params.HeightCm != nil {
+		updates["height_cm"] = *params.HeightCm
+	}
+	if params.BirthDate != nil {
+		updates["birth_date"] = *params.BirthDate
+	}
+	if params.Sex != nil {
+		updates["sex"] = *params.Sex
+	}
 
 	err := r.db.
 		Model(&user{}).

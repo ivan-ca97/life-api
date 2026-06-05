@@ -8,6 +8,7 @@ x-db-environment: &db-environment
 x-api-environment: &api-environment
   <<: *db-environment
   PORT: "8080"
+  CORS_ORIGINS: http://localhost:3000
   SEED_ADMIN_EMAIL: admin@life.local
   SEED_ADMIN_PASSWORD: admin123
 

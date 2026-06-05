@@ -1,6 +1,8 @@
 package ports
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/types"
@@ -9,8 +11,11 @@ import (
 )
 
 type UpdateParams struct {
-	Email    *string
-	Password *string
+	Email     *string
+	Password  *string
+	HeightCm  *int
+	BirthDate *time.Time
+	Sex       *string
 }
 
 type UserService interface {
