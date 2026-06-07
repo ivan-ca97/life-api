@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ivan-ca97/life/pkg/auth"
 
 	"github.com/ivan-ca97/life/internal/features/daily/domain"
@@ -25,35 +27,38 @@ func NewAuthorizedCorrectionService(base ports.CorrectionService, authorizer aut
 	}
 }
 
-func (s *authorizedCorrectionService) GetCorrection(ctx context.Context, date time.Time) (*domain.Correction, error) {
-	if err := s.authorizer.Require(ctx, permissions.DailyRead); err != nil {
-		return nil, err
-	}
-	userId, err := auth.ActorFromContext(ctx)
+func (s *authorizedCorrectionService) GetCorrection(ctx context.Context, ownerId uuid.UUID, date time.Time) (*domain.Correction, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead)
 	if err != nil {
 		return nil, err
 	}
-	return s.base.GetCorrection(userId, date)
+	correction, err := s.base.GetCorrection(ownerId, date)
+	if err != nil {
+		return nil, err
+	}
+	return correction, nil
 }
 
-func (s *authorizedCorrectionService) UpsertCorrection(ctx context.Context, correction *domain.Correction) error {
-	if err := s.authorizer.Require(ctx, permissions.DailyUpdate); err != nil {
-		return err
-	}
-	userId, err := auth.ActorFromContext(ctx)
+func (s *authorizedCorrectionService) UpsertCorrection(ctx context.Context, ownerId uuid.UUID, correction *domain.Correction) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate)
 	if err != nil {
 		return err
 	}
-	return s.base.UpsertCorrection(userId, correction)
-}
-
-func (s *authorizedCorrectionService) DeleteCorrection(ctx context.Context, date time.Time) error {
-	if err := s.authorizer.Require(ctx, permissions.DailyUpdate); err != nil {
-		return err
-	}
-	userId, err := auth.ActorFromContext(ctx)
+	err = s.base.UpsertCorrection(ownerId, correction)
 	if err != nil {
 		return err
 	}
-	return s.base.DeleteCorrection(userId, date)
+	return nil
+}
+
+func (s *authorizedCorrectionService) DeleteCorrection(ctx context.Context, ownerId uuid.UUID, date time.Time) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate)
+	if err != nil {
+		return err
+	}
+	err = s.base.DeleteCorrection(ownerId, date)
+	if err != nil {
+		return err
+	}
+	return nil
 }

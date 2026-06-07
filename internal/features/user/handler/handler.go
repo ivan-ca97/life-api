@@ -43,11 +43,11 @@ func (h *userHandler) Create(r *http.Request) (*userResponse, int, error) {
 }
 
 func (h *userHandler) GetById(r *http.Request) (*userResponse, int, error) {
-	id, err := api.PathParamUUID(r, "id")
+	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
 		return nil, 0, err
 	}
-	user, err := h.service.GetById(r.Context(), id)
+	user, err := h.service.GetById(r.Context(), userId)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -63,7 +63,7 @@ func (h *userHandler) List(r *http.Request) (*userPage, int, error) {
 }
 
 func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
-	id, err := api.PathParamUUID(r, "id")
+	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
 		return nil, 0, err
 	}
@@ -86,7 +86,7 @@ func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
 		BirthDate: birthDate,
 		Sex:       request.Sex,
 	}
-	user, err := h.service.Update(r.Context(), id, params)
+	user, err := h.service.Update(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -94,11 +94,11 @@ func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
 }
 
 func (h *userHandler) Deactivate(r *http.Request) (*api.NoResponse, int, error) {
-	id, err := api.PathParamUUID(r, "id")
+	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
 		return nil, 0, err
 	}
-	err = h.service.Deactivate(r.Context(), id)
+	err = h.service.Deactivate(r.Context(), userId)
 	if err != nil {
 		return nil, 0, err
 	}

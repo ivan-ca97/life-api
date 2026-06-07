@@ -193,6 +193,9 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	if params.MeasurementType != nil {
 		updates["measurement_type"] = *params.MeasurementType
 	}
+	if params.Public != nil {
+		updates["public"] = *params.Public
+	}
 
 	if len(updates) > 0 {
 		err = r.db.Model(&food{}).Where("id = ? AND user_id = ?", id, userId).Updates(updates).Error
@@ -279,6 +282,82 @@ func (r *foodRepository) Delete(id, userId uuid.UUID) error {
 		return domain.ErrFoodNotFound
 	}
 	return nil
+}
+
+func (r *foodRepository) FindByIdGlobal(id uuid.UUID) (*domain.Food, error) {
+	var model food
+	err := r.db.
+		Preload("Tags").
+		Preload("Ingredients").
+		Preload("Ingredients.Ingredient").
+		Preload("Conversions").
+		Where("id = ?", id).
+		First(&model).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, domain.ErrFoodNotFound
+	}
+	if err != nil {
+		return nil, cerr.NewInternalError("finding food by id (global)", err)
+	}
+	return model.toDomain(), nil
+}
+
+func (r *foodRepository) ListCommunity(params ports.CommunityListParams) (types.Page[domain.Food], error) {
+	var models []food
+	var total int64
+
+	countQuery := r.db.Model(&food{}).Where("public = true")
+	if params.Query != nil {
+		countQuery = countQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+	}
+	err := countQuery.Count(&total).Error
+	if err != nil {
+		return types.Page[domain.Food]{}, cerr.NewInternalError("counting community foods", err)
+	}
+
+	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Conversions").Where("public = true")
+	if params.Query != nil {
+		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+	}
+	err = findQuery.
+		Limit(params.Limit).
+		Offset(params.Offset).
+		Order("name ASC").
+		Find(&models).
+		Error
+	if err != nil {
+		return types.Page[domain.Food]{}, cerr.NewInternalError("listing community foods", err)
+	}
+
+	foods := make([]domain.Food, len(models))
+	for i, m := range models {
+		foods[i] = *m.toDomain()
+	}
+
+	result := types.Page[domain.Food]{
+		Items:  foods,
+		Total:  total,
+		Limit:  params.Limit,
+		Offset: params.Offset,
+	}
+	return result, nil
+}
+
+func (r *foodRepository) IsAccessibleBy(foodId, actorId uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.Raw(`
+		SELECT EXISTS(
+			SELECT 1 FROM foods WHERE id = ? AND (public = true OR user_id = ?)
+			UNION ALL
+			SELECT 1 FROM foods f JOIN shares s ON s.owner_id = f.user_id AND s.resource_type = 'foods'
+			WHERE f.id = ? AND s.grantee_id = ?
+		)
+	`, foodId, actorId, foodId, actorId).Scan(&exists).Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking food accessibility", err)
+	}
+	return exists, nil
 }
 
 func (r *foodRepository) IngredientFrequency(userId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {

@@ -11,11 +11,11 @@ import (
 )
 
 type AuthorizedMealService interface {
-	Create(ctx context.Context, params CreateParams) (*domain.Meal, error)
-	GetById(ctx context.Context, id uuid.UUID) (*domain.Meal, error)
-	List(ctx context.Context, params ListParams) (types.Page[domain.Meal], error)
-	Update(ctx context.Context, id uuid.UUID, params UpdateParams) (*domain.Meal, error)
-	Delete(ctx context.Context, id uuid.UUID) error
-	ListTypes(ctx context.Context, hour *int) ([]string, error)
-	PreviewNutrition(ctx context.Context, items []ItemParam) (*NutritionPreview, error)
+	Create(ctx context.Context, ownerId uuid.UUID, params CreateParams) (*domain.Meal, error)
+	GetById(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) (*domain.Meal, error)
+	List(ctx context.Context, ownerId uuid.UUID, params ListParams) (types.Page[domain.Meal], error)
+	Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params UpdateParams) (*domain.Meal, error)
+	Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error
+	ListTypes(ctx context.Context, ownerId uuid.UUID, hour *int) ([]string, error)
+	PreviewNutrition(ctx context.Context, ownerId uuid.UUID, items []ItemParam) (*NutritionPreview, error)
 }

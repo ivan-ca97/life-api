@@ -12,8 +12,8 @@ import (
 
 type AuthorizedUserService interface {
 	Create(ctx context.Context, email, password string) (*domain.User, error)
-	GetById(ctx context.Context, id uuid.UUID) (*domain.User, error)
+	GetById(ctx context.Context, ownerId uuid.UUID) (*domain.User, error)
 	List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error)
-	Update(ctx context.Context, id uuid.UUID, params UpdateParams) (*domain.User, error)
-	Deactivate(ctx context.Context, id uuid.UUID) error
+	Update(ctx context.Context, ownerId uuid.UUID, params UpdateParams) (*domain.User, error)
+	Deactivate(ctx context.Context, ownerId uuid.UUID) error
 }

@@ -68,6 +68,7 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		MeasurementType:     params.MeasurementType,
 		BaseQuantity:        params.BaseQuantity,
 		BaseUnit:            params.BaseUnit,
+		Public:              params.Public,
 		Tags:                params.Tags,
 		Ingredients:         ingredients,
 		Conversions:         conversions,
@@ -208,4 +209,77 @@ func (s *foodService) IngredientFrequency(userId uuid.UUID, params ports.Ingredi
 
 func (s *foodService) ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error) {
 	return s.repository.ListIngredients(userId, query)
+}
+
+func (s *foodService) ListCommunity(params ports.CommunityListParams) (types.Page[domain.Food], error) {
+	page, err := s.repository.ListCommunity(params)
+	if err != nil {
+		return types.Page[domain.Food]{}, err
+	}
+	return page, nil
+}
+
+func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
+	accessible, err := s.repository.IsAccessibleBy(foodId, actorId)
+	if err != nil {
+		return nil, err
+	}
+	if !accessible {
+		return nil, cerr.NewForbiddenError("you do not have access to this food")
+	}
+
+	source, err := s.repository.FindByIdGlobal(foodId)
+	if err != nil {
+		return nil, err
+	}
+
+	conversions := make([]domain.Conversion, len(source.Conversions))
+	for i, c := range source.Conversions {
+		conversions[i] = domain.Conversion{
+			Id:             uuid.New(),
+			Unit:           c.Unit,
+			BaseEquivalent: c.BaseEquivalent,
+			Inverse:        c.Inverse,
+			Note:           c.Note,
+		}
+	}
+
+	ingredients := make([]domain.Ingredient, len(source.Ingredients))
+	for i, ing := range source.Ingredients {
+		ingredients[i] = domain.Ingredient{
+			Name: ing.Name,
+		}
+	}
+
+	tags := make([]string, len(source.Tags))
+	copy(tags, source.Tags)
+
+	copied := &domain.Food{
+		Id:                  uuid.New(),
+		UserId:              actorId,
+		Name:                source.Name,
+		DefaultCalories:     source.DefaultCalories,
+		DefaultProteinGrams: source.DefaultProteinGrams,
+		DefaultCarbsGrams:   source.DefaultCarbsGrams,
+		DefaultFatGrams:     source.DefaultFatGrams,
+		DefaultFiberGrams:   source.DefaultFiberGrams,
+		MeasurementType:     source.MeasurementType,
+		BaseQuantity:        source.BaseQuantity,
+		BaseUnit:            source.BaseUnit,
+		Public:              false,
+		Tags:                tags,
+		Ingredients:         ingredients,
+		Conversions:         conversions,
+	}
+
+	err = s.repository.Create(copied)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := s.repository.FindById(copied.Id, actorId)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

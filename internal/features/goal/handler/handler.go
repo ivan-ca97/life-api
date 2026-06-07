@@ -28,7 +28,11 @@ func NewGoalHandler(service ports.AuthorizedGoalService) *goalHandler {
 }
 
 func (h *goalHandler) GetCurrent(r *http.Request) (*goalResponse, int, error) {
-	goal, err := h.service.GetCurrent(r.Context())
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	goal, err := h.service.GetCurrent(r.Context(), userId)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -36,6 +40,10 @@ func (h *goalHandler) GetCurrent(r *http.Request) (*goalResponse, int, error) {
 }
 
 func (h *goalHandler) Upsert(r *http.Request) (*goalResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[upsertGoalRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -57,7 +65,7 @@ func (h *goalHandler) Upsert(r *http.Request) (*goalResponse, int, error) {
 		}
 		params.StartedAt = &startedAt
 	}
-	goal, err := h.service.Upsert(r.Context(), params)
+	goal, err := h.service.Upsert(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}

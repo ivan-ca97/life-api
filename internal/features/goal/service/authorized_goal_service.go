@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/ivan-ca97/life/pkg/auth"
 
 	"github.com/ivan-ca97/life/internal/features/goal/domain"
@@ -24,32 +26,24 @@ func NewAuthorizedGoalService(base ports.GoalService, authorizer auth.Authorizat
 	}
 }
 
-func (s *authorizedGoalService) GetCurrent(ctx context.Context) (*domain.Goal, error) {
-	err := s.authorizer.Require(ctx, permissions.GoalsRead)
+func (s *authorizedGoalService) GetCurrent(ctx context.Context, ownerId uuid.UUID) (*domain.Goal, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.GoalsRead)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	goal, err := s.base.GetByUserId(userId)
+	goal, err := s.base.GetByUserId(ownerId)
 	if err != nil {
 		return nil, err
 	}
 	return goal, nil
 }
 
-func (s *authorizedGoalService) Upsert(ctx context.Context, params ports.UpsertParams) (*domain.Goal, error) {
-	err := s.authorizer.Require(ctx, permissions.GoalsUpdate)
+func (s *authorizedGoalService) Upsert(ctx context.Context, ownerId uuid.UUID, params ports.UpsertParams) (*domain.Goal, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.GoalsUpdate)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	goal, err := s.base.Upsert(userId, params)
+	goal, err := s.base.Upsert(ownerId, params)
 	if err != nil {
 		return nil, err
 	}

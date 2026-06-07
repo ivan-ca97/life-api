@@ -31,6 +31,10 @@ func NewWeightEntryHandler(service ports.AuthorizedWeightEntryService) *weightEn
 }
 
 func (h *weightEntryHandler) Create(r *http.Request) (*weightEntryResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[createWeightEntryRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -45,7 +49,7 @@ func (h *weightEntryHandler) Create(r *http.Request) (*weightEntryResponse, int,
 		BodyFatPercentage: request.BodyFatPercentage,
 		Notes:             request.Notes,
 	}
-	entry, err := h.service.Create(r.Context(), params)
+	entry, err := h.service.Create(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -53,11 +57,15 @@ func (h *weightEntryHandler) Create(r *http.Request) (*weightEntryResponse, int,
 }
 
 func (h *weightEntryHandler) GetById(r *http.Request) (*weightEntryResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	entry, err := h.service.GetById(r.Context(), id)
+	entry, err := h.service.GetById(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -65,6 +73,10 @@ func (h *weightEntryHandler) GetById(r *http.Request) (*weightEntryResponse, int
 }
 
 func (h *weightEntryHandler) List(r *http.Request) (*weightEntryPage, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	from, err := api.QueryParamDate(r, "from")
 	if err != nil {
 		return nil, 0, err
@@ -78,7 +90,7 @@ func (h *weightEntryHandler) List(r *http.Request) (*weightEntryPage, int, error
 		From:             from,
 		To:               to,
 	}
-	page, err := h.service.List(r.Context(), params)
+	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -86,6 +98,10 @@ func (h *weightEntryHandler) List(r *http.Request) (*weightEntryPage, int, error
 }
 
 func (h *weightEntryHandler) Update(r *http.Request) (*weightEntryResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
@@ -106,7 +122,7 @@ func (h *weightEntryHandler) Update(r *http.Request) (*weightEntryResponse, int,
 		}
 		params.Date = &date
 	}
-	entry, err := h.service.Update(r.Context(), id, params)
+	entry, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -114,11 +130,15 @@ func (h *weightEntryHandler) Update(r *http.Request) (*weightEntryResponse, int,
 }
 
 func (h *weightEntryHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	err = h.service.Delete(r.Context(), id)
+	err = h.service.Delete(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}

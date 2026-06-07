@@ -11,6 +11,7 @@ x-api-environment: &api-environment
   CORS_ORIGINS: http://localhost:3000
   SEED_ADMIN_EMAIL: admin@life.local
   SEED_ADMIN_PASSWORD: admin123
+  GOOGLE_CLIENT_ID: ""
 
 services:
   db:

@@ -27,6 +27,7 @@ type CreateParams struct {
 	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
+	Public              bool
 	Tags                []string
 	Ingredients         []string
 	Conversions         []ConversionParam
@@ -42,6 +43,7 @@ type UpdateParams struct {
 	MeasurementType     *string
 	BaseQuantity        *float64
 	BaseUnit            *string
+	Public              *bool
 	Tags                *[]string
 	Ingredients         *[]string
 	Conversions         *[]ConversionParam
@@ -78,6 +80,11 @@ type IngredientFrequencyResult struct {
 	LastDate       time.Time
 }
 
+type CommunityListParams struct {
+	types.PaginationParams
+	Query *string
+}
+
 type FoodService interface {
 	Create(userId uuid.UUID, params CreateParams) (*domain.Food, error)
 	GetById(id, userId uuid.UUID) (*domain.Food, error)
@@ -87,4 +94,6 @@ type FoodService interface {
 	Frequency(userId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
 	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error)
+	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
+	Copy(actorId, foodId uuid.UUID) (*domain.Food, error)
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ivan-ca97/life/pkg/auth"
 
 	"github.com/ivan-ca97/life/internal/features/daily/domain"
@@ -25,32 +27,24 @@ func NewAuthorizedSummaryService(base ports.SummaryService, authorizer auth.Auth
 	}
 }
 
-func (s *authorizedSummaryService) GetSummary(ctx context.Context, date time.Time) (*domain.DailySummary, error) {
-	err := s.authorizer.Require(ctx, permissions.DailyRead)
+func (s *authorizedSummaryService) GetSummary(ctx context.Context, ownerId uuid.UUID, date time.Time) (*domain.DailySummary, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	summary, err := s.base.GetSummary(userId, date)
+	summary, err := s.base.GetSummary(ownerId, date)
 	if err != nil {
 		return nil, err
 	}
 	return summary, nil
 }
 
-func (s *authorizedSummaryService) GetSummaryRange(ctx context.Context, from, to time.Time) ([]domain.DailySummary, error) {
-	err := s.authorizer.Require(ctx, permissions.DailyRead)
+func (s *authorizedSummaryService) GetSummaryRange(ctx context.Context, ownerId uuid.UUID, from, to time.Time) ([]domain.DailySummary, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	summaries, err := s.base.GetSummaryRange(userId, from, to)
+	summaries, err := s.base.GetSummaryRange(ownerId, from, to)
 	if err != nil {
 		return nil, err
 	}

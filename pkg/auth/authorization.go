@@ -1,8 +1,12 @@
 package auth
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type AuthorizationService interface {
-	Require(ctx context.Context, permission string) error
-	RequireOn(ctx context.Context, permission string, resource any) error
+	// Authorize checks if the current actor can perform the given permission on the specified owner's data.
+	Authorize(ctx context.Context, ownerId uuid.UUID, permission string) error
 }

@@ -39,8 +39,9 @@ func main() {
 	corsOrigins := os.Getenv("CORS_ORIGINS")
 	seedEmail := os.Getenv("SEED_ADMIN_EMAIL")
 	seedPassword := os.Getenv("SEED_ADMIN_PASSWORD")
+	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 
-	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword)
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}

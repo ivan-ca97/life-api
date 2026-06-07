@@ -7,7 +7,9 @@ import (
 )
 
 func (f *authFeature) PublicRoutes(r chi.Router) {
+	r.Post("/auth/register", endpoint.JSON(f.errorHandler, f.authHandler.Register))
 	r.Post("/auth/login", endpoint.JSON(f.errorHandler, f.authHandler.Login))
+	r.Post("/auth/google", endpoint.JSON(f.errorHandler, f.authHandler.LoginWithGoogle))
 }
 
 func (f *authFeature) ProtectedRoutes(r chi.Router) {

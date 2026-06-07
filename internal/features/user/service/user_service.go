@@ -50,6 +50,28 @@ func (s *userService) Create(email, password string) (*domain.User, error) {
 	return user, nil
 }
 
+func (s *userService) CreateOAuth(email, googleId string) (*domain.User, error) {
+	exists, err := s.repository.EmailExists(email)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, domain.ErrEmailTaken
+	}
+
+	user := &domain.User{
+		Id:       uuid.New(),
+		Email:    email,
+		GoogleId: &googleId,
+		Active:   true,
+	}
+	err = s.repository.Create(user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (s *userService) GetById(id uuid.UUID) (*domain.User, error) {
 	user, err := s.repository.FindById(id)
 	if err != nil {

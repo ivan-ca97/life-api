@@ -33,6 +33,10 @@ func NewMealHandler(service ports.AuthorizedMealService) *mealHandler {
 }
 
 func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[createMealRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -68,7 +72,7 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 		Items:        items,
 		Notes:        request.Notes,
 	}
-	meal, err := h.service.Create(r.Context(), params)
+	meal, err := h.service.Create(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -76,11 +80,15 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 }
 
 func (h *mealHandler) GetById(r *http.Request) (*mealResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	meal, err := h.service.GetById(r.Context(), id)
+	meal, err := h.service.GetById(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -88,6 +96,10 @@ func (h *mealHandler) GetById(r *http.Request) (*mealResponse, int, error) {
 }
 
 func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	date, err := api.QueryParamDate(r, "date")
 	if err != nil {
 		return nil, 0, err
@@ -96,7 +108,7 @@ func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
 		PaginationParams: api.PaginationFromRequest(r),
 		Date:             date,
 	}
-	page, err := h.service.List(r.Context(), params)
+	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -104,6 +116,10 @@ func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
 }
 
 func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
@@ -144,7 +160,7 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 		}
 		params.Date = &date
 	}
-	meal, err := h.service.Update(r.Context(), id, params)
+	meal, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -152,11 +168,15 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 }
 
 func (h *mealHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	err = h.service.Delete(r.Context(), id)
+	err = h.service.Delete(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -164,6 +184,10 @@ func (h *mealHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
 }
 
 func (h *mealHandler) PreviewNutrition(r *http.Request) (*nutritionPreviewResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[previewNutritionRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -176,7 +200,7 @@ func (h *mealHandler) PreviewNutrition(r *http.Request) (*nutritionPreviewRespon
 			Unit:     item.Unit,
 		}
 	}
-	preview, err := h.service.PreviewNutrition(r.Context(), items)
+	preview, err := h.service.PreviewNutrition(r.Context(), userId, items)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -191,17 +215,22 @@ func (h *mealHandler) PreviewNutrition(r *http.Request) (*nutritionPreviewRespon
 			FiberGrams:   pi.FiberGrams,
 		}
 	}
-	return &nutritionPreviewResponse{
+	response := &nutritionPreviewResponse{
 		Calories:     preview.Calories,
 		ProteinGrams: preview.ProteinGrams,
 		CarbsGrams:   preview.CarbsGrams,
 		FatGrams:     preview.FatGrams,
 		FiberGrams:   preview.FiberGrams,
 		Items:        respItems,
-	}, http.StatusOK, nil
+	}
+	return response, http.StatusOK, nil
 }
 
 func (h *mealHandler) ListTypes(r *http.Request) (*mealTypesResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	hour, err := api.QueryParamInt(r, "hour")
 	if err != nil {
 		return nil, 0, err
@@ -209,7 +238,7 @@ func (h *mealHandler) ListTypes(r *http.Request) (*mealTypesResponse, int, error
 	if hour != nil && (*hour < 0 || *hour > 23) {
 		return nil, 0, cerr.NewBadRequestError("hour must be between 0 and 23")
 	}
-	mealTypes, err := h.service.ListTypes(r.Context(), hour)
+	mealTypes, err := h.service.ListTypes(r.Context(), userId, hour)
 	if err != nil {
 		return nil, 0, err
 	}

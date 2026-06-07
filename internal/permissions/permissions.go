@@ -32,4 +32,8 @@ const (
 
 	GoalsRead   = "goals:read"
 	GoalsUpdate = "goals:update"
+
+	SharesRead   = "shares:read"
+	SharesCreate = "shares:create"
+	SharesDelete = "shares:delete"
 )

@@ -270,10 +270,15 @@ func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []p
 			return cerr.NewBadRequestError("nutritional values cannot be negative")
 		}
 	}
+	seen := make(map[uuid.UUID]bool, len(items))
 	for _, item := range items {
 		if item.Quantity <= 0 {
 			return cerr.NewBadRequestError(fmt.Sprintf("item quantity must be positive for food %s", item.FoodId))
 		}
+		if seen[item.FoodId] {
+			return cerr.NewBadRequestError(fmt.Sprintf("duplicate food %s in items", item.FoodId))
+		}
+		seen[item.FoodId] = true
 	}
 	return nil
 }

@@ -27,80 +27,60 @@ func NewAuthorizedExerciseService(base ports.ExerciseService, authorizer auth.Au
 	}
 }
 
-func (s *authorizedExerciseService) Create(ctx context.Context, params ports.CreateParams) (*domain.Exercise, error) {
-	err := s.authorizer.Require(ctx, permissions.ExercisesCreate)
+func (s *authorizedExerciseService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreateParams) (*domain.Exercise, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesCreate)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	exercise, err := s.base.Create(userId, params)
+	exercise, err := s.base.Create(ownerId, params)
 	if err != nil {
 		return nil, err
 	}
 	return exercise, nil
 }
 
-func (s *authorizedExerciseService) GetById(ctx context.Context, id uuid.UUID) (*domain.Exercise, error) {
-	err := s.authorizer.Require(ctx, permissions.ExercisesRead)
+func (s *authorizedExerciseService) GetById(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) (*domain.Exercise, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesRead)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	exercise, err := s.base.GetById(id, userId)
+	exercise, err := s.base.GetById(id, ownerId)
 	if err != nil {
 		return nil, err
 	}
 	return exercise, nil
 }
 
-func (s *authorizedExerciseService) List(ctx context.Context, params ports.ListParams) (types.Page[domain.Exercise], error) {
-	err := s.authorizer.Require(ctx, permissions.ExercisesRead)
+func (s *authorizedExerciseService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListParams) (types.Page[domain.Exercise], error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesRead)
 	if err != nil {
 		return types.Page[domain.Exercise]{}, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return types.Page[domain.Exercise]{}, err
-	}
-	page, err := s.base.List(userId, params)
+	page, err := s.base.List(ownerId, params)
 	if err != nil {
 		return types.Page[domain.Exercise]{}, err
 	}
 	return page, nil
 }
 
-func (s *authorizedExerciseService) Update(ctx context.Context, id uuid.UUID, params ports.UpdateParams) (*domain.Exercise, error) {
-	err := s.authorizer.Require(ctx, permissions.ExercisesUpdate)
+func (s *authorizedExerciseService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdateParams) (*domain.Exercise, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesUpdate)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	exercise, err := s.base.Update(id, userId, params)
+	exercise, err := s.base.Update(id, ownerId, params)
 	if err != nil {
 		return nil, err
 	}
 	return exercise, nil
 }
 
-func (s *authorizedExerciseService) Delete(ctx context.Context, id uuid.UUID) error {
-	err := s.authorizer.Require(ctx, permissions.ExercisesDelete)
+func (s *authorizedExerciseService) Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesDelete)
 	if err != nil {
 		return err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	err = s.base.Delete(id, userId)
+	err = s.base.Delete(id, ownerId)
 	if err != nil {
 		return err
 	}

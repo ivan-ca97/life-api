@@ -18,6 +18,7 @@ type Food struct {
 	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
+	Public              bool
 	Tags                []string
 	Ingredients         []Ingredient
 	Conversions         []Conversion

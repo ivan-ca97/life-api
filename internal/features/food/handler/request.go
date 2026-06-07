@@ -17,6 +17,7 @@ type createFoodRequest struct {
 	MeasurementType     string              `json:"measurement_type"`
 	BaseQuantity        *float64            `json:"base_quantity,omitempty"`
 	BaseUnit            string              `json:"base_unit"`
+	Public              bool                `json:"public"`
 	Tags                []string            `json:"tags"`
 	Ingredients         []string            `json:"ingredients"`
 	Conversions         []conversionRequest `json:"conversions"`
@@ -32,6 +33,7 @@ type updateFoodRequest struct {
 	MeasurementType     *string              `json:"measurement_type,omitempty"`
 	BaseQuantity        *float64             `json:"base_quantity,omitempty"`
 	BaseUnit            *string              `json:"base_unit,omitempty"`
+	Public              *bool                `json:"public,omitempty"`
 	Tags                *[]string            `json:"tags,omitempty"`
 	Ingredients         *[]string            `json:"ingredients,omitempty"`
 	Conversions         *[]conversionRequest `json:"conversions,omitempty"`

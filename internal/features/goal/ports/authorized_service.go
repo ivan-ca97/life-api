@@ -3,10 +3,12 @@ package ports
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/ivan-ca97/life/internal/features/goal/domain"
 )
 
 type AuthorizedGoalService interface {
-	GetCurrent(ctx context.Context) (*domain.Goal, error)
-	Upsert(ctx context.Context, params UpsertParams) (*domain.Goal, error)
+	GetCurrent(ctx context.Context, ownerId uuid.UUID) (*domain.Goal, error)
+	Upsert(ctx context.Context, ownerId uuid.UUID, params UpsertParams) (*domain.Goal, error)
 }

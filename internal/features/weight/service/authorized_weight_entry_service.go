@@ -27,80 +27,60 @@ func NewAuthorizedWeightEntryService(base ports.WeightEntryService, authorizer a
 	}
 }
 
-func (s *authorizedWeightEntryService) Create(ctx context.Context, params ports.CreateParams) (*domain.WeightEntry, error) {
-	err := s.authorizer.Require(ctx, permissions.WeightCreate)
+func (s *authorizedWeightEntryService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreateParams) (*domain.WeightEntry, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.WeightCreate)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	entry, err := s.base.Create(userId, params)
+	entry, err := s.base.Create(ownerId, params)
 	if err != nil {
 		return nil, err
 	}
 	return entry, nil
 }
 
-func (s *authorizedWeightEntryService) GetById(ctx context.Context, id uuid.UUID) (*domain.WeightEntry, error) {
-	err := s.authorizer.Require(ctx, permissions.WeightRead)
+func (s *authorizedWeightEntryService) GetById(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) (*domain.WeightEntry, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.WeightRead)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	entry, err := s.base.GetById(id, userId)
+	entry, err := s.base.GetById(id, ownerId)
 	if err != nil {
 		return nil, err
 	}
 	return entry, nil
 }
 
-func (s *authorizedWeightEntryService) List(ctx context.Context, params ports.ListParams) (types.Page[domain.WeightEntry], error) {
-	err := s.authorizer.Require(ctx, permissions.WeightRead)
+func (s *authorizedWeightEntryService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListParams) (types.Page[domain.WeightEntry], error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.WeightRead)
 	if err != nil {
 		return types.Page[domain.WeightEntry]{}, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return types.Page[domain.WeightEntry]{}, err
-	}
-	page, err := s.base.List(userId, params)
+	page, err := s.base.List(ownerId, params)
 	if err != nil {
 		return types.Page[domain.WeightEntry]{}, err
 	}
 	return page, nil
 }
 
-func (s *authorizedWeightEntryService) Update(ctx context.Context, id uuid.UUID, params ports.UpdateParams) (*domain.WeightEntry, error) {
-	err := s.authorizer.Require(ctx, permissions.WeightUpdate)
+func (s *authorizedWeightEntryService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdateParams) (*domain.WeightEntry, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.WeightUpdate)
 	if err != nil {
 		return nil, err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	entry, err := s.base.Update(id, userId, params)
+	entry, err := s.base.Update(id, ownerId, params)
 	if err != nil {
 		return nil, err
 	}
 	return entry, nil
 }
 
-func (s *authorizedWeightEntryService) Delete(ctx context.Context, id uuid.UUID) error {
-	err := s.authorizer.Require(ctx, permissions.WeightDelete)
+func (s *authorizedWeightEntryService) Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.WeightDelete)
 	if err != nil {
 		return err
 	}
-	userId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	err = s.base.Delete(id, userId)
+	err = s.base.Delete(id, ownerId)
 	if err != nil {
 		return err
 	}

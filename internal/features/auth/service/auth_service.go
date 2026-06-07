@@ -55,6 +55,19 @@ func (s *authService) Login(email, password string) (*domain.Session, error) {
 	return session, nil
 }
 
+func (s *authService) CreateSession(userId uuid.UUID) (*domain.Session, error) {
+	session := &domain.Session{
+		Id:        uuid.New(),
+		UserId:    userId,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	err := s.sessionRepository.Create(session)
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
+
 func (s *authService) Validate(sessionId uuid.UUID) (*domain.Session, error) {
 	session, err := s.sessionRepository.FindById(sessionId)
 	if err != nil {

@@ -20,6 +20,7 @@ type UpdateParams struct {
 
 type UserService interface {
 	Create(email, password string) (*domain.User, error)
+	CreateOAuth(email, googleId string) (*domain.User, error)
 	GetById(id uuid.UUID) (*domain.User, error)
 	GetByEmail(email string) (*domain.User, error)
 	List(params types.PaginationParams) (types.Page[domain.User], error)

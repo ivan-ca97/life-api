@@ -6,4 +6,5 @@ var (
 	ErrInvalidCredentials = cerr.NewUnauthorizedError("invalid credentials")
 	ErrSessionNotFound    = cerr.NewUnauthorizedError("session not found")
 	ErrSessionExpired     = cerr.NewUnauthorizedError("session expired")
+	ErrInvalidGoogleToken = cerr.NewBadRequestError("invalid google token")
 )

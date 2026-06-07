@@ -27,6 +27,10 @@ func NewSummaryHandler(service ports.AuthorizedSummaryService) *summaryHandler {
 }
 
 func (h *summaryHandler) GetSummary(r *http.Request) (*summaryResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	date, err := api.QueryParamDate(r, "date")
 	if err != nil {
 		return nil, 0, err
@@ -34,7 +38,7 @@ func (h *summaryHandler) GetSummary(r *http.Request) (*summaryResponse, int, err
 	if date == nil {
 		return nil, 0, cerr.NewBadRequestError("date query parameter is required (format: YYYY-MM-DD)")
 	}
-	summary, err := h.service.GetSummary(r.Context(), *date)
+	summary, err := h.service.GetSummary(r.Context(), userId, *date)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -42,6 +46,10 @@ func (h *summaryHandler) GetSummary(r *http.Request) (*summaryResponse, int, err
 }
 
 func (h *summaryHandler) GetSummaryRange(r *http.Request) (*summaryRangeResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	from, err := api.QueryParamDate(r, "from")
 	if err != nil {
 		return nil, 0, err
@@ -63,7 +71,7 @@ func (h *summaryHandler) GetSummaryRange(r *http.Request) (*summaryRangeResponse
 	if days > 365 {
 		return nil, 0, cerr.NewBadRequestError("date range cannot exceed 365 days")
 	}
-	summaries, err := h.service.GetSummaryRange(r.Context(), *from, *to)
+	summaries, err := h.service.GetSummaryRange(r.Context(), userId, *from, *to)
 	if err != nil {
 		return nil, 0, err
 	}

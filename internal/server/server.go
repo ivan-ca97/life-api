@@ -12,8 +12,9 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
-	"github.com/ivan-ca97/life/pkg/auth"
 
+	authorizationApp "github.com/ivan-ca97/life/internal/applications/authorization"
+	"github.com/ivan-ca97/life/internal/features/authorization"
 	featureAuth "github.com/ivan-ca97/life/internal/features/auth"
 	"github.com/ivan-ca97/life/internal/features/daily"
 	"github.com/ivan-ca97/life/internal/features/exercise"
@@ -29,13 +30,16 @@ type server struct {
 	port   int
 }
 
-func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword string) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId string) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
-	authorizer := auth.NewBinaryAuthorizationService()
+
+	authorizationFeature := authorization.NewAuthorizationFeature(database)
+	authorizer := authorizationFeature.AuthorizationService()
 
 	userFeature := user.NewUserFeature(database, authorizer, errorHandler)
-	authFeature := featureAuth.NewAuthFeature(database, userFeature.Service(), errorHandler)
+	authFeature := featureAuth.NewAuthFeature(database, userFeature.Service(), authorizationFeature.RoleRepository(), errorHandler, googleClientId)
+	authorizationApplication := authorizationApp.NewAuthorizationApplication(authorizationFeature.ShareRepository(), authorizer, userFeature.Service(), errorHandler)
 	foodFeature := food.NewFoodFeature(database, authorizer, errorHandler)
 	mealFeature := meal.NewMealFeature(database, authorizer, errorHandler)
 	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, errorHandler)
@@ -70,14 +74,21 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 
 		r.Group(func(r chi.Router) {
 			r.Use(authFeature.Middleware().Handle)
+
 			authFeature.ProtectedRoutes(r)
-			userFeature.ProtectedRoutes(r)
-			foodFeature.ProtectedRoutes(r)
-			mealFeature.ProtectedRoutes(r)
-			exerciseFeature.ProtectedRoutes(r)
-			weightFeature.ProtectedRoutes(r)
-			goalFeature.ProtectedRoutes(r)
-			dailyFeature.ProtectedRoutes(r)
+			foodFeature.GlobalRoutes(r)
+			userFeature.AdminRoutes(r)
+
+			r.Route("/users/{userId}", func(r chi.Router) {
+				userFeature.ProtectedRoutes(r)
+				foodFeature.ProtectedRoutes(r)
+				mealFeature.ProtectedRoutes(r)
+				exerciseFeature.ProtectedRoutes(r)
+				weightFeature.ProtectedRoutes(r)
+				goalFeature.ProtectedRoutes(r)
+				dailyFeature.ProtectedRoutes(r)
+				authorizationApplication.ProtectedRoutes(r)
+			})
 		})
 	})
 

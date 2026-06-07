@@ -40,6 +40,7 @@ type conversionResponse struct {
 
 type foodResponse struct {
 	Id                  uuid.UUID            `json:"id"`
+	UserId              uuid.UUID            `json:"user_id"`
 	Name                string               `json:"name"`
 	DefaultCalories     *float64             `json:"default_calories,omitempty"`
 	DefaultProteinGrams *float64             `json:"default_protein_grams,omitempty"`
@@ -49,6 +50,7 @@ type foodResponse struct {
 	MeasurementType     string               `json:"measurement_type"`
 	BaseQuantity        float64              `json:"base_quantity"`
 	BaseUnit            string               `json:"base_unit"`
+	Public              bool                 `json:"public"`
 	Tags                []string               `json:"tags"`
 	Ingredients         []ingredientResponse   `json:"ingredients"`
 	Conversions         []conversionResponse `json:"conversions"`
@@ -81,6 +83,7 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 	}
 	return &foodResponse{
 		Id:                  f.Id,
+		UserId:              f.UserId,
 		Name:                f.Name,
 		DefaultCalories:     f.DefaultCalories,
 		DefaultProteinGrams: f.DefaultProteinGrams,
@@ -90,6 +93,7 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
+		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
 		Conversions:         conversions,

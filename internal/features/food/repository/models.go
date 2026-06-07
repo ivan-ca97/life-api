@@ -20,6 +20,7 @@ type food struct {
 	MeasurementType     string           `gorm:"not null;default:'mass'"`
 	BaseQuantity        float64          `gorm:"not null;default:1"`
 	BaseUnit            string           `gorm:"not null;default:''"`
+	Public              bool             `gorm:"not null;default:false"`
 	CreatedAt           time.Time        `gorm:"not null;autoCreateTime"`
 	UpdatedAt           time.Time        `gorm:"not null;autoUpdateTime"`
 	Tags                []foodTag        `gorm:"foreignKey:FoodId"`
@@ -99,6 +100,7 @@ func (f *food) toDomain() *domain.Food {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
+		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
 		Conversions:         conversions,
@@ -120,6 +122,7 @@ func foodFromDomain(f *domain.Food) *food {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
+		Public:              f.Public,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}

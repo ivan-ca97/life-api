@@ -22,10 +22,11 @@ type authFeature struct {
 	errorHandler http_errors.HttpErrorHandler
 }
 
-func NewAuthFeature(db *gorm.DB, userService user_ports.UserService, errorHandler http_errors.HttpErrorHandler) *authFeature {
+func NewAuthFeature(db *gorm.DB, userService user_ports.UserService, roleAssigner ports.RoleAssigner, errorHandler http_errors.HttpErrorHandler, googleClientId string) *authFeature {
 	sessionRepository := repository.NewSessionRepository(db)
 	authService := service.NewAuthService(sessionRepository, userService)
-	authHandler := handler.NewAuthHandler(authService)
+	googleVerifier := service.NewGoogleTokenVerifier()
+	authHandler := handler.NewAuthHandler(authService, userService, roleAssigner, googleVerifier, googleClientId)
 	sessionMiddleware := middleware.NewSessionMiddleware(authService, errorHandler)
 
 	return &authFeature{

@@ -78,6 +78,10 @@ func NewCorrectionHandler(service ports.AuthorizedCorrectionService) *correction
 }
 
 func (h *correctionHandler) GetCorrection(r *http.Request) (*correctionResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	date, err := api.QueryParamDate(r, "date")
 	if err != nil {
 		return nil, 0, err
@@ -85,7 +89,7 @@ func (h *correctionHandler) GetCorrection(r *http.Request) (*correctionResponse,
 	if date == nil {
 		return nil, 0, cerr.NewBadRequestError("date query parameter is required (format: YYYY-MM-DD)")
 	}
-	correction, err := h.service.GetCorrection(r.Context(), *date)
+	correction, err := h.service.GetCorrection(r.Context(), userId, *date)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -96,6 +100,10 @@ func (h *correctionHandler) GetCorrection(r *http.Request) (*correctionResponse,
 }
 
 func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	req, err := api.DecodeBody[upsertCorrectionRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -117,10 +125,11 @@ func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionRespon
 		DistanceMeters:  req.DistanceMeters,
 		Notes:           req.Notes,
 	}
-	if err := h.service.UpsertCorrection(r.Context(), correction); err != nil {
+	err = h.service.UpsertCorrection(r.Context(), userId, correction)
+	if err != nil {
 		return nil, 0, err
 	}
-	updated, err := h.service.GetCorrection(r.Context(), date)
+	updated, err := h.service.GetCorrection(r.Context(), userId, date)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -131,6 +140,10 @@ func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionRespon
 }
 
 func (h *correctionHandler) DeleteCorrection(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	date, err := api.QueryParamDate(r, "date")
 	if err != nil {
 		return nil, 0, err
@@ -138,7 +151,8 @@ func (h *correctionHandler) DeleteCorrection(r *http.Request) (*api.NoResponse, 
 	if date == nil {
 		return nil, 0, cerr.NewBadRequestError("date query parameter is required (format: YYYY-MM-DD)")
 	}
-	if err := h.service.DeleteCorrection(r.Context(), *date); err != nil {
+	err = h.service.DeleteCorrection(r.Context(), userId, *date)
+	if err != nil {
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil

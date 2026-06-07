@@ -11,9 +11,9 @@ import (
 )
 
 type AuthorizedExerciseService interface {
-	Create(ctx context.Context, params CreateParams) (*domain.Exercise, error)
-	GetById(ctx context.Context, id uuid.UUID) (*domain.Exercise, error)
-	List(ctx context.Context, params ListParams) (types.Page[domain.Exercise], error)
-	Update(ctx context.Context, id uuid.UUID, params UpdateParams) (*domain.Exercise, error)
-	Delete(ctx context.Context, id uuid.UUID) error
+	Create(ctx context.Context, ownerId uuid.UUID, params CreateParams) (*domain.Exercise, error)
+	GetById(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) (*domain.Exercise, error)
+	List(ctx context.Context, ownerId uuid.UUID, params ListParams) (types.Page[domain.Exercise], error)
+	Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params UpdateParams) (*domain.Exercise, error)
+	Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error
 }

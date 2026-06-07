@@ -28,7 +28,11 @@ func NewAuthorizedUserService(base ports.UserService, authorizer auth.Authorizat
 }
 
 func (s *authorizedUserService) Create(ctx context.Context, email, password string) (*domain.User, error) {
-	err := s.authorizer.Require(ctx, permissions.UsersCreate)
+	actorId, err := auth.ActorFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = s.authorizer.Authorize(ctx, actorId, permissions.UsersCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +43,12 @@ func (s *authorizedUserService) Create(ctx context.Context, email, password stri
 	return user, nil
 }
 
-func (s *authorizedUserService) GetById(ctx context.Context, id uuid.UUID) (*domain.User, error) {
-	err := s.authorizer.Require(ctx, permissions.UsersRead)
+func (s *authorizedUserService) GetById(ctx context.Context, ownerId uuid.UUID) (*domain.User, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.UsersRead)
 	if err != nil {
 		return nil, err
 	}
-	user, err := s.base.GetById(id)
+	user, err := s.base.GetById(ownerId)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,11 @@ func (s *authorizedUserService) GetById(ctx context.Context, id uuid.UUID) (*dom
 }
 
 func (s *authorizedUserService) List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error) {
-	err := s.authorizer.Require(ctx, permissions.UsersRead)
+	actorId, err := auth.ActorFromContext(ctx)
+	if err != nil {
+		return types.Page[domain.User]{}, err
+	}
+	err = s.authorizer.Authorize(ctx, actorId, permissions.UsersRead)
 	if err != nil {
 		return types.Page[domain.User]{}, err
 	}
@@ -63,24 +71,24 @@ func (s *authorizedUserService) List(ctx context.Context, params types.Paginatio
 	return page, nil
 }
 
-func (s *authorizedUserService) Update(ctx context.Context, id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
-	err := s.authorizer.Require(ctx, permissions.UsersUpdate)
+func (s *authorizedUserService) Update(ctx context.Context, ownerId uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.UsersUpdate)
 	if err != nil {
 		return nil, err
 	}
-	user, err := s.base.Update(id, params)
+	user, err := s.base.Update(ownerId, params)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (s *authorizedUserService) Deactivate(ctx context.Context, id uuid.UUID) error {
-	err := s.authorizer.Require(ctx, permissions.UsersDeactivate)
+func (s *authorizedUserService) Deactivate(ctx context.Context, ownerId uuid.UUID) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.UsersDeactivate)
 	if err != nil {
 		return err
 	}
-	err = s.base.Deactivate(id)
+	err = s.base.Deactivate(ownerId)
 	if err != nil {
 		return err
 	}

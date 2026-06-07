@@ -31,6 +31,10 @@ func NewExerciseHandler(service ports.AuthorizedExerciseService) *exerciseHandle
 }
 
 func (h *exerciseHandler) Create(r *http.Request) (*exerciseResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[createExerciseRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -57,7 +61,7 @@ func (h *exerciseHandler) Create(r *http.Request) (*exerciseResponse, int, error
 		Tags:                    request.Tags,
 		Notes:                   request.Notes,
 	}
-	exercise, err := h.service.Create(r.Context(), params)
+	exercise, err := h.service.Create(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -65,11 +69,15 @@ func (h *exerciseHandler) Create(r *http.Request) (*exerciseResponse, int, error
 }
 
 func (h *exerciseHandler) GetById(r *http.Request) (*exerciseResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	exercise, err := h.service.GetById(r.Context(), id)
+	exercise, err := h.service.GetById(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -77,6 +85,10 @@ func (h *exerciseHandler) GetById(r *http.Request) (*exerciseResponse, int, erro
 }
 
 func (h *exerciseHandler) List(r *http.Request) (*exercisePage, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	date, err := api.QueryParamDate(r, "date")
 	if err != nil {
 		return nil, 0, err
@@ -85,7 +97,7 @@ func (h *exerciseHandler) List(r *http.Request) (*exercisePage, int, error) {
 		PaginationParams: api.PaginationFromRequest(r),
 		Date:             date,
 	}
-	page, err := h.service.List(r.Context(), params)
+	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -93,6 +105,10 @@ func (h *exerciseHandler) List(r *http.Request) (*exercisePage, int, error) {
 }
 
 func (h *exerciseHandler) Update(r *http.Request) (*exerciseResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
@@ -125,7 +141,7 @@ func (h *exerciseHandler) Update(r *http.Request) (*exerciseResponse, int, error
 		}
 		params.Date = &date
 	}
-	exercise, err := h.service.Update(r.Context(), id, params)
+	exercise, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -133,11 +149,15 @@ func (h *exerciseHandler) Update(r *http.Request) (*exerciseResponse, int, error
 }
 
 func (h *exerciseHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	err = h.service.Delete(r.Context(), id)
+	err = h.service.Delete(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}

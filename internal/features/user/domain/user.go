@@ -10,6 +10,7 @@ type User struct {
 	Id           uuid.UUID
 	Email        string
 	PasswordHash string
+	GoogleId     *string
 	Active       bool
 	HeightCm     *int
 	BirthDate    *time.Time

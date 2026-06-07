@@ -21,6 +21,8 @@ type FoodHandler interface {
 	ListIngredients(r *http.Request) (*ingredientsListResponse, int, error)
 	ListUnits(r *http.Request) (*unitsListResponse, int, error)
 	ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, error)
+	ListCommunity(r *http.Request) (*foodPage, int, error)
+	Copy(r *http.Request) (*foodResponse, int, error)
 }
 
 type foodHandler struct {
@@ -36,6 +38,10 @@ func NewFoodHandler(service ports.AuthorizedFoodService) *foodHandler {
 }
 
 func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	request, err := api.DecodeBody[createFoodRequest](r)
 	if err != nil {
 		return nil, 0, err
@@ -66,11 +72,12 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 		MeasurementType:     request.MeasurementType,
 		BaseQuantity:        baseQuantity,
 		BaseUnit:            request.BaseUnit,
+		Public:              request.Public,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
 		Conversions:         conversions,
 	}
-	food, err := h.service.Create(r.Context(), params)
+	food, err := h.service.Create(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -78,11 +85,15 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 }
 
 func (h *foodHandler) GetById(r *http.Request) (*foodResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	food, err := h.service.GetById(r.Context(), id)
+	food, err := h.service.GetById(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -90,6 +101,10 @@ func (h *foodHandler) GetById(r *http.Request) (*foodResponse, int, error) {
 }
 
 func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	var query *string
 	if q := r.URL.Query().Get("q"); q != "" {
 		query = &q
@@ -103,7 +118,7 @@ func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
 		Query:            query,
 		Tag:              tag,
 	}
-	page, err := h.service.List(r.Context(), params)
+	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -111,6 +126,10 @@ func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
 }
 
 func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
@@ -142,11 +161,12 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		MeasurementType:     request.MeasurementType,
 		BaseQuantity:        request.BaseQuantity,
 		BaseUnit:            request.BaseUnit,
+		Public:              request.Public,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
 		Conversions:         conversions,
 	}
-	food, err := h.service.Update(r.Context(), id, params)
+	food, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -154,11 +174,15 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 }
 
 func (h *foodHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	err = h.service.Delete(r.Context(), id)
+	err = h.service.Delete(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -166,6 +190,10 @@ func (h *foodHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
 }
 
 func (h *foodHandler) Frequency(r *http.Request) (*frequencyResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	from, err := api.QueryParamDate(r, "from")
 	if err != nil {
 		return nil, 0, err
@@ -183,7 +211,7 @@ func (h *foodHandler) Frequency(r *http.Request) (*frequencyResponse, int, error
 		To:   to,
 		Tag:  tag,
 	}
-	results, err := h.service.Frequency(r.Context(), params)
+	results, err := h.service.Frequency(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -191,11 +219,15 @@ func (h *foodHandler) Frequency(r *http.Request) (*frequencyResponse, int, error
 }
 
 func (h *foodHandler) ListIngredients(r *http.Request) (*ingredientsListResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	var query *string
 	if q := r.URL.Query().Get("q"); q != "" {
 		query = &q
 	}
-	ingredients, err := h.service.ListIngredients(r.Context(), query)
+	ingredients, err := h.service.ListIngredients(r.Context(), userId, query)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -215,11 +247,15 @@ func (h *foodHandler) ListUnits(_ *http.Request) (*unitsListResponse, int, error
 }
 
 func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	id, err := api.PathParamUUID(r, "id")
 	if err != nil {
 		return nil, 0, err
 	}
-	food, err := h.service.GetById(r.Context(), id)
+	food, err := h.service.GetById(r.Context(), userId, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -235,6 +271,10 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 }
 
 func (h *foodHandler) IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
 	from, err := api.QueryParamDate(r, "from")
 	if err != nil {
 		return nil, 0, err
@@ -247,9 +287,42 @@ func (h *foodHandler) IngredientFrequency(r *http.Request) (*ingredientFrequency
 		From: from,
 		To:   to,
 	}
-	results, err := h.service.IngredientFrequency(r.Context(), params)
+	results, err := h.service.IngredientFrequency(r.Context(), userId, params)
 	if err != nil {
 		return nil, 0, err
 	}
 	return newIngredientFrequencyResponse(results), http.StatusOK, nil
+}
+
+func (h *foodHandler) ListCommunity(r *http.Request) (*foodPage, int, error) {
+	var query *string
+	q := r.URL.Query().Get("q")
+	if q != "" {
+		query = &q
+	}
+	params := ports.CommunityListParams{
+		PaginationParams: api.PaginationFromRequest(r),
+		Query:            query,
+	}
+	page, err := h.service.ListCommunity(r.Context(), params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return newFoodPage(page), http.StatusOK, nil
+}
+
+func (h *foodHandler) Copy(r *http.Request) (*foodResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	id, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	food, err := h.service.Copy(r.Context(), userId, id)
+	if err != nil {
+		return nil, 0, err
+	}
+	return foodFromDomain(food), http.StatusCreated, nil
 }
