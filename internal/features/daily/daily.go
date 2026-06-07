@@ -5,6 +5,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 	"github.com/ivan-ca97/life/pkg/auth"
+	"github.com/ivan-ca97/life/pkg/dayclosure"
 
 	"github.com/ivan-ca97/life/internal/features/daily/handler"
 	"github.com/ivan-ca97/life/internal/features/daily/repository"
@@ -14,6 +15,8 @@ import (
 type dailyFeature struct {
 	summaryHandler    handler.SummaryHandler
 	correctionHandler handler.CorrectionHandler
+	closureHandler    handler.DayClosureHandler
+	closureChecker    dayclosure.DayClosureChecker
 	errorHandler      http_errors.HttpErrorHandler
 }
 
@@ -28,9 +31,20 @@ func NewDailyFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHan
 	authorizedCorrectionService := service.NewAuthorizedCorrectionService(correctionService, authorizer)
 	correctionHandler := handler.NewCorrectionHandler(authorizedCorrectionService)
 
+	dayClosureRepository := repository.NewDayClosureRepository(db)
+	dayClosureService := service.NewDayClosureService(dayClosureRepository)
+	authorizedDayClosureService := service.NewAuthorizedDayClosureService(dayClosureService, authorizer)
+	closureHandler := handler.NewDayClosureHandler(authorizedDayClosureService)
+
 	return &dailyFeature{
 		summaryHandler:    summaryHandler,
 		correctionHandler: correctionHandler,
+		closureHandler:    closureHandler,
+		closureChecker:    dayClosureService,
 		errorHandler:      errorHandler,
 	}
+}
+
+func (f *dailyFeature) DayClosureChecker() dayclosure.DayClosureChecker {
+	return f.closureChecker
 }

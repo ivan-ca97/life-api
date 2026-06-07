@@ -4,6 +4,7 @@ import "time"
 
 type DailySummary struct {
 	Date            time.Time
+	Closed          bool
 	MealsSummary    MealsSummary
 	ExerciseSummary ExerciseSummary
 	WeightEntry     *WeightEntrySummary

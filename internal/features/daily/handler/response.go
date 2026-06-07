@@ -37,6 +37,7 @@ type goalsSummaryResponse struct {
 
 type summaryResponse struct {
 	Date           string                      `json:"date"`
+	Closed         bool                        `json:"closed"`
 	Meals          mealsSummaryResponse        `json:"meals"`
 	Exercise       exerciseSummaryResponse     `json:"exercise"`
 	Weight         *weightEntrySummaryResponse `json:"weight,omitempty"`
@@ -51,7 +52,8 @@ type summaryRangeResponse struct {
 
 func summaryFromDomain(s *domain.DailySummary) *summaryResponse {
 	response := &summaryResponse{
-		Date: s.Date.Format("2006-01-02"),
+		Date:   s.Date.Format("2006-01-02"),
+		Closed: s.Closed,
 		Meals: mealsSummaryResponse{
 			TotalCalories:     s.MealsSummary.TotalCalories,
 			TotalProteinGrams: s.MealsSummary.TotalProteinGrams,

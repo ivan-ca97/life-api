@@ -41,11 +41,12 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	authFeature := featureAuth.NewAuthFeature(database, userFeature.Service(), authorizationFeature.RoleRepository(), errorHandler, googleClientId)
 	authorizationApplication := authorizationApp.NewAuthorizationApplication(authorizationFeature.ShareRepository(), authorizer, userFeature.Service(), errorHandler)
 	foodFeature := food.NewFoodFeature(database, authorizer, errorHandler)
-	mealFeature := meal.NewMealFeature(database, authorizer, errorHandler)
-	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, errorHandler)
+	dailyFeature := daily.NewDailyFeature(database, authorizer, errorHandler)
+	closureChecker := dailyFeature.DayClosureChecker()
+	mealFeature := meal.NewMealFeature(database, authorizer, closureChecker, errorHandler)
+	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, closureChecker, errorHandler)
 	weightFeature := weight.NewWeightFeature(database, authorizer, errorHandler)
 	goalFeature := goal.NewGoalFeature(database, authorizer, errorHandler)
-	dailyFeature := daily.NewDailyFeature(database, authorizer, errorHandler)
 
 	router := chi.NewRouter()
 	origins := []string{"http://localhost:3000"}

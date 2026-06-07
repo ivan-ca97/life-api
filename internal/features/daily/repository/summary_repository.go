@@ -52,10 +52,16 @@ func (r *summaryRepository) GetDailySummary(userId uuid.UUID, date time.Time) (*
 		return nil, err
 	}
 
+	closed, err := r.isDateClosed(userId, date)
+	if err != nil {
+		return nil, err
+	}
+
 	bmr := calculateBMR(profile, weightEntry, date)
 
 	summary := &domain.DailySummary{
 		Date:            date,
+		Closed:          closed,
 		MealsSummary:    *mealsSummary,
 		ExerciseSummary: *exerciseSummary,
 		WeightEntry:     weightEntry,
@@ -92,12 +98,18 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 		return nil, err
 	}
 
+	closedDates, err := r.getClosedDatesRange(userId, from, to)
+	if err != nil {
+		return nil, err
+	}
+
 	var summaries []domain.DailySummary
 	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
 		key := d.Format("2006-01-02")
 		summary := domain.DailySummary{
-			Date:  d,
-			Goals: goals,
+			Date:   d,
+			Closed: closedDates[key],
+			Goals:  goals,
 		}
 		if m, ok := mealsMap[key]; ok {
 			summary.MealsSummary = m
@@ -346,6 +358,39 @@ func applyCaloricBalance(summary *domain.DailySummary) {
 	balance := summary.MealsSummary.TotalCalories - (*summary.EstimatedBMR + summary.ExerciseSummary.TotalCaloriesBurned)
 	balance = math.Round(balance*100) / 100
 	summary.CaloricBalance = &balance
+}
+
+func (r *summaryRepository) isDateClosed(userId uuid.UUID, date time.Time) (bool, error) {
+	var count int64
+	err := r.db.
+		Table("day_closures").
+		Where("user_id = ? AND date = ?", userId, date).
+		Count(&count).
+		Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking day closure for summary", err)
+	}
+	return count > 0, nil
+}
+
+func (r *summaryRepository) getClosedDatesRange(userId uuid.UUID, from, to time.Time) (map[string]bool, error) {
+	var results []struct {
+		Date string
+	}
+	err := r.db.
+		Table("day_closures").
+		Select("date::text as date").
+		Where("user_id = ? AND date >= ? AND date <= ?", userId, from, to).
+		Scan(&results).
+		Error
+	if err != nil {
+		return nil, cerr.NewInternalError("fetching closed dates for summary", err)
+	}
+	m := make(map[string]bool, len(results))
+	for _, r := range results {
+		m[r.Date] = true
+	}
+	return m, nil
 }
 
 func (r *summaryRepository) getGoals(userId uuid.UUID) (*domain.GoalsSummary, error) {

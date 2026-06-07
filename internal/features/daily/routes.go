@@ -14,4 +14,7 @@ func (f *dailyFeature) ProtectedRoutes(r chi.Router) {
 	r.Get("/daily/corrections", endpoint.JSON(f.errorHandler, f.correctionHandler.GetCorrection))
 	r.Put("/daily/corrections", endpoint.JSON(f.errorHandler, f.correctionHandler.UpsertCorrection))
 	r.Delete("/daily/corrections", endpoint.JSON(f.errorHandler, f.correctionHandler.DeleteCorrection))
+	r.Put("/daily/closure", endpoint.JSON(f.errorHandler, f.closureHandler.Close))
+	r.Delete("/daily/closure", endpoint.JSON(f.errorHandler, f.closureHandler.Open))
+	r.Get("/daily/closure", endpoint.JSON(f.errorHandler, f.closureHandler.GetStatus))
 }
