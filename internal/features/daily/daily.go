@@ -26,15 +26,15 @@ func NewDailyFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHan
 	authorizedSummaryService := service.NewAuthorizedSummaryService(summaryService, authorizer)
 	summaryHandler := handler.NewSummaryHandler(authorizedSummaryService)
 
-	correctionRepository := repository.NewCorrectionRepository(db)
-	correctionService := service.NewCorrectionService(correctionRepository)
-	authorizedCorrectionService := service.NewAuthorizedCorrectionService(correctionService, authorizer)
-	correctionHandler := handler.NewCorrectionHandler(authorizedCorrectionService)
-
 	dayClosureRepository := repository.NewDayClosureRepository(db)
 	dayClosureService := service.NewDayClosureService(dayClosureRepository)
 	authorizedDayClosureService := service.NewAuthorizedDayClosureService(dayClosureService, authorizer)
 	closureHandler := handler.NewDayClosureHandler(authorizedDayClosureService)
+
+	correctionRepository := repository.NewCorrectionRepository(db)
+	correctionService := service.NewCorrectionService(correctionRepository, dayClosureService)
+	authorizedCorrectionService := service.NewAuthorizedCorrectionService(correctionService, authorizer)
+	correctionHandler := handler.NewCorrectionHandler(authorizedCorrectionService)
 
 	return &dailyFeature{
 		summaryHandler:    summaryHandler,

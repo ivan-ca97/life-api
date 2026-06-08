@@ -19,8 +19,8 @@ type exerciseFeature struct {
 
 func NewExerciseFeature(db *gorm.DB, authorizer auth.AuthorizationService, closureChecker dayclosure.DayClosureChecker, errorHandler http_errors.HttpErrorHandler) *exerciseFeature {
 	exerciseRepository := repository.NewExerciseRepository(db)
-	exerciseService := service.NewExerciseService(exerciseRepository)
-	authorizedService := service.NewAuthorizedExerciseService(exerciseService, authorizer, closureChecker)
+	exerciseService := service.NewExerciseService(exerciseRepository, closureChecker)
+	authorizedService := service.NewAuthorizedExerciseService(exerciseService, authorizer)
 	exerciseHandler := handler.NewExerciseHandler(authorizedService)
 
 	return &exerciseFeature{

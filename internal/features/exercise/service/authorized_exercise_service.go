@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/auth"
-	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/exercise/domain"
@@ -15,18 +14,16 @@ import (
 )
 
 type authorizedExerciseService struct {
-	base           ports.ExerciseService
-	authorizer     auth.AuthorizationService
-	closureChecker dayclosure.DayClosureChecker
+	base       ports.ExerciseService
+	authorizer auth.AuthorizationService
 }
 
 var _ ports.AuthorizedExerciseService = (*authorizedExerciseService)(nil)
 
-func NewAuthorizedExerciseService(base ports.ExerciseService, authorizer auth.AuthorizationService, closureChecker dayclosure.DayClosureChecker) *authorizedExerciseService {
+func NewAuthorizedExerciseService(base ports.ExerciseService, authorizer auth.AuthorizationService) *authorizedExerciseService {
 	return &authorizedExerciseService{
-		base:           base,
-		authorizer:     authorizer,
-		closureChecker: closureChecker,
+		base:       base,
+		authorizer: authorizer,
 	}
 }
 
@@ -34,13 +31,6 @@ func (s *authorizedExerciseService) Create(ctx context.Context, ownerId uuid.UUI
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesCreate)
 	if err != nil {
 		return nil, err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, params.Date)
-	if err != nil {
-		return nil, err
-	}
-	if closed {
-		return nil, dayclosure.ErrDayClosed
 	}
 	exercise, err := s.base.Create(ownerId, params)
 	if err != nil {
@@ -78,17 +68,6 @@ func (s *authorizedExerciseService) Update(ctx context.Context, ownerId uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	exercise, err := s.base.GetById(id, ownerId)
-	if err != nil {
-		return nil, err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, exercise.Date)
-	if err != nil {
-		return nil, err
-	}
-	if closed {
-		return nil, dayclosure.ErrDayClosed
-	}
 	updated, err := s.base.Update(id, ownerId, params)
 	if err != nil {
 		return nil, err
@@ -100,17 +79,6 @@ func (s *authorizedExerciseService) Delete(ctx context.Context, ownerId uuid.UUI
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.ExercisesDelete)
 	if err != nil {
 		return err
-	}
-	exercise, err := s.base.GetById(id, ownerId)
-	if err != nil {
-		return err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, exercise.Date)
-	if err != nil {
-		return err
-	}
-	if closed {
-		return dayclosure.ErrDayClosed
 	}
 	err = s.base.Delete(id, ownerId)
 	if err != nil {

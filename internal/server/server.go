@@ -54,7 +54,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	closureChecker := dailyFeature.DayClosureChecker()
 	mealFeature := meal.NewMealFeature(database, authorizer, closureChecker, errorHandler)
 	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, closureChecker, errorHandler)
-	weightFeature := weight.NewWeightFeature(database, authorizer, errorHandler)
+	weightFeature := weight.NewWeightFeature(database, authorizer, closureChecker, errorHandler)
 	goalFeature := goal.NewGoalFeature(database, authorizer, errorHandler)
 
 	router := chi.NewRouter()

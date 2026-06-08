@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
 
 	foodDomain "github.com/ivan-ca97/life/internal/features/food/domain"
@@ -29,20 +30,30 @@ type resolvedItems struct {
 }
 
 type mealService struct {
-	repository ports.MealRepository
-	foodLookup ports.FoodLookup
+	repository     ports.MealRepository
+	foodLookup     ports.FoodLookup
+	closureChecker dayclosure.DayClosureChecker
 }
 
 var _ ports.MealService = (*mealService)(nil)
 
-func NewMealService(repository ports.MealRepository, foodLookup ports.FoodLookup) *mealService {
+func NewMealService(repository ports.MealRepository, foodLookup ports.FoodLookup, closureChecker dayclosure.DayClosureChecker) *mealService {
 	return &mealService{
-		repository: repository,
-		foodLookup: foodLookup,
+		repository:     repository,
+		foodLookup:     foodLookup,
+		closureChecker: closureChecker,
 	}
 }
 
 func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Meal, error) {
+	closed, err := s.closureChecker.IsClosed(userId, params.Date)
+	if err != nil {
+		return nil, err
+	}
+	if closed {
+		return nil, dayclosure.ErrDayClosed
+	}
+
 	if err := validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, params.Items); err != nil {
 		return nil, err
 	}
@@ -99,6 +110,18 @@ func (s *mealService) List(userId uuid.UUID, params ports.ListParams) (types.Pag
 }
 
 func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Meal, error) {
+	meal, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	closed, err := s.closureChecker.IsClosed(userId, meal.Date)
+	if err != nil {
+		return nil, err
+	}
+	if closed {
+		return nil, dayclosure.ErrDayClosed
+	}
+
 	var itemsForValidation []ports.ItemParam
 	if params.Items != nil {
 		itemsForValidation = *params.Items
@@ -118,11 +141,11 @@ func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 		params.FiberGrams = coalesce(params.FiberGrams, resolved.Totals.FiberGrams)
 		params.ResolvedItems = &resolved.Items
 	}
-	meal, err := s.repository.Update(id, userId, params)
+	updated, err := s.repository.Update(id, userId, params)
 	if err != nil {
 		return nil, err
 	}
-	return meal, nil
+	return updated, nil
 }
 
 func (s *mealService) PreviewNutrition(userId uuid.UUID, items []ports.ItemParam) (*ports.NutritionPreview, error) {
@@ -157,7 +180,19 @@ func (s *mealService) PreviewNutrition(userId uuid.UUID, items []ports.ItemParam
 }
 
 func (s *mealService) Delete(id, userId uuid.UUID) error {
-	err := s.repository.Delete(id, userId)
+	meal, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return err
+	}
+	closed, err := s.closureChecker.IsClosed(userId, meal.Date)
+	if err != nil {
+		return err
+	}
+	if closed {
+		return dayclosure.ErrDayClosed
+	}
+
+	err = s.repository.Delete(id, userId)
 	if err != nil {
 		return err
 	}

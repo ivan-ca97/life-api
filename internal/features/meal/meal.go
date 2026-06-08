@@ -20,8 +20,8 @@ type mealFeature struct {
 func NewMealFeature(db *gorm.DB, authorizer auth.AuthorizationService, closureChecker dayclosure.DayClosureChecker, errorHandler http_errors.HttpErrorHandler) *mealFeature {
 	mealRepository := repository.NewMealRepository(db)
 	foodLookup := repository.NewFoodLookup(db)
-	mealService := service.NewMealService(mealRepository, foodLookup)
-	authorizedService := service.NewAuthorizedMealService(mealService, authorizer, closureChecker)
+	mealService := service.NewMealService(mealRepository, foodLookup, closureChecker)
+	authorizedService := service.NewAuthorizedMealService(mealService, authorizer)
 	mealHandler := handler.NewMealHandler(authorizedService)
 
 	return &mealFeature{

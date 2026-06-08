@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/google/uuid"
 
+	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/exercise/domain"
@@ -10,18 +11,28 @@ import (
 )
 
 type exerciseService struct {
-	repository ports.ExerciseRepository
+	repository     ports.ExerciseRepository
+	closureChecker dayclosure.DayClosureChecker
 }
 
 var _ ports.ExerciseService = (*exerciseService)(nil)
 
-func NewExerciseService(repository ports.ExerciseRepository) *exerciseService {
+func NewExerciseService(repository ports.ExerciseRepository, closureChecker dayclosure.DayClosureChecker) *exerciseService {
 	return &exerciseService{
-		repository: repository,
+		repository:     repository,
+		closureChecker: closureChecker,
 	}
 }
 
 func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Exercise, error) {
+	closed, err := s.closureChecker.IsClosed(userId, params.Date)
+	if err != nil {
+		return nil, err
+	}
+	if closed {
+		return nil, dayclosure.ErrDayClosed
+	}
+
 	if !domain.IsValidExerciseType(params.Type) {
 		return nil, domain.ErrInvalidExerciseType
 	}
@@ -48,7 +59,7 @@ func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*
 		Tags:                    params.Tags,
 		Notes:                   params.Notes,
 	}
-	err := s.repository.Create(exercise)
+	err = s.repository.Create(exercise)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +83,22 @@ func (s *exerciseService) List(userId uuid.UUID, params ports.ListParams) (types
 }
 
 func (s *exerciseService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Exercise, error) {
+	current, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	closed, err := s.closureChecker.IsClosed(userId, current.Date)
+	if err != nil {
+		return nil, err
+	}
+	if closed {
+		return nil, dayclosure.ErrDayClosed
+	}
+
 	if params.Type != nil && !domain.IsValidExerciseType(*params.Type) {
 		return nil, domain.ErrInvalidExerciseType
 	}
 	if params.DistanceMeters != nil || params.DurationSeconds != nil {
-		current, err := s.repository.FindById(id, userId)
-		if err != nil {
-			return nil, err
-		}
 		distance := current.DistanceMeters
 		if params.DistanceMeters != nil {
 			distance = params.DistanceMeters
@@ -111,7 +130,19 @@ func computeSpeedAndPace(distance *float64, duration *int) (*float64, *float64) 
 }
 
 func (s *exerciseService) Delete(id, userId uuid.UUID) error {
-	err := s.repository.Delete(id, userId)
+	exercise, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return err
+	}
+	closed, err := s.closureChecker.IsClosed(userId, exercise.Date)
+	if err != nil {
+		return err
+	}
+	if closed {
+		return dayclosure.ErrDayClosed
+	}
+
+	err = s.repository.Delete(id, userId)
 	if err != nil {
 		return err
 	}

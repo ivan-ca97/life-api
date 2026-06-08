@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/auth"
-	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/meal/domain"
@@ -15,18 +14,16 @@ import (
 )
 
 type authorizedMealService struct {
-	base           ports.MealService
-	authorizer     auth.AuthorizationService
-	closureChecker dayclosure.DayClosureChecker
+	base       ports.MealService
+	authorizer auth.AuthorizationService
 }
 
 var _ ports.AuthorizedMealService = (*authorizedMealService)(nil)
 
-func NewAuthorizedMealService(base ports.MealService, authorizer auth.AuthorizationService, closureChecker dayclosure.DayClosureChecker) *authorizedMealService {
+func NewAuthorizedMealService(base ports.MealService, authorizer auth.AuthorizationService) *authorizedMealService {
 	return &authorizedMealService{
-		base:           base,
-		authorizer:     authorizer,
-		closureChecker: closureChecker,
+		base:       base,
+		authorizer: authorizer,
 	}
 }
 
@@ -34,13 +31,6 @@ func (s *authorizedMealService) Create(ctx context.Context, ownerId uuid.UUID, p
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.MealsCreate)
 	if err != nil {
 		return nil, err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, params.Date)
-	if err != nil {
-		return nil, err
-	}
-	if closed {
-		return nil, dayclosure.ErrDayClosed
 	}
 	meal, err := s.base.Create(ownerId, params)
 	if err != nil {
@@ -78,17 +68,6 @@ func (s *authorizedMealService) Update(ctx context.Context, ownerId uuid.UUID, i
 	if err != nil {
 		return nil, err
 	}
-	meal, err := s.base.GetById(id, ownerId)
-	if err != nil {
-		return nil, err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, meal.Date)
-	if err != nil {
-		return nil, err
-	}
-	if closed {
-		return nil, dayclosure.ErrDayClosed
-	}
 	updated, err := s.base.Update(id, ownerId, params)
 	if err != nil {
 		return nil, err
@@ -100,17 +79,6 @@ func (s *authorizedMealService) Delete(ctx context.Context, ownerId uuid.UUID, i
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.MealsDelete)
 	if err != nil {
 		return err
-	}
-	meal, err := s.base.GetById(id, ownerId)
-	if err != nil {
-		return err
-	}
-	closed, err := s.closureChecker.IsClosed(ownerId, meal.Date)
-	if err != nil {
-		return err
-	}
-	if closed {
-		return dayclosure.ErrDayClosed
 	}
 	err = s.base.Delete(id, ownerId)
 	if err != nil {
