@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ivan-ca97/life/internal/features/auth/domain"
-	"github.com/ivan-ca97/life/internal/features/auth/ports"
+	"github.com/ivan-ca97/life/internal/features/authentication/domain"
+	"github.com/ivan-ca97/life/internal/features/authentication/ports"
 )
 
 type googleTokenVerifier struct {

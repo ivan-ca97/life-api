@@ -13,9 +13,10 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 
+	authenticationApp "github.com/ivan-ca97/life/internal/applications/authentication"
 	authorizationApp "github.com/ivan-ca97/life/internal/applications/authorization"
+	"github.com/ivan-ca97/life/internal/features/authentication"
 	"github.com/ivan-ca97/life/internal/features/authorization"
-	featureAuth "github.com/ivan-ca97/life/internal/features/auth"
 	"github.com/ivan-ca97/life/internal/features/daily"
 	"github.com/ivan-ca97/life/internal/features/exercise"
 	"github.com/ivan-ca97/life/internal/features/food"
@@ -38,7 +39,15 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	authorizer := authorizationFeature.AuthorizationService()
 
 	userFeature := user.NewUserFeature(database, authorizer, errorHandler)
-	authFeature := featureAuth.NewAuthFeature(database, userFeature.Service(), authorizationFeature.RoleRepository(), errorHandler, googleClientId)
+	authenticationFeature := authentication.NewAuthenticationFeature(database, errorHandler)
+	authenticationApplication := authenticationApp.NewAuthenticationApplication(
+		authenticationFeature.Service(),
+		userFeature.Service(),
+		authorizationFeature.RoleRepository(),
+		authenticationFeature.GoogleVerifier(),
+		googleClientId,
+		errorHandler,
+	)
 	authorizationApplication := authorizationApp.NewAuthorizationApplication(authorizationFeature.ShareRepository(), authorizer, userFeature.Service(), errorHandler)
 	foodFeature := food.NewFoodFeature(database, authorizer, errorHandler)
 	dailyFeature := daily.NewDailyFeature(database, authorizer, errorHandler)
@@ -71,12 +80,12 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Use(http_errors.Middleware)
 
-		authFeature.PublicRoutes(r)
+		authenticationApplication.PublicRoutes(r)
 
 		r.Group(func(r chi.Router) {
-			r.Use(authFeature.Middleware().Handle)
+			r.Use(authenticationFeature.Middleware().Handle)
 
-			authFeature.ProtectedRoutes(r)
+			authenticationApplication.ProtectedRoutes(r)
 			foodFeature.GlobalRoutes(r)
 			userFeature.AdminRoutes(r)
 

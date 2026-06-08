@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ivan-ca97/life/internal/features/auth/domain"
+	"github.com/ivan-ca97/life/internal/features/authentication/domain"
 )
 
 type session struct {

@@ -10,20 +10,20 @@ import (
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 	"github.com/ivan-ca97/life/pkg/auth"
 
-	"github.com/ivan-ca97/life/internal/features/auth/ports"
+	"github.com/ivan-ca97/life/internal/features/authentication/ports"
 )
 
 type sessionMiddleware struct {
-	authService  ports.AuthService
-	errorHandler http_errors.HttpErrorHandler
+	authenticationService ports.AuthenticationService
+	errorHandler          http_errors.HttpErrorHandler
 }
 
 var _ api.Middleware = (*sessionMiddleware)(nil)
 
-func NewSessionMiddleware(authService ports.AuthService, errorHandler http_errors.HttpErrorHandler) *sessionMiddleware {
+func NewSessionMiddleware(authenticationService ports.AuthenticationService, errorHandler http_errors.HttpErrorHandler) *sessionMiddleware {
 	return &sessionMiddleware{
-		authService:  authService,
-		errorHandler: errorHandler,
+		authenticationService: authenticationService,
+		errorHandler:          errorHandler,
 	}
 }
 
@@ -35,7 +35,7 @@ func (m *sessionMiddleware) Handle(next http.Handler) http.Handler {
 			return
 		}
 
-		session, err := m.authService.Validate(token)
+		session, err := m.authenticationService.Validate(token)
 		if err != nil {
 			m.errorHandler.Report(r, err)
 			return
