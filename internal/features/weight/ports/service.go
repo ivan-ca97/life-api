@@ -15,6 +15,7 @@ type CreateParams struct {
 	WeightKg          float64
 	BodyFatPercentage *float64
 	Notes             string
+	ExternalId        *string
 }
 
 type UpdateParams struct {

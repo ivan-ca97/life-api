@@ -27,6 +27,7 @@ type CreateParams struct {
 	TotalSets               *int
 	Tags                    []string
 	Notes                   string
+	ExternalId              *string
 }
 
 type UpdateParams struct {

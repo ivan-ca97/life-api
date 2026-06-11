@@ -14,4 +14,5 @@ type WeightEntryRepository interface {
 	List(userId uuid.UUID, params ListParams) (types.Page[domain.WeightEntry], error)
 	Update(id, userId uuid.UUID, params UpdateParams) (*domain.WeightEntry, error)
 	Delete(id, userId uuid.UUID) error
+	ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error)
 }

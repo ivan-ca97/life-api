@@ -1,6 +1,8 @@
 package ports
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/types"
@@ -14,4 +16,6 @@ type ExerciseRepository interface {
 	List(userId uuid.UUID, params ListParams) (types.Page[domain.Exercise], error)
 	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Exercise, error)
 	Delete(id, userId uuid.UUID) error
+	ExistsByDateAndName(userId uuid.UUID, date time.Time, name string) (bool, error)
+	ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error)
 }

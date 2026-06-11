@@ -10,7 +10,7 @@ import (
 )
 
 type foodLookupModel struct {
-	Id                  uuid.UUID              `gorm:"type:uuid;primaryKey"`
+	Id                  uuid.UUID `gorm:"type:uuid;primaryKey"`
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -206,4 +207,30 @@ func (r *exerciseRepository) Delete(id, userId uuid.UUID) error {
 		return domain.ErrExerciseNotFound
 	}
 	return nil
+}
+
+func (r *exerciseRepository) ExistsByDateAndName(userId uuid.UUID, date time.Time, name string) (bool, error) {
+	var count int64
+	err := r.db.
+		Model(&exercise{}).
+		Where("user_id = ? AND date = ? AND name = ?", userId, date, name).
+		Count(&count).
+		Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking exercise existence", err)
+	}
+	return count > 0, nil
+}
+
+func (r *exerciseRepository) ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error) {
+	var count int64
+	err := r.db.
+		Model(&exercise{}).
+		Where("user_id = ? AND external_id = ?", userId, externalId).
+		Count(&count).
+		Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking exercise existence by external id", err)
+	}
+	return count > 0, nil
 }

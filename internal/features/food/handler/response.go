@@ -51,8 +51,8 @@ type foodResponse struct {
 	BaseQuantity        float64              `json:"base_quantity"`
 	BaseUnit            string               `json:"base_unit"`
 	Public              bool                 `json:"public"`
-	Tags                []string               `json:"tags"`
-	Ingredients         []ingredientResponse   `json:"ingredients"`
+	Tags                []string             `json:"tags"`
+	Ingredients         []ingredientResponse `json:"ingredients"`
 	Conversions         []conversionResponse `json:"conversions"`
 	CreatedAt           time.Time            `json:"created_at"`
 	UpdatedAt           time.Time            `json:"updated_at"`

@@ -40,6 +40,7 @@ func (s *weightEntryService) Create(userId uuid.UUID, params ports.CreateParams)
 		WeightKg:          params.WeightKg,
 		BodyFatPercentage: params.BodyFatPercentage,
 		Notes:             params.Notes,
+		ExternalId:        params.ExternalId,
 	}
 	err = s.repository.Create(entry)
 	if err != nil {

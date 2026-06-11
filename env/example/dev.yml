@@ -12,6 +12,11 @@ x-api-environment: &api-environment
   SEED_ADMIN_EMAIL: admin@life.local
   SEED_ADMIN_PASSWORD: admin123
   GOOGLE_CLIENT_ID: ""
+  R2_ACCOUNT_ID: ""
+  R2_ACCESS_KEY_ID: ""
+  R2_SECRET_ACCESS_KEY: ""
+  R2_BUCKET: ""
+  R2_PUBLIC_URL: ""
 
 services:
   db:

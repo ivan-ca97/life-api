@@ -9,11 +9,11 @@ import (
 )
 
 type exercise struct {
-	Id                      uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	UserId                  uuid.UUID  `gorm:"type:uuid;not null"`
-	Date                    time.Time  `gorm:"type:date;not null"`
-	Type                    string     `gorm:"not null"`
-	Name                    string     `gorm:"default:''"`
+	Id                      uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId                  uuid.UUID `gorm:"type:uuid;not null"`
+	Date                    time.Time `gorm:"type:date;not null"`
+	Type                    string    `gorm:"not null"`
+	Name                    string    `gorm:"default:''"`
 	StartedAt               *time.Time
 	DurationSeconds         *int
 	EstimatedCaloriesBurned *float64
@@ -27,7 +27,8 @@ type exercise struct {
 	MaxHeartRate            *int
 	TotalVolumeKg           *float64
 	TotalSets               *int
-	Notes                   string        `gorm:"not null;default:''"`
+	Notes                   string `gorm:"not null;default:''"`
+	ExternalId              *string
 	CreatedAt               time.Time     `gorm:"not null;autoCreateTime"`
 	UpdatedAt               time.Time     `gorm:"not null;autoUpdateTime"`
 	Tags                    []exerciseTag `gorm:"foreignKey:ExerciseId"`
@@ -64,6 +65,7 @@ func (m *exercise) toDomain() *domain.Exercise {
 		TotalSets:               m.TotalSets,
 		Tags:                    tags,
 		Notes:                   m.Notes,
+		ExternalId:              m.ExternalId,
 		CreatedAt:               m.CreatedAt,
 		UpdatedAt:               m.UpdatedAt,
 	}
@@ -90,6 +92,7 @@ func exerciseFromDomain(e *domain.Exercise) *exercise {
 		TotalVolumeKg:           e.TotalVolumeKg,
 		TotalSets:               e.TotalSets,
 		Notes:                   e.Notes,
+		ExternalId:              e.ExternalId,
 		CreatedAt:               e.CreatedAt,
 		UpdatedAt:               e.UpdatedAt,
 	}

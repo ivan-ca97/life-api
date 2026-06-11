@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	ExerciseTypeWeightlifting   = "weightlifting"
-	ExerciseTypeWalking         = "walking"
-	ExerciseTypeCycling         = "cycling"
-	ExerciseTypeRunning         = "running"
-	ExerciseTypeOther           = "other"
+	ExerciseTypeWeightlifting    = "weightlifting"
+	ExerciseTypeWalking          = "walking"
+	ExerciseTypeCycling          = "cycling"
+	ExerciseTypeRunning          = "running"
+	ExerciseTypeOther            = "other"
 	ExerciseTypeManualAdjustment = "manual_adjustment"
 )
 
@@ -45,6 +45,7 @@ type Exercise struct {
 	TotalSets               *int
 	Tags                    []string
 	Notes                   string
+	ExternalId              *string
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 }

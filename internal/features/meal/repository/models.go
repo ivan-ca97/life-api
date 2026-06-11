@@ -9,21 +9,21 @@ import (
 )
 
 type meal struct {
-	Id           uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	UserId       uuid.UUID  `gorm:"type:uuid;not null"`
-	Date         time.Time  `gorm:"type:date;not null"`
-	Type         string     `gorm:"not null"`
-	Name         string     `gorm:"default:''"`
-	PhotoUrl     string     `gorm:"not null;default:''"`
+	Id           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId       uuid.UUID `gorm:"type:uuid;not null"`
+	Date         time.Time `gorm:"type:date;not null"`
+	Type         string    `gorm:"not null"`
+	Name         string    `gorm:"default:''"`
+	PhotoUrl     string    `gorm:"not null;default:''"`
 	EatenAt      *time.Time
 	Calories     *float64
 	ProteinGrams *float64
 	CarbsGrams   *float64
 	FatGrams     *float64
 	FiberGrams   *float64
-	Notes        string    `gorm:"not null;default:''"`
-	CreatedAt    time.Time `gorm:"not null;autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"not null;autoUpdateTime"`
+	Notes        string     `gorm:"not null;default:''"`
+	CreatedAt    time.Time  `gorm:"not null;autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"not null;autoUpdateTime"`
 	Tags         []mealTag  `gorm:"foreignKey:MealId"`
 	Items        []mealItem `gorm:"foreignKey:MealId"`
 }
@@ -34,13 +34,13 @@ type mealTag struct {
 }
 
 type mealItem struct {
-	Id                 uuid.UUID    `gorm:"type:uuid;primaryKey"`
-	MealId             uuid.UUID    `gorm:"type:uuid;not null"`
-	FoodId             uuid.UUID    `gorm:"type:uuid;not null"`
-	InputQuantity      float64      `gorm:"column:input_quantity;not null;default:1"`
-	InputUnit          *string      `gorm:"column:input_unit"`
-	NormalizedQuantity *float64     `gorm:"column:normalized_quantity"`
-	NormalizedUnit     *string      `gorm:"column:normalized_unit"`
+	Id                 uuid.UUID `gorm:"type:uuid;primaryKey"`
+	MealId             uuid.UUID `gorm:"type:uuid;not null"`
+	FoodId             uuid.UUID `gorm:"type:uuid;not null"`
+	InputQuantity      float64   `gorm:"column:input_quantity;not null;default:1"`
+	InputUnit          *string   `gorm:"column:input_unit"`
+	NormalizedQuantity *float64  `gorm:"column:normalized_quantity"`
+	NormalizedUnit     *string   `gorm:"column:normalized_unit"`
 	Calories           *float64
 	ProteinGrams       *float64
 	CarbsGrams         *float64

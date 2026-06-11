@@ -14,7 +14,8 @@ type weightEntry struct {
 	Date              time.Time `gorm:"type:date;not null"`
 	WeightKg          float64   `gorm:"not null"`
 	BodyFatPercentage *float64
-	Notes             string    `gorm:"not null;default:''"`
+	Notes             string `gorm:"not null;default:''"`
+	ExternalId        *string
 	CreatedAt         time.Time `gorm:"not null;autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"not null;autoUpdateTime"`
 }
@@ -27,6 +28,7 @@ func (m *weightEntry) toDomain() *domain.WeightEntry {
 		WeightKg:          m.WeightKg,
 		BodyFatPercentage: m.BodyFatPercentage,
 		Notes:             m.Notes,
+		ExternalId:        m.ExternalId,
 		CreatedAt:         m.CreatedAt,
 		UpdatedAt:         m.UpdatedAt,
 	}
@@ -40,6 +42,7 @@ func weightEntryFromDomain(e *domain.WeightEntry) *weightEntry {
 		WeightKg:          e.WeightKg,
 		BodyFatPercentage: e.BodyFatPercentage,
 		Notes:             e.Notes,
+		ExternalId:        e.ExternalId,
 		CreatedAt:         e.CreatedAt,
 		UpdatedAt:         e.UpdatedAt,
 	}

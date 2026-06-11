@@ -149,3 +149,16 @@ func (r *weightEntryRepository) Delete(id, userId uuid.UUID) error {
 	}
 	return nil
 }
+
+func (r *weightEntryRepository) ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error) {
+	var count int64
+	err := r.db.
+		Model(&weightEntry{}).
+		Where("user_id = ? AND external_id = ?", userId, externalId).
+		Count(&count).
+		Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking weight entry existence by external id", err)
+	}
+	return count > 0, nil
+}

@@ -58,6 +58,7 @@ func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*
 		TotalSets:               params.TotalSets,
 		Tags:                    params.Tags,
 		Notes:                   params.Notes,
+		ExternalId:              params.ExternalId,
 	}
 	err = s.repository.Create(exercise)
 	if err != nil {

@@ -13,6 +13,7 @@ type WeightEntry struct {
 	WeightKg          float64
 	BodyFatPercentage *float64
 	Notes             string
+	ExternalId        *string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }

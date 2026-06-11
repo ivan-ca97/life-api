@@ -41,7 +41,13 @@ func main() {
 	seedPassword := os.Getenv("SEED_ADMIN_PASSWORD")
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 
-	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId)
+	r2AccountId := os.Getenv("R2_ACCOUNT_ID")
+	r2AccessKeyId := os.Getenv("R2_ACCESS_KEY_ID")
+	r2SecretAccessKey := os.Getenv("R2_SECRET_ACCESS_KEY")
+	r2Bucket := os.Getenv("R2_BUCKET")
+	r2PublicURL := os.Getenv("R2_PUBLIC_URL")
+
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
