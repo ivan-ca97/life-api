@@ -31,31 +31,42 @@ type foodUnitsResponse struct {
 	Conversions []string `json:"conversions"`
 }
 
-type conversionResponse struct {
-	Unit           string  `json:"unit"`
+type volumeConversionResponse struct {
+	GramsPerMl float64 `json:"grams_per_ml"`
+	Note       string  `json:"note,omitempty"`
+}
+
+type unitConversionResponse struct {
 	BaseEquivalent float64 `json:"base_equivalent"`
-	Inverse        bool    `json:"inverse"`
-	Note           *string `json:"note,omitempty"`
+	Note           string  `json:"note,omitempty"`
+}
+
+type portionResponse struct {
+	Id             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	BaseEquivalent float64   `json:"base_equivalent"`
 }
 
 type foodResponse struct {
-	Id                  uuid.UUID            `json:"id"`
-	UserId              uuid.UUID            `json:"user_id"`
-	Name                string               `json:"name"`
-	DefaultCalories     *float64             `json:"default_calories,omitempty"`
-	DefaultProteinGrams *float64             `json:"default_protein_grams,omitempty"`
-	DefaultCarbsGrams   *float64             `json:"default_carbs_grams,omitempty"`
-	DefaultFatGrams     *float64             `json:"default_fat_grams,omitempty"`
-	DefaultFiberGrams   *float64             `json:"default_fiber_grams,omitempty"`
-	MeasurementType     string               `json:"measurement_type"`
-	BaseQuantity        float64              `json:"base_quantity"`
-	BaseUnit            string               `json:"base_unit"`
-	Public              bool                 `json:"public"`
-	Tags                []string             `json:"tags"`
-	Ingredients         []ingredientResponse `json:"ingredients"`
-	Conversions         []conversionResponse `json:"conversions"`
-	CreatedAt           time.Time            `json:"created_at"`
-	UpdatedAt           time.Time            `json:"updated_at"`
+	Id                  uuid.UUID                 `json:"id"`
+	UserId              uuid.UUID                 `json:"user_id"`
+	Name                string                    `json:"name"`
+	DefaultCalories     *float64                  `json:"default_calories,omitempty"`
+	DefaultProteinGrams *float64                  `json:"default_protein_grams,omitempty"`
+	DefaultCarbsGrams   *float64                  `json:"default_carbs_grams,omitempty"`
+	DefaultFatGrams     *float64                  `json:"default_fat_grams,omitempty"`
+	DefaultFiberGrams   *float64                  `json:"default_fiber_grams,omitempty"`
+	MeasurementType     string                    `json:"measurement_type"`
+	BaseQuantity        float64                   `json:"base_quantity"`
+	BaseUnit            string                    `json:"base_unit"`
+	Public              bool                      `json:"public"`
+	Tags                []string                  `json:"tags"`
+	Ingredients         []ingredientResponse      `json:"ingredients"`
+	VolumeConversion    *volumeConversionResponse `json:"volume_conversion,omitempty"`
+	UnitConversion      *unitConversionResponse   `json:"unit_conversion,omitempty"`
+	Portions            []portionResponse         `json:"portions"`
+	CreatedAt           time.Time                 `json:"created_at"`
+	UpdatedAt           time.Time                 `json:"updated_at"`
 }
 
 func foodFromDomain(f *domain.Food) *foodResponse {
@@ -67,20 +78,30 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 	for i, ing := range f.Ingredients {
 		ingredients[i] = ingredientResponse{Id: ing.Id, Name: ing.Name}
 	}
-	conversions := make([]conversionResponse, len(f.Conversions))
-	for i, c := range f.Conversions {
-		var note *string
-		if c.Note != "" {
-			n := c.Note
-			note = &n
-		}
-		conversions[i] = conversionResponse{
-			Unit:           c.Unit,
-			BaseEquivalent: c.BaseEquivalent,
-			Inverse:        c.Inverse,
-			Note:           note,
+	portions := make([]portionResponse, len(f.Portions))
+	for i, p := range f.Portions {
+		portions[i] = portionResponse{
+			Id:             p.Id,
+			Name:           p.Name,
+			BaseEquivalent: p.BaseEquivalent,
 		}
 	}
+
+	var volumeConv *volumeConversionResponse
+	if f.VolumeConversion != nil {
+		volumeConv = &volumeConversionResponse{
+			GramsPerMl: f.VolumeConversion.GramsPerMl,
+			Note:       f.VolumeConversion.Note,
+		}
+	}
+	var unitConv *unitConversionResponse
+	if f.UnitConversion != nil {
+		unitConv = &unitConversionResponse{
+			BaseEquivalent: f.UnitConversion.BaseEquivalent,
+			Note:           f.UnitConversion.Note,
+		}
+	}
+
 	return &foodResponse{
 		Id:                  f.Id,
 		UserId:              f.UserId,
@@ -96,7 +117,9 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
-		Conversions:         conversions,
+		VolumeConversion:    volumeConv,
+		UnitConversion:      unitConv,
+		Portions:            portions,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}

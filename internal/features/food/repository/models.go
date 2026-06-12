@@ -17,15 +17,19 @@ type food struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string           `gorm:"not null;default:'mass'"`
-	BaseQuantity        float64          `gorm:"not null;default:1"`
-	BaseUnit            string           `gorm:"not null;default:''"`
-	Public              bool             `gorm:"not null;default:false"`
-	CreatedAt           time.Time        `gorm:"not null;autoCreateTime"`
-	UpdatedAt           time.Time        `gorm:"not null;autoUpdateTime"`
-	Tags                []foodTag        `gorm:"foreignKey:FoodId"`
+	MeasurementType     string    `gorm:"not null;default:'mass'"`
+	BaseQuantity        float64   `gorm:"not null;default:1"`
+	BaseUnit            string    `gorm:"not null;default:''"`
+	Public              bool      `gorm:"not null;default:false"`
+	GramsPerMl          *float64
+	VolumeNote          *string
+	UnitBaseEquivalent  *float64
+	UnitNote            *string
+	CreatedAt           time.Time     `gorm:"not null;autoCreateTime"`
+	UpdatedAt           time.Time     `gorm:"not null;autoUpdateTime"`
+	Tags                []foodTag     `gorm:"foreignKey:FoodId"`
 	Ingredients         []foodIngredient `gorm:"foreignKey:FoodId"`
-	Conversions         []foodConversion `gorm:"foreignKey:FoodId"`
+	Portions            []foodPortion `gorm:"foreignKey:FoodId"`
 }
 
 type foodTag struct {
@@ -49,17 +53,15 @@ type foodIngredient struct {
 	Ingredient   ingredient `gorm:"foreignKey:IngredientId;references:Id"`
 }
 
-type foodConversion struct {
+type foodPortion struct {
 	Id             uuid.UUID `gorm:"type:uuid;primaryKey"`
 	FoodId         uuid.UUID `gorm:"type:uuid;not null"`
-	Unit           string    `gorm:"not null"`
+	Name           string    `gorm:"not null"`
 	BaseEquivalent float64   `gorm:"not null"`
-	Inverse        bool      `gorm:"not null;default:false"`
-	Note           *string
 }
 
-func (foodConversion) TableName() string {
-	return "food_conversions"
+func (foodPortion) TableName() string {
+	return "food_portions"
 }
 
 func (f *food) toDomain() *domain.Food {
@@ -74,20 +76,39 @@ func (f *food) toDomain() *domain.Food {
 			Name: fi.Ingredient.Name,
 		}
 	}
-	conversions := make([]domain.Conversion, len(f.Conversions))
-	for i, c := range f.Conversions {
-		note := ""
-		if c.Note != nil {
-			note = *c.Note
+	portions := make([]domain.Portion, len(f.Portions))
+	for i, p := range f.Portions {
+		portions[i] = domain.Portion{
+			Id:             p.Id,
+			Name:           p.Name,
+			BaseEquivalent: p.BaseEquivalent,
 		}
-		conversions[i] = domain.Conversion{
-			Id:             c.Id,
-			Unit:           c.Unit,
-			BaseEquivalent: c.BaseEquivalent,
-			Inverse:        c.Inverse,
+	}
+
+	var volumeConv *domain.VolumeConversion
+	if f.GramsPerMl != nil {
+		note := ""
+		if f.VolumeNote != nil {
+			note = *f.VolumeNote
+		}
+		volumeConv = &domain.VolumeConversion{
+			GramsPerMl: *f.GramsPerMl,
+			Note:       note,
+		}
+	}
+
+	var unitConv *domain.UnitConversion
+	if f.UnitBaseEquivalent != nil {
+		note := ""
+		if f.UnitNote != nil {
+			note = *f.UnitNote
+		}
+		unitConv = &domain.UnitConversion{
+			BaseEquivalent: *f.UnitBaseEquivalent,
 			Note:           note,
 		}
 	}
+
 	return &domain.Food{
 		Id:                  f.Id,
 		UserId:              f.UserId,
@@ -103,14 +124,16 @@ func (f *food) toDomain() *domain.Food {
 		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
-		Conversions:         conversions,
+		VolumeConversion:    volumeConv,
+		UnitConversion:      unitConv,
+		Portions:            portions,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}
 }
 
 func foodFromDomain(f *domain.Food) *food {
-	return &food{
+	model := &food{
 		Id:                  f.Id,
 		UserId:              f.UserId,
 		Name:                f.Name,
@@ -126,4 +149,17 @@ func foodFromDomain(f *domain.Food) *food {
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}
+	if f.VolumeConversion != nil {
+		model.GramsPerMl = &f.VolumeConversion.GramsPerMl
+		if f.VolumeConversion.Note != "" {
+			model.VolumeNote = &f.VolumeConversion.Note
+		}
+	}
+	if f.UnitConversion != nil {
+		model.UnitBaseEquivalent = &f.UnitConversion.BaseEquivalent
+		if f.UnitConversion.Note != "" {
+			model.UnitNote = &f.UnitConversion.Note
+		}
+	}
+	return model
 }

@@ -2,10 +2,17 @@ package ports
 
 import "github.com/google/uuid"
 
-type FoodConversion struct {
-	Unit           string
+type FoodVolumeConversion struct {
+	GramsPerMl float64
+}
+
+type FoodUnitConversion struct {
 	BaseEquivalent float64
-	Inverse        bool
+}
+
+type FoodPortion struct {
+	Name           string
+	BaseEquivalent float64
 }
 
 type FoodNutrition struct {
@@ -18,7 +25,9 @@ type FoodNutrition struct {
 	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
-	Conversions         []FoodConversion
+	VolumeConversion    *FoodVolumeConversion
+	UnitConversion      *FoodUnitConversion
+	Portions            []FoodPortion
 }
 
 type FoodLookup interface {

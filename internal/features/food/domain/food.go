@@ -6,6 +6,22 @@ import (
 	"github.com/google/uuid"
 )
 
+type VolumeConversion struct {
+	GramsPerMl float64
+	Note       string
+}
+
+type UnitConversion struct {
+	BaseEquivalent float64
+	Note           string
+}
+
+type Portion struct {
+	Id             uuid.UUID
+	Name           string
+	BaseEquivalent float64
+}
+
 type Food struct {
 	Id                  uuid.UUID
 	UserId              uuid.UUID
@@ -21,7 +37,9 @@ type Food struct {
 	Public              bool
 	Tags                []string
 	Ingredients         []Ingredient
-	Conversions         []Conversion
+	VolumeConversion    *VolumeConversion
+	UnitConversion      *UnitConversion
+	Portions            []Portion
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
@@ -29,12 +47,4 @@ type Food struct {
 type Ingredient struct {
 	Id   uuid.UUID
 	Name string
-}
-
-type Conversion struct {
-	Id             uuid.UUID
-	Unit           string
-	BaseEquivalent float64
-	Inverse        bool
-	Note           string
 }

@@ -28,7 +28,7 @@ func NewFoodRepository(db *gorm.DB) *foodRepository {
 
 func (r *foodRepository) Create(f *domain.Food) error {
 	model := foodFromDomain(f)
-	err := r.db.Omit("Tags", "Ingredients", "Conversions").Create(model).Error
+	err := r.db.Omit("Tags", "Ingredients", "Portions").Create(model).Error
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return domain.ErrFoodAlreadyExists
@@ -64,26 +64,19 @@ func (r *foodRepository) Create(f *domain.Food) error {
 			}
 		}
 	}
-	if len(f.Conversions) > 0 {
-		conversions := make([]foodConversion, len(f.Conversions))
-		for i, c := range f.Conversions {
-			var note *string
-			if c.Note != "" {
-				n := c.Note
-				note = &n
-			}
-			conversions[i] = foodConversion{
-				Id:             c.Id,
+	if len(f.Portions) > 0 {
+		portions := make([]foodPortion, len(f.Portions))
+		for i, p := range f.Portions {
+			portions[i] = foodPortion{
+				Id:             p.Id,
 				FoodId:         f.Id,
-				Unit:           c.Unit,
-				BaseEquivalent: c.BaseEquivalent,
-				Inverse:        c.Inverse,
-				Note:           note,
+				Name:           p.Name,
+				BaseEquivalent: p.BaseEquivalent,
 			}
 		}
-		err = r.db.Create(&conversions).Error
+		err = r.db.Create(&portions).Error
 		if err != nil {
-			return cerr.NewInternalError("inserting food conversions", err)
+			return cerr.NewInternalError("inserting food portions", err)
 		}
 	}
 	return nil
@@ -95,7 +88,7 @@ func (r *foodRepository) FindById(id, userId uuid.UUID) (*domain.Food, error) {
 		Preload("Tags").
 		Preload("Ingredients").
 		Preload("Ingredients.Ingredient").
-		Preload("Conversions").
+		Preload("Portions").
 		Where("id = ? AND user_id = ?", id, userId).
 		First(&model).
 		Error
@@ -124,7 +117,7 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 		return types.Page[domain.Food]{}, cerr.NewInternalError("counting foods", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Conversions").Where("user_id = ?", userId)
+	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("user_id = ?", userId)
 	if params.Query != nil {
 		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
 	}
@@ -196,6 +189,25 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	if params.Public != nil {
 		updates["public"] = *params.Public
 	}
+	if params.Conversions != nil {
+		c := params.Conversions
+		updates["grams_per_ml"] = nil
+		updates["volume_note"] = nil
+		updates["unit_base_equivalent"] = nil
+		updates["unit_note"] = nil
+		if c.VolumeConversion != nil {
+			updates["grams_per_ml"] = c.VolumeConversion.GramsPerMl
+			if c.VolumeConversion.Note != nil {
+				updates["volume_note"] = *c.VolumeConversion.Note
+			}
+		}
+		if c.UnitConversion != nil {
+			updates["unit_base_equivalent"] = c.UnitConversion.BaseEquivalent
+			if c.UnitConversion.Note != nil {
+				updates["unit_note"] = *c.UnitConversion.Note
+			}
+		}
+	}
 
 	if len(updates) > 0 {
 		err = r.db.Model(&food{}).Where("id = ? AND user_id = ?", id, userId).Updates(updates).Error
@@ -215,10 +227,7 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		if len(*params.Tags) > 0 {
 			tags := make([]foodTag, len(*params.Tags))
 			for i, t := range *params.Tags {
-				tags[i] = foodTag{
-					FoodId: id,
-					Tag:    t,
-				}
+				tags[i] = foodTag{FoodId: id, Tag: t}
 			}
 			err = r.db.Create(&tags).Error
 			if err != nil {
@@ -246,26 +255,24 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		}
 	}
 
-	if params.Conversions != nil {
-		err = r.db.Where("food_id = ?", id).Delete(&foodConversion{}).Error
+	if params.Portions != nil {
+		err = r.db.Where("food_id = ?", id).Delete(&foodPortion{}).Error
 		if err != nil {
-			return nil, cerr.NewInternalError("deleting food conversions", err)
+			return nil, cerr.NewInternalError("deleting food portions", err)
 		}
-		if len(*params.Conversions) > 0 {
-			conversions := make([]foodConversion, len(*params.Conversions))
-			for i, c := range *params.Conversions {
-				conversions[i] = foodConversion{
+		if len(*params.Portions) > 0 {
+			portions := make([]foodPortion, len(*params.Portions))
+			for i, p := range *params.Portions {
+				portions[i] = foodPortion{
 					Id:             uuid.New(),
 					FoodId:         id,
-					Unit:           c.Unit,
-					BaseEquivalent: c.BaseEquivalent,
-					Inverse:        c.Inverse,
-					Note:           c.Note,
+					Name:           p.Name,
+					BaseEquivalent: p.BaseEquivalent,
 				}
 			}
-			err = r.db.Create(&conversions).Error
+			err = r.db.Create(&portions).Error
 			if err != nil {
-				return nil, cerr.NewInternalError("inserting food conversions", err)
+				return nil, cerr.NewInternalError("inserting food portions", err)
 			}
 		}
 	}
@@ -290,7 +297,7 @@ func (r *foodRepository) FindByIdGlobal(id uuid.UUID) (*domain.Food, error) {
 		Preload("Tags").
 		Preload("Ingredients").
 		Preload("Ingredients.Ingredient").
-		Preload("Conversions").
+		Preload("Portions").
 		Where("id = ?", id).
 		First(&model).
 		Error
@@ -316,7 +323,7 @@ func (r *foodRepository) ListCommunity(params ports.CommunityListParams) (types.
 		return types.Page[domain.Food]{}, cerr.NewInternalError("counting community foods", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Conversions").Where("public = true")
+	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("public = true")
 	if params.Query != nil {
 		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
 	}

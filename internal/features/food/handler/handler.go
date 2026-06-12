@@ -53,13 +53,11 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 	if request.BaseQuantity != nil {
 		baseQuantity = *request.BaseQuantity
 	}
-	conversions := make([]ports.ConversionParam, len(request.Conversions))
-	for i, c := range request.Conversions {
-		conversions[i] = ports.ConversionParam{
-			Unit:           c.Unit,
-			BaseEquivalent: c.BaseEquivalent,
-			Inverse:        c.Inverse,
-			Note:           c.Note,
+	portions := make([]ports.PortionParam, len(request.Portions))
+	for i, p := range request.Portions {
+		portions[i] = ports.PortionParam{
+			Name:           p.Name,
+			BaseEquivalent: p.BaseEquivalent,
 		}
 	}
 	params := ports.CreateParams{
@@ -75,7 +73,8 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 		Public:              request.Public,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
-		Conversions:         conversions,
+		Conversions:         conversionsParamFromRequest(request.Conversions),
+		Portions:            portions,
 	}
 	food, err := h.service.Create(r.Context(), userId, params)
 	if err != nil {
@@ -138,18 +137,13 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	var conversions *[]ports.ConversionParam
-	if request.Conversions != nil {
-		convs := make([]ports.ConversionParam, len(*request.Conversions))
-		for i, c := range *request.Conversions {
-			convs[i] = ports.ConversionParam{
-				Unit:           c.Unit,
-				BaseEquivalent: c.BaseEquivalent,
-				Inverse:        c.Inverse,
-				Note:           c.Note,
-			}
+	var portions *[]ports.PortionParam
+	if request.Portions != nil {
+		pp := make([]ports.PortionParam, len(*request.Portions))
+		for i, p := range *request.Portions {
+			pp[i] = ports.PortionParam{Name: p.Name, BaseEquivalent: p.BaseEquivalent}
 		}
-		conversions = &convs
+		portions = &pp
 	}
 	params := ports.UpdateParams{
 		Name:                request.Name,
@@ -164,7 +158,8 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		Public:              request.Public,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
-		Conversions:         conversions,
+		Conversions:         conversionsParamFromRequest(request.Conversions),
+		Portions:            portions,
 	}
 	food, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
@@ -260,14 +255,44 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 		return nil, 0, err
 	}
 	metric := domain.MetricUnitsForDimension(domain.UnitDimension(food.MeasurementType))
-	conversions := make([]string, len(food.Conversions))
-	for i, c := range food.Conversions {
-		conversions[i] = c.Unit
+	var extraUnits []string
+	if food.VolumeConversion != nil {
+		if domain.UnitDimension(food.MeasurementType) == domain.DimensionMass {
+			extraUnits = append(extraUnits, domain.MetricUnitsForDimension(domain.DimensionVolume)...)
+		} else {
+			extraUnits = append(extraUnits, domain.MetricUnitsForDimension(domain.DimensionMass)...)
+		}
+	}
+	if food.UnitConversion != nil {
+		extraUnits = append(extraUnits, "u")
+	}
+	for _, p := range food.Portions {
+		extraUnits = append(extraUnits, p.Name)
 	}
 	return &foodUnitsResponse{
 		Metric:      metric,
-		Conversions: conversions,
+		Conversions: extraUnits,
 	}, http.StatusOK, nil
+}
+
+func conversionsParamFromRequest(r *conversionsRequest) *ports.ConversionsParam {
+	if r == nil {
+		return nil
+	}
+	p := &ports.ConversionsParam{}
+	if r.VolumeConversion != nil {
+		p.VolumeConversion = &ports.VolumeConversionParam{
+			GramsPerMl: r.VolumeConversion.GramsPerMl,
+			Note:       r.VolumeConversion.Note,
+		}
+	}
+	if r.UnitConversion != nil {
+		p.UnitConversion = &ports.UnitConversionParam{
+			BaseEquivalent: r.UnitConversion.BaseEquivalent,
+			Note:           r.UnitConversion.Note,
+		}
+	}
+	return p
 }
 
 func (h *foodHandler) IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error) {

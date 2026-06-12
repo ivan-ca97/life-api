@@ -10,29 +10,30 @@ import (
 )
 
 type foodLookupModel struct {
-	Id                  uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Id                  uuid.UUID            `gorm:"type:uuid;primaryKey"`
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string                 `gorm:"not null;default:'mass'"`
-	BaseQuantity        float64                `gorm:"not null;default:1"`
-	BaseUnit            string                 `gorm:"not null;default:''"`
-	Conversions         []foodConversionLookup `gorm:"foreignKey:FoodId"`
+	MeasurementType     string               `gorm:"not null;default:'mass'"`
+	BaseQuantity        float64              `gorm:"not null;default:1"`
+	BaseUnit            string               `gorm:"not null;default:''"`
+	GramsPerMl          *float64
+	UnitBaseEquivalent  *float64
+	Portions            []foodPortionLookup  `gorm:"foreignKey:FoodId"`
 }
 
 func (foodLookupModel) TableName() string { return "foods" }
 
-type foodConversionLookup struct {
+type foodPortionLookup struct {
 	Id             uuid.UUID `gorm:"type:uuid;primaryKey"`
 	FoodId         uuid.UUID `gorm:"type:uuid;not null"`
-	Unit           string    `gorm:"not null"`
+	Name           string    `gorm:"not null"`
 	BaseEquivalent float64   `gorm:"not null"`
-	Inverse        bool      `gorm:"not null;default:false"`
 }
 
-func (foodConversionLookup) TableName() string { return "food_conversions" }
+func (foodPortionLookup) TableName() string { return "food_portions" }
 
 type foodLookup struct {
 	db *gorm.DB
@@ -51,8 +52,8 @@ func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID
 
 	var models []foodLookupModel
 	err := r.db.
-		Preload("Conversions").
-		Where("id IN ? AND user_id = ?", ids, userId).
+		Preload("Portions").
+		Where("id IN ? AND (user_id = ? OR public = true)", ids, userId).
 		Find(&models).Error
 	if err != nil {
 		return nil, cerr.NewInternalError("looking up foods for nutrition calculation", err)
@@ -60,15 +61,7 @@ func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID
 
 	result := make(map[uuid.UUID]ports.FoodNutrition, len(models))
 	for _, m := range models {
-		conversions := make([]ports.FoodConversion, len(m.Conversions))
-		for i, c := range m.Conversions {
-			conversions[i] = ports.FoodConversion{
-				Unit:           c.Unit,
-				BaseEquivalent: c.BaseEquivalent,
-				Inverse:        c.Inverse,
-			}
-		}
-		result[m.Id] = ports.FoodNutrition{
+		nutrition := ports.FoodNutrition{
 			Id:                  m.Id,
 			DefaultCalories:     m.DefaultCalories,
 			DefaultProteinGrams: m.DefaultProteinGrams,
@@ -78,8 +71,19 @@ func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID
 			MeasurementType:     m.MeasurementType,
 			BaseQuantity:        m.BaseQuantity,
 			BaseUnit:            m.BaseUnit,
-			Conversions:         conversions,
 		}
+		if m.GramsPerMl != nil {
+			nutrition.VolumeConversion = &ports.FoodVolumeConversion{GramsPerMl: *m.GramsPerMl}
+		}
+		if m.UnitBaseEquivalent != nil {
+			nutrition.UnitConversion = &ports.FoodUnitConversion{BaseEquivalent: *m.UnitBaseEquivalent}
+		}
+		portions := make([]ports.FoodPortion, len(m.Portions))
+		for i, p := range m.Portions {
+			portions[i] = ports.FoodPortion{Name: p.Name, BaseEquivalent: p.BaseEquivalent}
+		}
+		nutrition.Portions = portions
+		result[m.Id] = nutrition
 	}
 	return result, nil
 }

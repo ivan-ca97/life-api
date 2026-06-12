@@ -1,10 +1,23 @@
 package handler
 
-type conversionRequest struct {
-	Unit           string  `json:"unit"`
+type volumeConversionRequest struct {
+	GramsPerMl float64 `json:"grams_per_ml"`
+	Note       *string `json:"note,omitempty"`
+}
+
+type unitConversionRequest struct {
 	BaseEquivalent float64 `json:"base_equivalent"`
-	Inverse        bool    `json:"inverse"`
 	Note           *string `json:"note,omitempty"`
+}
+
+type conversionsRequest struct {
+	VolumeConversion *volumeConversionRequest `json:"volume_conversion,omitempty"`
+	UnitConversion   *unitConversionRequest   `json:"unit_conversion,omitempty"`
+}
+
+type portionRequest struct {
+	Name           string  `json:"name"`
+	BaseEquivalent float64 `json:"base_equivalent"`
 }
 
 type createFoodRequest struct {
@@ -20,7 +33,8 @@ type createFoodRequest struct {
 	Public              bool                `json:"public"`
 	Tags                []string            `json:"tags"`
 	Ingredients         []string            `json:"ingredients"`
-	Conversions         []conversionRequest `json:"conversions"`
+	Conversions         *conversionsRequest `json:"conversions,omitempty"`
+	Portions            []portionRequest    `json:"portions"`
 }
 
 type updateFoodRequest struct {
@@ -36,5 +50,6 @@ type updateFoodRequest struct {
 	Public              *bool                `json:"public,omitempty"`
 	Tags                *[]string            `json:"tags,omitempty"`
 	Ingredients         *[]string            `json:"ingredients,omitempty"`
-	Conversions         *[]conversionRequest `json:"conversions,omitempty"`
+	Conversions         *conversionsRequest  `json:"conversions,omitempty"`
+	Portions            *[]portionRequest    `json:"portions,omitempty"`
 }

@@ -286,13 +286,29 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty 
 		return qty, standardUnit, nil
 	}
 
-	// Conversion lookup by unit (handles custom units and cross-dimension metric units)
-	for _, conv := range food.Conversions {
-		if item.Unit == conv.Unit {
-			if conv.Inverse {
-				return item.Quantity / conv.BaseEquivalent, standardUnit, nil
+	// Cross-dimension via density (mass food + volume unit, or volume food + mass unit)
+	if food.VolumeConversion != nil {
+		if unitDim, ok := foodDomain.GetUnitDimension(item.Unit); ok {
+			if dim == foodDomain.DimensionMass && unitDim == foodDomain.DimensionVolume {
+				mlQty, _, _ := foodDomain.ConvertToStandard(item.Quantity, item.Unit)
+				return mlQty * food.VolumeConversion.GramsPerMl, standardUnit, nil
 			}
-			return item.Quantity * conv.BaseEquivalent, standardUnit, nil
+			if dim == foodDomain.DimensionVolume && unitDim == foodDomain.DimensionMass {
+				gQty, _, _ := foodDomain.ConvertToStandard(item.Quantity, item.Unit)
+				return gQty / food.VolumeConversion.GramsPerMl, standardUnit, nil
+			}
+		}
+	}
+
+	// "u" via unit conversion
+	if item.Unit == "u" && food.UnitConversion != nil {
+		return item.Quantity * food.UnitConversion.BaseEquivalent, standardUnit, nil
+	}
+
+	// Named portion
+	for _, portion := range food.Portions {
+		if item.Unit == portion.Name {
+			return item.Quantity * portion.BaseEquivalent, standardUnit, nil
 		}
 	}
 

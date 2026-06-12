@@ -10,11 +10,24 @@ import (
 	"github.com/ivan-ca97/life/internal/features/food/domain"
 )
 
-type ConversionParam struct {
-	Unit           string
+type VolumeConversionParam struct {
+	GramsPerMl float64
+	Note       *string
+}
+
+type UnitConversionParam struct {
 	BaseEquivalent float64
-	Inverse        bool
 	Note           *string
+}
+
+type ConversionsParam struct {
+	VolumeConversion *VolumeConversionParam
+	UnitConversion   *UnitConversionParam
+}
+
+type PortionParam struct {
+	Name           string
+	BaseEquivalent float64
 }
 
 type CreateParams struct {
@@ -30,7 +43,8 @@ type CreateParams struct {
 	Public              bool
 	Tags                []string
 	Ingredients         []string
-	Conversions         []ConversionParam
+	Conversions         *ConversionsParam
+	Portions            []PortionParam
 }
 
 type UpdateParams struct {
@@ -46,7 +60,8 @@ type UpdateParams struct {
 	Public              *bool
 	Tags                *[]string
 	Ingredients         *[]string
-	Conversions         *[]ConversionParam
+	Conversions         *ConversionsParam
+	Portions            *[]PortionParam
 }
 
 type ListParams struct {
