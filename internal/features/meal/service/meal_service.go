@@ -69,7 +69,7 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		Date:         params.Date,
 		Type:         params.Type,
 		Name:         params.Name,
-		PhotoUrl:     params.PhotoUrl,
+		Photos:       photosFromParams(params.Photos),
 		EatenAt:      params.EatenAt,
 		Calories:     coalesce(params.Calories, resolved.Totals.Calories),
 		ProteinGrams: coalesce(params.ProteinGrams, resolved.Totals.ProteinGrams),
@@ -353,6 +353,47 @@ func addPtr(acc *float64, val *float64) *float64 {
 	}
 	sum := *acc + *val
 	return &sum
+}
+
+func photosFromParams(params []ports.PhotoParam) []domain.MealPhoto {
+	photos := make([]domain.MealPhoto, len(params))
+	for i, p := range params {
+		photos[i] = domain.MealPhoto{
+			Id:         uuid.New(),
+			MealItemId: p.MealItemId,
+			Url:        p.Url,
+			IsPrimary:  p.IsPrimary,
+		}
+	}
+	enforcePrimary(photos)
+	return photos
+}
+
+// enforcePrimary ensures each group (meal-level and per item) has exactly one
+// primary photo. If a group has photos but none marked primary, the first is promoted.
+func enforcePrimary(photos []domain.MealPhoto) {
+	type groupKey struct{ itemId uuid.UUID }
+	hasPrimary := map[groupKey]bool{}
+	firstIdx := map[groupKey]int{}
+
+	for i, p := range photos {
+		var key groupKey
+		if p.MealItemId != nil {
+			key = groupKey{itemId: *p.MealItemId}
+		}
+		if p.IsPrimary {
+			hasPrimary[key] = true
+		}
+		if _, seen := firstIdx[key]; !seen {
+			firstIdx[key] = i
+		}
+	}
+
+	for key, idx := range firstIdx {
+		if !hasPrimary[key] {
+			photos[idx].IsPrimary = true
+		}
+	}
 }
 
 func coalesce(explicit *float64, calculated *float64) *float64 {

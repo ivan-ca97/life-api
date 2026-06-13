@@ -32,6 +32,7 @@ type PortionParam struct {
 
 type CreateParams struct {
 	Name                string
+	PhotoUrl            string
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64
@@ -49,6 +50,7 @@ type CreateParams struct {
 
 type UpdateParams struct {
 	Name                *string
+	PhotoUrl            *string
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64

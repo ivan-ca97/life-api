@@ -26,6 +26,7 @@ type Food struct {
 	Id                  uuid.UUID
 	UserId              uuid.UUID
 	Name                string
+	PhotoUrl            string
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64

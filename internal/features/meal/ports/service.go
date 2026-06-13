@@ -18,11 +18,17 @@ type ItemParam struct {
 	MeasurementMethod domain.MeasurementMethod
 }
 
+type PhotoParam struct {
+	Url        string
+	IsPrimary  bool
+	MealItemId *uuid.UUID
+}
+
 type CreateParams struct {
 	Date         time.Time
 	Type         string
 	Name         string
-	PhotoUrl     string
+	Photos       []PhotoParam
 	EatenAt      *time.Time
 	Calories     *float64
 	ProteinGrams *float64
@@ -38,7 +44,7 @@ type UpdateParams struct {
 	Date          *time.Time
 	Type          *string
 	Name          *string
-	PhotoUrl      *string
+	Photos        *[]PhotoParam
 	EatenAt       *time.Time
 	Calories      *float64
 	ProteinGrams  *float64

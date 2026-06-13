@@ -12,6 +12,7 @@ type food struct {
 	Id                  uuid.UUID `gorm:"type:uuid;primaryKey"`
 	UserId              uuid.UUID `gorm:"type:uuid;not null"`
 	Name                string    `gorm:"not null"`
+	PhotoUrl            string    `gorm:"not null;default:''"`
 	DefaultCalories     *float64
 	DefaultProteinGrams *float64
 	DefaultCarbsGrams   *float64
@@ -113,6 +114,7 @@ func (f *food) toDomain() *domain.Food {
 		Id:                  f.Id,
 		UserId:              f.UserId,
 		Name:                f.Name,
+		PhotoUrl:            f.PhotoUrl,
 		DefaultCalories:     f.DefaultCalories,
 		DefaultProteinGrams: f.DefaultProteinGrams,
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,
@@ -137,6 +139,7 @@ func foodFromDomain(f *domain.Food) *food {
 		Id:                  f.Id,
 		UserId:              f.UserId,
 		Name:                f.Name,
+		PhotoUrl:            f.PhotoUrl,
 		DefaultCalories:     f.DefaultCalories,
 		DefaultProteinGrams: f.DefaultProteinGrams,
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,

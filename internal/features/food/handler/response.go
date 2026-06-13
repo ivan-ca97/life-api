@@ -51,6 +51,7 @@ type foodResponse struct {
 	Id                  uuid.UUID                 `json:"id"`
 	UserId              uuid.UUID                 `json:"user_id"`
 	Name                string                    `json:"name"`
+	PhotoUrl            string                    `json:"photo_url,omitempty"`
 	DefaultCalories     *float64                  `json:"default_calories,omitempty"`
 	DefaultProteinGrams *float64                  `json:"default_protein_grams,omitempty"`
 	DefaultCarbsGrams   *float64                  `json:"default_carbs_grams,omitempty"`
@@ -106,6 +107,7 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		Id:                  f.Id,
 		UserId:              f.UserId,
 		Name:                f.Name,
+		PhotoUrl:            f.PhotoUrl,
 		DefaultCalories:     f.DefaultCalories,
 		DefaultProteinGrams: f.DefaultProteinGrams,
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,

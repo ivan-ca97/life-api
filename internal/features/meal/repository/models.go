@@ -9,23 +9,23 @@ import (
 )
 
 type meal struct {
-	Id           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	UserId       uuid.UUID `gorm:"type:uuid;not null"`
-	Date         time.Time `gorm:"type:date;not null"`
-	Type         string    `gorm:"not null"`
-	Name         string    `gorm:"default:''"`
-	PhotoUrl     string    `gorm:"not null;default:''"`
+	Id           uuid.UUID   `gorm:"type:uuid;primaryKey"`
+	UserId       uuid.UUID   `gorm:"type:uuid;not null"`
+	Date         time.Time   `gorm:"type:date;not null"`
+	Type         string      `gorm:"not null"`
+	Name         string      `gorm:"default:''"`
 	EatenAt      *time.Time
 	Calories     *float64
 	ProteinGrams *float64
 	CarbsGrams   *float64
 	FatGrams     *float64
 	FiberGrams   *float64
-	Notes        string     `gorm:"not null;default:''"`
-	CreatedAt    time.Time  `gorm:"not null;autoCreateTime"`
-	UpdatedAt    time.Time  `gorm:"not null;autoUpdateTime"`
-	Tags         []mealTag  `gorm:"foreignKey:MealId"`
-	Items        []mealItem `gorm:"foreignKey:MealId"`
+	Notes        string      `gorm:"not null;default:''"`
+	CreatedAt    time.Time   `gorm:"not null;autoCreateTime"`
+	UpdatedAt    time.Time   `gorm:"not null;autoUpdateTime"`
+	Tags         []mealTag   `gorm:"foreignKey:MealId"`
+	Items        []mealItem  `gorm:"foreignKey:MealId"`
+	Photos       []mealPhoto `gorm:"foreignKey:MealId"`
 }
 
 type mealTag struct {
@@ -58,6 +58,19 @@ type mealItemFood struct {
 
 func (mealItemFood) TableName() string {
 	return "foods"
+}
+
+type mealPhoto struct {
+	Id         uuid.UUID  `gorm:"type:uuid;primaryKey"`
+	MealId     uuid.UUID  `gorm:"type:uuid;not null"`
+	MealItemId *uuid.UUID `gorm:"type:uuid"`
+	Url        string     `gorm:"not null"`
+	IsPrimary  bool       `gorm:"not null;default:false"`
+	CreatedAt  time.Time  `gorm:"not null;autoCreateTime"`
+}
+
+func (mealPhoto) TableName() string {
+	return "meal_photos"
 }
 
 func (m *meal) toDomain() *domain.Meal {
@@ -101,13 +114,22 @@ func (m *meal) toDomain() *domain.Meal {
 			MeasurementMethod:  method,
 		}
 	}
+	photos := make([]domain.MealPhoto, len(m.Photos))
+	for i, p := range m.Photos {
+		photos[i] = domain.MealPhoto{
+			Id:         p.Id,
+			MealItemId: p.MealItemId,
+			Url:        p.Url,
+			IsPrimary:  p.IsPrimary,
+		}
+	}
 	return &domain.Meal{
 		Id:           m.Id,
 		UserId:       m.UserId,
 		Date:         m.Date,
 		Type:         m.Type,
 		Name:         m.Name,
-		PhotoUrl:     m.PhotoUrl,
+		Photos:       photos,
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,
 		ProteinGrams: m.ProteinGrams,
@@ -129,7 +151,6 @@ func mealFromDomain(m *domain.Meal) *meal {
 		Date:         m.Date,
 		Type:         m.Type,
 		Name:         m.Name,
-		PhotoUrl:     m.PhotoUrl,
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,
 		ProteinGrams: m.ProteinGrams,

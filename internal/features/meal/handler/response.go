@@ -10,6 +10,13 @@ import (
 	"github.com/ivan-ca97/life/internal/features/meal/domain"
 )
 
+type mealPhotoResponse struct {
+	Id         uuid.UUID  `json:"id"`
+	Url        string     `json:"url"`
+	IsPrimary  bool       `json:"is_primary"`
+	MealItemId *uuid.UUID `json:"meal_item_id,omitempty"`
+}
+
 type mealItemResponse struct {
 	Id                 uuid.UUID `json:"id"`
 	FoodId             uuid.UUID `json:"food_id"`
@@ -28,28 +35,37 @@ type mealItemResponse struct {
 }
 
 type mealResponse struct {
-	Id           uuid.UUID          `json:"id"`
-	Date         string             `json:"date"`
-	Type         string             `json:"type"`
-	Name         string             `json:"name"`
-	PhotoUrl     string             `json:"photo_url"`
-	EatenAt      *time.Time         `json:"eaten_at,omitempty"`
-	Calories     *float64           `json:"calories,omitempty"`
-	ProteinGrams *float64           `json:"protein_grams,omitempty"`
-	CarbsGrams   *float64           `json:"carbs_grams,omitempty"`
-	FatGrams     *float64           `json:"fat_grams,omitempty"`
-	FiberGrams   *float64           `json:"fiber_grams,omitempty"`
-	Tags         []string           `json:"tags"`
-	Items        []mealItemResponse `json:"items"`
-	Notes        string             `json:"notes"`
-	CreatedAt    time.Time          `json:"created_at"`
-	UpdatedAt    time.Time          `json:"updated_at"`
+	Id           uuid.UUID           `json:"id"`
+	Date         string              `json:"date"`
+	Type         string              `json:"type"`
+	Name         string              `json:"name"`
+	Photos       []mealPhotoResponse `json:"photos"`
+	EatenAt      *time.Time          `json:"eaten_at,omitempty"`
+	Calories     *float64            `json:"calories,omitempty"`
+	ProteinGrams *float64            `json:"protein_grams,omitempty"`
+	CarbsGrams   *float64            `json:"carbs_grams,omitempty"`
+	FatGrams     *float64            `json:"fat_grams,omitempty"`
+	FiberGrams   *float64            `json:"fiber_grams,omitempty"`
+	Tags         []string            `json:"tags"`
+	Items        []mealItemResponse  `json:"items"`
+	Notes        string              `json:"notes"`
+	CreatedAt    time.Time           `json:"created_at"`
+	UpdatedAt    time.Time           `json:"updated_at"`
 }
 
 func mealFromDomain(m *domain.Meal) *mealResponse {
 	tags := m.Tags
 	if tags == nil {
 		tags = []string{}
+	}
+	photos := make([]mealPhotoResponse, len(m.Photos))
+	for i, p := range m.Photos {
+		photos[i] = mealPhotoResponse{
+			Id:         p.Id,
+			Url:        p.Url,
+			IsPrimary:  p.IsPrimary,
+			MealItemId: p.MealItemId,
+		}
 	}
 	items := make([]mealItemResponse, len(m.Items))
 	for i, item := range m.Items {
@@ -75,7 +91,7 @@ func mealFromDomain(m *domain.Meal) *mealResponse {
 		Date:         m.Date.Format("2006-01-02"),
 		Type:         m.Type,
 		Name:         m.Name,
-		PhotoUrl:     m.PhotoUrl,
+		Photos:       photos,
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,
 		ProteinGrams: m.ProteinGrams,

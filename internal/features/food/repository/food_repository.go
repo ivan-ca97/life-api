@@ -162,6 +162,9 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	if params.Name != nil {
 		updates["name"] = *params.Name
 	}
+	if params.PhotoUrl != nil {
+		updates["photo_url"] = *params.PhotoUrl
+	}
 	if params.DefaultCalories != nil {
 		updates["default_calories"] = *params.DefaultCalories
 	}

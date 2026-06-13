@@ -63,11 +63,19 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 			MeasurementMethod: method,
 		}
 	}
+	photos := make([]ports.PhotoParam, len(request.Photos))
+	for i, p := range request.Photos {
+		photos[i] = ports.PhotoParam{
+			Url:        p.Url,
+			IsPrimary:  p.IsPrimary,
+			MealItemId: p.MealItemId,
+		}
+	}
 	params := ports.CreateParams{
 		Date:         date,
 		Type:         request.Type,
 		Name:         request.Name,
-		PhotoUrl:     request.PhotoUrl,
+		Photos:       photos,
 		EatenAt:      request.EatenAt,
 		Calories:     request.Calories,
 		ProteinGrams: request.ProteinGrams,
@@ -137,7 +145,6 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 	params := ports.UpdateParams{
 		Type:         request.Type,
 		Name:         request.Name,
-		PhotoUrl:     request.PhotoUrl,
 		EatenAt:      request.EatenAt,
 		Calories:     request.Calories,
 		ProteinGrams: request.ProteinGrams,
@@ -146,6 +153,17 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 		FiberGrams:   request.FiberGrams,
 		Tags:         request.Tags,
 		Notes:        request.Notes,
+	}
+	if request.Photos != nil {
+		pp := make([]ports.PhotoParam, len(*request.Photos))
+		for i, p := range *request.Photos {
+			pp[i] = ports.PhotoParam{
+				Url:        p.Url,
+				IsPrimary:  p.IsPrimary,
+				MealItemId: p.MealItemId,
+			}
+		}
+		params.Photos = &pp
 	}
 	if request.Items != nil {
 		items := make([]ports.ItemParam, len(*request.Items))

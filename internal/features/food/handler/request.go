@@ -22,6 +22,7 @@ type portionRequest struct {
 
 type createFoodRequest struct {
 	Name                string              `json:"name"`
+	PhotoUrl            string              `json:"photo_url,omitempty"`
 	DefaultCalories     *float64            `json:"default_calories,omitempty"`
 	DefaultProteinGrams *float64            `json:"default_protein_grams,omitempty"`
 	DefaultCarbsGrams   *float64            `json:"default_carbs_grams,omitempty"`
@@ -39,6 +40,7 @@ type createFoodRequest struct {
 
 type updateFoodRequest struct {
 	Name                *string              `json:"name,omitempty"`
+	PhotoUrl            *string              `json:"photo_url,omitempty"`
 	DefaultCalories     *float64             `json:"default_calories,omitempty"`
 	DefaultProteinGrams *float64             `json:"default_protein_grams,omitempty"`
 	DefaultCarbsGrams   *float64             `json:"default_carbs_grams,omitempty"`

@@ -62,6 +62,7 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 	}
 	params := ports.CreateParams{
 		Name:                request.Name,
+		PhotoUrl:            request.PhotoUrl,
 		DefaultCalories:     request.DefaultCalories,
 		DefaultProteinGrams: request.DefaultProteinGrams,
 		DefaultCarbsGrams:   request.DefaultCarbsGrams,
@@ -147,6 +148,7 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 	}
 	params := ports.UpdateParams{
 		Name:                request.Name,
+		PhotoUrl:            request.PhotoUrl,
 		DefaultCalories:     request.DefaultCalories,
 		DefaultProteinGrams: request.DefaultProteinGrams,
 		DefaultCarbsGrams:   request.DefaultCarbsGrams,

@@ -9,21 +9,32 @@ import (
 type MeasurementMethod string
 
 const (
-	MeasurementMethodPhotoEstimate MeasurementMethod = "photo_estimate"
-	MeasurementMethodConfirmed     MeasurementMethod = "confirmed"
-	MeasurementMethodWeighedCooked MeasurementMethod = "weighed_cooked"
-	MeasurementMethodWeighedRaw    MeasurementMethod = "weighed_raw"
+	MeasurementMethodWeighedRaw      MeasurementMethod = "weighed_raw"
+	MeasurementMethodWeighedCooked   MeasurementMethod = "weighed_cooked"
+	MeasurementMethodLabel           MeasurementMethod = "label"
+	MeasurementMethodStandardPortion MeasurementMethod = "standard_portion"
+	MeasurementMethodPhotoEstimate   MeasurementMethod = "photo_estimate"
+	MeasurementMethodVisualEstimate  MeasurementMethod = "visual_estimate"
 )
 
 var validMeasurementMethods = map[MeasurementMethod]bool{
-	MeasurementMethodPhotoEstimate: true,
-	MeasurementMethodConfirmed:     true,
-	MeasurementMethodWeighedCooked: true,
-	MeasurementMethodWeighedRaw:    true,
+	MeasurementMethodWeighedRaw:      true,
+	MeasurementMethodWeighedCooked:   true,
+	MeasurementMethodLabel:           true,
+	MeasurementMethodStandardPortion: true,
+	MeasurementMethodPhotoEstimate:   true,
+	MeasurementMethodVisualEstimate:  true,
 }
 
 func IsValidMeasurementMethod(m MeasurementMethod) bool {
 	return m == "" || validMeasurementMethods[m]
+}
+
+type MealPhoto struct {
+	Id         uuid.UUID
+	MealItemId *uuid.UUID
+	Url        string
+	IsPrimary  bool
 }
 
 type MealItem struct {
@@ -50,7 +61,7 @@ type Meal struct {
 	Date         time.Time
 	Type         string
 	Name         string
-	PhotoUrl     string
+	Photos       []MealPhoto
 	EatenAt      *time.Time
 	Calories     *float64
 	ProteinGrams *float64

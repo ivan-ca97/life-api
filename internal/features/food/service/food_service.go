@@ -58,6 +58,7 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		Id:                  uuid.New(),
 		UserId:              userId,
 		Name:                params.Name,
+		PhotoUrl:            params.PhotoUrl,
 		DefaultCalories:     params.DefaultCalories,
 		DefaultProteinGrams: params.DefaultProteinGrams,
 		DefaultCarbsGrams:   params.DefaultCarbsGrams,

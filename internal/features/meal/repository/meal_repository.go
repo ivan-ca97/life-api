@@ -27,9 +27,25 @@ func NewMealRepository(db *gorm.DB) *mealRepository {
 
 func (r *mealRepository) Create(m *domain.Meal) error {
 	model := mealFromDomain(m)
-	err := r.db.Omit("Tags", "Items").Create(model).Error
+	err := r.db.Omit("Tags", "Items", "Photos").Create(model).Error
 	if err != nil {
 		return cerr.NewInternalError("inserting meal", err)
+	}
+	if len(m.Photos) > 0 {
+		photos := make([]mealPhoto, len(m.Photos))
+		for i, p := range m.Photos {
+			photos[i] = mealPhoto{
+				Id:         p.Id,
+				MealId:     m.Id,
+				MealItemId: p.MealItemId,
+				Url:        p.Url,
+				IsPrimary:  p.IsPrimary,
+			}
+		}
+		err = r.db.Create(&photos).Error
+		if err != nil {
+			return cerr.NewInternalError("inserting meal photos", err)
+		}
 	}
 	if len(m.Tags) > 0 {
 		tags := make([]mealTag, len(m.Tags))
@@ -96,6 +112,7 @@ func (r *mealRepository) FindById(id, userId uuid.UUID) (*domain.Meal, error) {
 		Preload("Tags").
 		Preload("Items").
 		Preload("Items.Food").
+		Preload("Photos").
 		Where("id = ? AND user_id = ?", id, userId).
 		First(&model).
 		Error
@@ -121,7 +138,7 @@ func (r *mealRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 		return types.Page[domain.Meal]{}, cerr.NewInternalError("counting meals", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Items").Preload("Items.Food").Where("user_id = ?", userId)
+	findQuery := r.db.Preload("Tags").Preload("Items").Preload("Items.Food").Preload("Photos").Where("user_id = ?", userId)
 	if params.Date != nil {
 		findQuery = findQuery.Where("date = ?", *params.Date)
 	}
@@ -169,9 +186,6 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	if params.Name != nil {
 		updates["name"] = *params.Name
 	}
-	if params.PhotoUrl != nil {
-		updates["photo_url"] = *params.PhotoUrl
-	}
 	if params.EatenAt != nil {
 		updates["eaten_at"] = *params.EatenAt
 	}
@@ -217,6 +231,29 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 			err = r.db.Create(&tags).Error
 			if err != nil {
 				return nil, cerr.NewInternalError("inserting meal tags", err)
+			}
+		}
+	}
+
+	if params.Photos != nil {
+		err = r.db.Where("meal_id = ?", id).Delete(&mealPhoto{}).Error
+		if err != nil {
+			return nil, cerr.NewInternalError("deleting meal photos", err)
+		}
+		if len(*params.Photos) > 0 {
+			photos := make([]mealPhoto, len(*params.Photos))
+			for i, p := range *params.Photos {
+				photos[i] = mealPhoto{
+					Id:         uuid.New(),
+					MealId:     id,
+					MealItemId: p.MealItemId,
+					Url:        p.Url,
+					IsPrimary:  p.IsPrimary,
+				}
+			}
+			err = r.db.Create(&photos).Error
+			if err != nil {
+				return nil, cerr.NewInternalError("inserting meal photos", err)
 			}
 		}
 	}
