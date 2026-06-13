@@ -6,6 +6,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type MeasurementMethod string
+
+const (
+	MeasurementMethodPhotoEstimate MeasurementMethod = "photo_estimate"
+	MeasurementMethodConfirmed     MeasurementMethod = "confirmed"
+	MeasurementMethodWeighedCooked MeasurementMethod = "weighed_cooked"
+	MeasurementMethodWeighedRaw    MeasurementMethod = "weighed_raw"
+)
+
+var validMeasurementMethods = map[MeasurementMethod]bool{
+	MeasurementMethodPhotoEstimate: true,
+	MeasurementMethodConfirmed:     true,
+	MeasurementMethodWeighedCooked: true,
+	MeasurementMethodWeighedRaw:    true,
+}
+
+func IsValidMeasurementMethod(m MeasurementMethod) bool {
+	return m == "" || validMeasurementMethods[m]
+}
+
 type MealItem struct {
 	Id                 uuid.UUID
 	MealId             uuid.UUID
@@ -21,6 +41,7 @@ type MealItem struct {
 	FatGrams           *float64
 	FiberGrams         *float64
 	Notes              string
+	MeasurementMethod  MeasurementMethod
 }
 
 type Meal struct {

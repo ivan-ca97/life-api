@@ -7,10 +7,11 @@ import (
 )
 
 type mealItemRequest struct {
-	FoodId   uuid.UUID `json:"food_id"`
-	Quantity float64   `json:"quantity"`
-	Unit     string    `json:"unit"`
-	Notes    string    `json:"notes"`
+	FoodId            uuid.UUID `json:"food_id"`
+	Quantity          float64   `json:"quantity"`
+	Unit              string    `json:"unit"`
+	Notes             string    `json:"notes"`
+	MeasurementMethod string    `json:"measurement_method,omitempty"`
 }
 
 type createMealRequest struct {

@@ -24,6 +24,7 @@ type mealItemResponse struct {
 	FatGrams           *float64  `json:"fat_grams,omitempty"`
 	FiberGrams         *float64  `json:"fiber_grams,omitempty"`
 	Notes              string    `json:"notes"`
+	MeasurementMethod  string    `json:"measurement_method,omitempty"`
 }
 
 type mealResponse struct {
@@ -66,6 +67,7 @@ func mealFromDomain(m *domain.Meal) *mealResponse {
 			FatGrams:           item.FatGrams,
 			FiberGrams:         item.FiberGrams,
 			Notes:              item.Notes,
+			MeasurementMethod:  string(item.MeasurementMethod),
 		}
 	}
 	return &mealResponse{

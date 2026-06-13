@@ -11,10 +11,11 @@ import (
 )
 
 type ItemParam struct {
-	FoodId   uuid.UUID
-	Quantity float64
-	Unit     string
-	Notes    string
+	FoodId            uuid.UUID
+	Quantity          float64
+	Unit              string
+	Notes             string
+	MeasurementMethod domain.MeasurementMethod
 }
 
 type CreateParams struct {

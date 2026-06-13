@@ -47,6 +47,7 @@ type mealItem struct {
 	FatGrams           *float64
 	FiberGrams         *float64
 	Notes              string       `gorm:"not null;default:''"`
+	MeasurementMethod  *string      `gorm:"column:measurement_method"`
 	Food               mealItemFood `gorm:"foreignKey:FoodId;references:Id"`
 }
 
@@ -78,6 +79,10 @@ func (m *meal) toDomain() *domain.Meal {
 		if item.NormalizedUnit != nil {
 			normalizedUnit = *item.NormalizedUnit
 		}
+		var method domain.MeasurementMethod
+		if item.MeasurementMethod != nil {
+			method = domain.MeasurementMethod(*item.MeasurementMethod)
+		}
 		items[i] = domain.MealItem{
 			Id:                 item.Id,
 			MealId:             item.MealId,
@@ -93,6 +98,7 @@ func (m *meal) toDomain() *domain.Meal {
 			FatGrams:           item.FatGrams,
 			FiberGrams:         item.FiberGrams,
 			Notes:              item.Notes,
+			MeasurementMethod:  method,
 		}
 	}
 	return &domain.Meal{

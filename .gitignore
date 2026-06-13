@@ -1,4 +1,8 @@
 .claude
 
+companion-app
+health_connect_import/
+migrations/
+
 .env
 env/dev.yml

@@ -8,8 +8,8 @@ import (
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/units"
 
-	foodDomain "github.com/ivan-ca97/life/internal/features/food/domain"
 	"github.com/ivan-ca97/life/internal/features/meal/domain"
 	"github.com/ivan-ca97/life/internal/features/meal/ports"
 )
@@ -235,7 +235,7 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 			return nil, err
 		}
 
-		baseInStandard, _, _ := foodDomain.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
+		baseInStandard, _, _ := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
 		ratio := normalizedQty / baseInStandard
 
 		itemCalories := scale(food.DefaultCalories, ratio)
@@ -262,18 +262,19 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 			FatGrams:           itemFat,
 			FiberGrams:         itemFiber,
 			Notes:              item.Notes,
+			MeasurementMethod:  item.MeasurementMethod,
 		}
 	}
 	return result, nil
 }
 
 func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty float64, normalizedUnit string, err error) {
-	dim := foodDomain.UnitDimension(food.MeasurementType)
-	standardUnit := foodDomain.StandardUnit[dim]
+	dim := units.Dimension(food.MeasurementType)
+	standardUnit := units.StandardUnit[dim]
 
 	// "porcion" multiplies the base serving and normalizes to the standard metric unit
 	if item.Unit == unitPorcion {
-		baseStd, _, err := foodDomain.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
+		baseStd, _, err := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
 		if err != nil {
 			return 0, "", cerr.NewBadRequestError(fmt.Sprintf("food %s has invalid base unit '%s'", food.Id, food.BaseUnit))
 		}
@@ -281,20 +282,20 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty 
 	}
 
 	// Metric unit of the same dimension: automatic conversion
-	if unitDim, ok := foodDomain.GetUnitDimension(item.Unit); ok && unitDim == dim {
-		qty, _, _ := foodDomain.ConvertToStandard(item.Quantity, item.Unit)
+	if unitDim, ok := units.GetDimension(item.Unit); ok && unitDim == dim {
+		qty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
 		return qty, standardUnit, nil
 	}
 
 	// Cross-dimension via density (mass food + volume unit, or volume food + mass unit)
 	if food.VolumeConversion != nil {
-		if unitDim, ok := foodDomain.GetUnitDimension(item.Unit); ok {
-			if dim == foodDomain.DimensionMass && unitDim == foodDomain.DimensionVolume {
-				mlQty, _, _ := foodDomain.ConvertToStandard(item.Quantity, item.Unit)
+		if unitDim, ok := units.GetDimension(item.Unit); ok {
+			if dim == units.DimensionMass && unitDim == units.DimensionVolume {
+				mlQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
 				return mlQty * food.VolumeConversion.GramsPerMl, standardUnit, nil
 			}
-			if dim == foodDomain.DimensionVolume && unitDim == foodDomain.DimensionMass {
-				gQty, _, _ := foodDomain.ConvertToStandard(item.Quantity, item.Unit)
+			if dim == units.DimensionVolume && unitDim == units.DimensionMass {
+				gQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
 				return gQty / food.VolumeConversion.GramsPerMl, standardUnit, nil
 			}
 		}

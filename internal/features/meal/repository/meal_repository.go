@@ -60,6 +60,11 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 				nq := item.NormalizedQuantity
 				normalizedQty = &nq
 			}
+			var method *string
+			if item.MeasurementMethod != "" {
+				m := string(item.MeasurementMethod)
+				method = &m
+			}
 			items[i] = mealItem{
 				Id:                 uuid.New(),
 				MealId:             m.Id,
@@ -74,6 +79,7 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 				FatGrams:           item.FatGrams,
 				FiberGrams:         item.FiberGrams,
 				Notes:              item.Notes,
+				MeasurementMethod:  method,
 			}
 		}
 		err = r.db.Create(&items).Error
@@ -236,6 +242,11 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 					nq := item.NormalizedQuantity
 					normalizedQty = &nq
 				}
+				var method *string
+				if item.MeasurementMethod != "" {
+					mv := string(item.MeasurementMethod)
+					method = &mv
+				}
 				items[i] = mealItem{
 					Id:                 uuid.New(),
 					MealId:             id,
@@ -250,6 +261,7 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 					FatGrams:           item.FatGrams,
 					FiberGrams:         item.FiberGrams,
 					Notes:              item.Notes,
+					MeasurementMethod:  method,
 				}
 			}
 			err = r.db.Create(&items).Error

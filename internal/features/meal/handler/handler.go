@@ -7,6 +7,7 @@ import (
 	"github.com/ivan-ca97/life/pkg/api"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 
+	"github.com/ivan-ca97/life/internal/features/meal/domain"
 	"github.com/ivan-ca97/life/internal/features/meal/ports"
 )
 
@@ -50,11 +51,16 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 	}
 	items := make([]ports.ItemParam, len(request.Items))
 	for i, item := range request.Items {
+		method := domain.MeasurementMethod(item.MeasurementMethod)
+		if !domain.IsValidMeasurementMethod(method) {
+			return nil, 0, cerr.NewBadRequestError("invalid measurement_method: " + item.MeasurementMethod)
+		}
 		items[i] = ports.ItemParam{
-			FoodId:   item.FoodId,
-			Quantity: item.Quantity,
-			Unit:     item.Unit,
-			Notes:    item.Notes,
+			FoodId:            item.FoodId,
+			Quantity:          item.Quantity,
+			Unit:              item.Unit,
+			Notes:             item.Notes,
+			MeasurementMethod: method,
 		}
 	}
 	params := ports.CreateParams{
@@ -144,11 +150,16 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 	if request.Items != nil {
 		items := make([]ports.ItemParam, len(*request.Items))
 		for i, item := range *request.Items {
+			method := domain.MeasurementMethod(item.MeasurementMethod)
+			if !domain.IsValidMeasurementMethod(method) {
+				return nil, 0, cerr.NewBadRequestError("invalid measurement_method: " + item.MeasurementMethod)
+			}
 			items[i] = ports.ItemParam{
-				FoodId:   item.FoodId,
-				Quantity: item.Quantity,
-				Unit:     item.Unit,
-				Notes:    item.Notes,
+				FoodId:            item.FoodId,
+				Quantity:          item.Quantity,
+				Unit:              item.Unit,
+				Notes:             item.Notes,
+				MeasurementMethod: method,
 			}
 		}
 		params.Items = &items
