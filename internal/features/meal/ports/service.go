@@ -21,7 +21,8 @@ type ItemParam struct {
 type PhotoParam struct {
 	Url        string
 	IsPrimary  bool
-	MealItemId *uuid.UUID
+	MealItemId *uuid.UUID // existing item UUID (from a GET response)
+	ItemFoodId *uuid.UUID // food_id reference for new/unknown items; resolved server-side
 }
 
 type CreateParams struct {

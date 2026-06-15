@@ -10,6 +10,7 @@ type mealPhotoRequest struct {
 	Url        string     `json:"url"`
 	IsPrimary  bool       `json:"is_primary"`
 	MealItemId *uuid.UUID `json:"meal_item_id,omitempty"`
+	ItemFoodId *uuid.UUID `json:"item_food_id,omitempty"`
 }
 
 type mealItemRequest struct {

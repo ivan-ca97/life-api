@@ -54,6 +54,22 @@ func (r *weightEntryRepository) FindById(id, userId uuid.UUID) (*domain.WeightEn
 	return model.toDomain(), nil
 }
 
+func (r *weightEntryRepository) LatestByUserId(userId uuid.UUID) (*domain.WeightEntry, error) {
+	var model weightEntry
+	err := r.db.
+		Where("user_id = ?", userId).
+		Order("date DESC").
+		First(&model).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, cerr.NewInternalError("finding latest weight entry", err)
+	}
+	return model.toDomain(), nil
+}
+
 func (r *weightEntryRepository) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.WeightEntry], error) {
 	var models []weightEntry
 	var total int64

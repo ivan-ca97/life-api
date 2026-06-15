@@ -124,10 +124,19 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 	if params.Tag != nil {
 		findQuery = findQuery.Where("id IN (SELECT food_id FROM food_tags WHERE tag = ?)", *params.Tag)
 	}
+	orderClause := "name ASC"
+	if params.Sort != nil {
+		switch *params.Sort {
+		case "created_at":
+			orderClause = "created_at DESC"
+		case "updated_at":
+			orderClause = "updated_at DESC"
+		}
+	}
 	err = findQuery.
 		Limit(params.Limit).
 		Offset(params.Offset).
-		Order("name ASC").
+		Order(orderClause).
 		Find(&models).
 		Error
 	if err != nil {

@@ -113,10 +113,15 @@ func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
 	if t := r.URL.Query().Get("tag"); t != "" {
 		tag = &t
 	}
+	var sort *string
+	if s := r.URL.Query().Get("sort"); s != "" {
+		sort = &s
+	}
 	params := ports.ListParams{
 		PaginationParams: api.PaginationFromRequest(r),
 		Query:            query,
 		Tag:              tag,
+		Sort:             sort,
 	}
 	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {

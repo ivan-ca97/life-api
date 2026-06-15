@@ -25,6 +25,21 @@ func NewAuthorizationService(roleRepo ports.RoleRepository, shareRepo ports.Shar
 	}
 }
 
+func (s *authorizationService) AuthorizeAdmin(ctx context.Context) error {
+	actorId, err := auth.ActorFromContext(ctx)
+	if err != nil {
+		return auth.ErrNoActor
+	}
+	isAdmin, err := s.roleRepo.UserHasRole(actorId, "admin")
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return auth.ErrForbidden
+	}
+	return nil
+}
+
 func (s *authorizationService) Authorize(ctx context.Context, ownerId uuid.UUID, permission string) error {
 	actorId, err := auth.ActorFromContext(ctx)
 	if err != nil {

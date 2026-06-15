@@ -33,6 +33,7 @@ func IsValidMeasurementMethod(m MeasurementMethod) bool {
 type MealPhoto struct {
 	Id         uuid.UUID
 	MealItemId *uuid.UUID
+	ItemFoodId *uuid.UUID // write-time only: resolved to MealItemId by the repository
 	Url        string
 	IsPrimary  bool
 }

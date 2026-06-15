@@ -17,6 +17,7 @@ x-api-environment: &api-environment
   R2_SECRET_ACCESS_KEY: ""
   R2_BUCKET: ""
   R2_PUBLIC_URL: ""
+  WATCHDOG_INTERVAL_SECONDS: "86400"
 
 services:
   db:

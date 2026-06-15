@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -15,8 +17,10 @@ import (
 
 	authenticationApp "github.com/ivan-ca97/life/internal/applications/authentication"
 	authorizationApp "github.com/ivan-ca97/life/internal/applications/authorization"
+	fitnessAdvisorApp "github.com/ivan-ca97/life/internal/applications/fitness_advisor"
 	healthConnectImportApp "github.com/ivan-ca97/life/internal/applications/health_connect_import"
 	hevyImportApp "github.com/ivan-ca97/life/internal/applications/hevy_import"
+	watchdogApp "github.com/ivan-ca97/life/internal/applications/integrity_watchdog"
 	"github.com/ivan-ca97/life/internal/features/authentication"
 	"github.com/ivan-ca97/life/internal/features/authorization"
 	"github.com/ivan-ca97/life/internal/features/daily"
@@ -30,11 +34,12 @@ import (
 )
 
 type server struct {
-	router chi.Router
-	port   int
+	router   chi.Router
+	port     int
+	watchdog *watchdogApp.WatchdogApplication
 }
 
-func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL string) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL string, watchdogInterval time.Duration) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
 
@@ -75,6 +80,8 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	)
 	goalFeature := goal.NewGoalFeature(database, authorizer, errorHandler)
 	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, errorHandler)
+	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
+	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
 
 	router := chi.NewRouter()
 	origins := []string{"http://localhost:3000"}
@@ -107,6 +114,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 			authenticationApplication.ProtectedRoutes(r)
 			foodFeature.GlobalRoutes(r)
 			userFeature.AdminRoutes(r)
+			watchdog.ProtectedRoutes(r)
 
 			r.Route("/users/{userId}", func(r chi.Router) {
 				userFeature.ProtectedRoutes(r)
@@ -120,6 +128,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 				dailyFeature.ProtectedRoutes(r)
 				authorizationApplication.ProtectedRoutes(r)
 				mediaFeature.ProtectedRoutes(r)
+				fitnessAdvisor.ProtectedRoutes(r)
 			})
 		})
 	})
@@ -130,18 +139,17 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	}
 
 	s := &server{
-		router: router,
-		port:   port,
+		router:   router,
+		port:     port,
+		watchdog: watchdog,
 	}
 	return s, nil
 }
 
 func (s *server) Start() error {
+	go s.watchdog.Start(context.Background())
+
 	address := fmt.Sprintf(":%d", s.port)
 	slog.Info("server listening", "address", address)
-	err := http.ListenAndServe(address, s.router)
-	if err != nil {
-		return err
-	}
-	return nil
+	return http.ListenAndServe(address, s.router)
 }

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/ivan-ca97/life/internal/infrastructure/postgres"
 	"github.com/ivan-ca97/life/internal/server"
@@ -47,7 +48,14 @@ func main() {
 	r2Bucket := os.Getenv("R2_BUCKET")
 	r2PublicURL := os.Getenv("R2_PUBLIC_URL")
 
-	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
+	watchdogInterval := 24 * time.Hour
+	if s := os.Getenv("WATCHDOG_INTERVAL_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			watchdogInterval = time.Duration(n) * time.Second
+		}
+	}
+
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, watchdogInterval)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}

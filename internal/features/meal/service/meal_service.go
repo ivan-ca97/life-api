@@ -63,13 +63,18 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		return nil, err
 	}
 
+	photos, err := photosFromParams(params.Photos)
+	if err != nil {
+		return nil, err
+	}
+
 	meal := &domain.Meal{
 		Id:           uuid.New(),
 		UserId:       userId,
 		Date:         params.Date,
 		Type:         params.Type,
 		Name:         params.Name,
-		Photos:       photosFromParams(params.Photos),
+		Photos:       photos,
 		EatenAt:      params.EatenAt,
 		Calories:     coalesce(params.Calories, resolved.Totals.Calories),
 		ProteinGrams: coalesce(params.ProteinGrams, resolved.Totals.ProteinGrams),
@@ -128,6 +133,11 @@ func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 	}
 	if err := validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, itemsForValidation); err != nil {
 		return nil, err
+	}
+	if params.Photos != nil {
+		if err := enforcePhotoParamPrimary(*params.Photos); err != nil {
+			return nil, err
+		}
 	}
 	if params.Items != nil {
 		resolved, err := s.resolveItems(userId, *params.Items)
@@ -355,45 +365,99 @@ func addPtr(acc *float64, val *float64) *float64 {
 	return &sum
 }
 
-func photosFromParams(params []ports.PhotoParam) []domain.MealPhoto {
+func photosFromParams(params []ports.PhotoParam) ([]domain.MealPhoto, error) {
 	photos := make([]domain.MealPhoto, len(params))
 	for i, p := range params {
 		photos[i] = domain.MealPhoto{
 			Id:         uuid.New(),
 			MealItemId: p.MealItemId,
+			ItemFoodId: p.ItemFoodId,
 			Url:        p.Url,
 			IsPrimary:  p.IsPrimary,
 		}
 	}
-	enforcePrimary(photos)
-	return photos
+	if err := enforcePrimary(photos); err != nil {
+		return nil, err
+	}
+	return photos, nil
 }
 
 // enforcePrimary ensures each group (meal-level and per item) has exactly one
-// primary photo. If a group has photos but none marked primary, the first is promoted.
-func enforcePrimary(photos []domain.MealPhoto) {
-	type groupKey struct{ itemId uuid.UUID }
-	hasPrimary := map[groupKey]bool{}
-	firstIdx := map[groupKey]int{}
+// primary photo. Returns an error if multiple primaries are sent for the same group.
+// If a group has no primary, the first photo in that group is promoted.
+// Groups are keyed by MealItemId if set, otherwise by ItemFoodId, otherwise meal-level.
+func enforcePrimary(photos []domain.MealPhoto) error {
+	firstPrimary := map[string]int{}
+	firstInGroup := map[string]int{}
 
 	for i, p := range photos {
-		var key groupKey
-		if p.MealItemId != nil {
-			key = groupKey{itemId: *p.MealItemId}
+		key := photoGroupKey(p)
+		if _, seen := firstInGroup[key]; !seen {
+			firstInGroup[key] = i
 		}
 		if p.IsPrimary {
-			hasPrimary[key] = true
-		}
-		if _, seen := firstIdx[key]; !seen {
-			firstIdx[key] = i
+			if _, has := firstPrimary[key]; !has {
+				firstPrimary[key] = i
+			} else {
+				return cerr.NewBadRequestError("only one photo per group can be primary")
+			}
 		}
 	}
 
-	for key, idx := range firstIdx {
-		if !hasPrimary[key] {
+	for key, idx := range firstInGroup {
+		if _, ok := firstPrimary[key]; !ok {
 			photos[idx].IsPrimary = true
 		}
 	}
+	return nil
+}
+
+// enforcePhotoParamPrimary is the Update-path equivalent of enforcePrimary,
+// operating on PhotoParam slices before they reach the repository.
+func enforcePhotoParamPrimary(photos []ports.PhotoParam) error {
+	firstPrimary := map[string]int{}
+	firstInGroup := map[string]int{}
+
+	for i, p := range photos {
+		key := photoParamGroupKey(p)
+		if _, seen := firstInGroup[key]; !seen {
+			firstInGroup[key] = i
+		}
+		if p.IsPrimary {
+			if _, has := firstPrimary[key]; !has {
+				firstPrimary[key] = i
+			} else {
+				return cerr.NewBadRequestError("only one photo per group can be primary")
+			}
+		}
+	}
+
+	for key, idx := range firstInGroup {
+		if _, ok := firstPrimary[key]; !ok {
+			photos[idx].IsPrimary = true
+		}
+	}
+	return nil
+}
+
+func photoParamGroupKey(p ports.PhotoParam) string {
+	if p.MealItemId != nil {
+		return "item:" + p.MealItemId.String()
+	}
+	if p.ItemFoodId != nil {
+		return "food:" + p.ItemFoodId.String()
+	}
+	return ""
+}
+
+func photoGroupKey(p domain.MealPhoto) string {
+	if p.MealItemId != nil {
+		return "item:" + p.MealItemId.String()
+	}
+	if p.ItemFoodId != nil {
+		return "food:" + p.ItemFoodId.String()
+	}
+	return "" // meal-level
 }
 
 func coalesce(explicit *float64, calculated *float64) *float64 {

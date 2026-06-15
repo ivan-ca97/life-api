@@ -70,6 +70,7 @@ type ListParams struct {
 	types.PaginationParams
 	Query *string
 	Tag   *string
+	Sort  *string // "name" (default), "created_at", "updated_at"
 }
 
 type FrequencyParams struct {

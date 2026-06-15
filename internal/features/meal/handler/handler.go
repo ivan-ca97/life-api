@@ -69,6 +69,7 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 			Url:        p.Url,
 			IsPrimary:  p.IsPrimary,
 			MealItemId: p.MealItemId,
+			ItemFoodId: p.ItemFoodId,
 		}
 	}
 	params := ports.CreateParams{
@@ -161,6 +162,7 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 				Url:        p.Url,
 				IsPrimary:  p.IsPrimary,
 				MealItemId: p.MealItemId,
+				ItemFoodId: p.ItemFoodId,
 			}
 		}
 		params.Photos = &pp

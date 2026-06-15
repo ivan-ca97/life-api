@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
@@ -31,13 +32,30 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 	if err != nil {
 		return cerr.NewInternalError("inserting meal", err)
 	}
+
+	// Items are created before photos so that ItemFoodId references can be resolved.
+	foodIdToItemId := make(map[uuid.UUID]uuid.UUID, len(m.Items))
+	if len(m.Items) > 0 {
+		items := make([]mealItem, len(m.Items))
+		for i, item := range m.Items {
+			mi := buildMealItem(m.Id, item)
+			mi.Id = uuid.New()
+			items[i] = mi
+			foodIdToItemId[item.FoodId] = mi.Id
+		}
+		err = r.db.Create(&items).Error
+		if err != nil {
+			return cerr.NewInternalError("inserting meal items", err)
+		}
+	}
+
 	if len(m.Photos) > 0 {
 		photos := make([]mealPhoto, len(m.Photos))
 		for i, p := range m.Photos {
 			photos[i] = mealPhoto{
 				Id:         p.Id,
 				MealId:     m.Id,
-				MealItemId: p.MealItemId,
+				MealItemId: resolveItemId(p.MealItemId, p.ItemFoodId, foodIdToItemId),
 				Url:        p.Url,
 				IsPrimary:  p.IsPrimary,
 			}
@@ -47,6 +65,7 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 			return cerr.NewInternalError("inserting meal photos", err)
 		}
 	}
+
 	if len(m.Tags) > 0 {
 		tags := make([]mealTag, len(m.Tags))
 		for i, t := range m.Tags {
@@ -60,49 +79,7 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 			return cerr.NewInternalError("inserting meal tags", err)
 		}
 	}
-	if len(m.Items) > 0 {
-		items := make([]mealItem, len(m.Items))
-		for i, item := range m.Items {
-			var inputUnit *string
-			if item.InputUnit != "" {
-				inputUnit = &item.InputUnit
-			}
-			var normalizedUnit *string
-			if item.NormalizedUnit != "" {
-				normalizedUnit = &item.NormalizedUnit
-			}
-			var normalizedQty *float64
-			if item.NormalizedQuantity != 0 {
-				nq := item.NormalizedQuantity
-				normalizedQty = &nq
-			}
-			var method *string
-			if item.MeasurementMethod != "" {
-				m := string(item.MeasurementMethod)
-				method = &m
-			}
-			items[i] = mealItem{
-				Id:                 uuid.New(),
-				MealId:             m.Id,
-				FoodId:             item.FoodId,
-				InputQuantity:      item.InputQuantity,
-				InputUnit:          inputUnit,
-				NormalizedQuantity: normalizedQty,
-				NormalizedUnit:     normalizedUnit,
-				Calories:           item.Calories,
-				ProteinGrams:       item.ProteinGrams,
-				CarbsGrams:         item.CarbsGrams,
-				FatGrams:           item.FatGrams,
-				FiberGrams:         item.FiberGrams,
-				Notes:              item.Notes,
-				MeasurementMethod:  method,
-			}
-		}
-		err = r.db.Create(&items).Error
-		if err != nil {
-			return cerr.NewInternalError("inserting meal items", err)
-		}
-	}
+
 	return nil
 }
 
@@ -235,6 +212,15 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		}
 	}
 
+	// Items are upserted before photos so that photo ItemFoodId references can be resolved.
+	var foodIdToItemId map[uuid.UUID]uuid.UUID
+	if params.ResolvedItems != nil {
+		foodIdToItemId, err = r.upsertItems(id, *params.ResolvedItems)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if params.Photos != nil {
 		err = r.db.Where("meal_id = ?", id).Delete(&mealPhoto{}).Error
 		if err != nil {
@@ -246,7 +232,7 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 				photos[i] = mealPhoto{
 					Id:         uuid.New(),
 					MealId:     id,
-					MealItemId: p.MealItemId,
+					MealItemId: resolveItemId(p.MealItemId, p.ItemFoodId, foodIdToItemId),
 					Url:        p.Url,
 					IsPrimary:  p.IsPrimary,
 				}
@@ -258,57 +244,69 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		}
 	}
 
-	if params.ResolvedItems != nil {
-		err = r.db.Where("meal_id = ?", id).Delete(&mealItem{}).Error
-		if err != nil {
-			return nil, cerr.NewInternalError("deleting meal items", err)
+	return r.FindById(id, userId)
+}
+
+// upsertItems preserves item UUIDs for food_ids already in the meal (update),
+// assigns new UUIDs for food_ids being added, and deletes food_ids no longer present.
+// Returns a food_id → item.Id map for resolving photo ItemFoodId references.
+func (r *mealRepository) upsertItems(mealId uuid.UUID, incoming []domain.MealItem) (map[uuid.UUID]uuid.UUID, error) {
+	var existingItems []mealItem
+	if err := r.db.Where("meal_id = ?", mealId).Find(&existingItems).Error; err != nil {
+		return nil, cerr.NewInternalError("fetching meal items for upsert", err)
+	}
+
+	existingByFoodId := make(map[uuid.UUID]uuid.UUID, len(existingItems))
+	for _, item := range existingItems {
+		existingByFoodId[item.FoodId] = item.Id
+	}
+
+	incomingFoodIds := make(map[uuid.UUID]bool, len(incoming))
+	newItems := make([]mealItem, 0, len(incoming))
+	foodIdToItemId := make(map[uuid.UUID]uuid.UUID, len(incoming))
+
+	for _, item := range incoming {
+		incomingFoodIds[item.FoodId] = true
+		mi := buildMealItem(mealId, item)
+		if existingId, ok := existingByFoodId[item.FoodId]; ok {
+			mi.Id = existingId
+		} else {
+			mi.Id = uuid.New()
 		}
-		if len(*params.ResolvedItems) > 0 {
-			items := make([]mealItem, len(*params.ResolvedItems))
-			for i, item := range *params.ResolvedItems {
-				var inputUnit *string
-				if item.InputUnit != "" {
-					inputUnit = &item.InputUnit
-				}
-				var normalizedUnit *string
-				if item.NormalizedUnit != "" {
-					normalizedUnit = &item.NormalizedUnit
-				}
-				var normalizedQty *float64
-				if item.NormalizedQuantity != 0 {
-					nq := item.NormalizedQuantity
-					normalizedQty = &nq
-				}
-				var method *string
-				if item.MeasurementMethod != "" {
-					mv := string(item.MeasurementMethod)
-					method = &mv
-				}
-				items[i] = mealItem{
-					Id:                 uuid.New(),
-					MealId:             id,
-					FoodId:             item.FoodId,
-					InputQuantity:      item.InputQuantity,
-					InputUnit:          inputUnit,
-					NormalizedQuantity: normalizedQty,
-					NormalizedUnit:     normalizedUnit,
-					Calories:           item.Calories,
-					ProteinGrams:       item.ProteinGrams,
-					CarbsGrams:         item.CarbsGrams,
-					FatGrams:           item.FatGrams,
-					FiberGrams:         item.FiberGrams,
-					Notes:              item.Notes,
-					MeasurementMethod:  method,
-				}
-			}
-			err = r.db.Create(&items).Error
-			if err != nil {
-				return nil, cerr.NewInternalError("inserting meal items", err)
+		newItems = append(newItems, mi)
+		foodIdToItemId[item.FoodId] = mi.Id
+	}
+
+	for _, item := range existingItems {
+		if !incomingFoodIds[item.FoodId] {
+			if err := r.db.Delete(&mealItem{}, "id = ?", item.Id).Error; err != nil {
+				return nil, cerr.NewInternalError("deleting removed meal item", err)
 			}
 		}
 	}
 
-	return r.FindById(id, userId)
+	if len(newItems) > 0 {
+		if err := r.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&newItems).Error; err != nil {
+			return nil, cerr.NewInternalError("upserting meal items", err)
+		}
+	}
+
+	return foodIdToItemId, nil
+}
+
+// resolveItemId returns the final meal_item_id for a photo.
+// MealItemId takes precedence (existing item UUID from a GET response).
+// If only ItemFoodId is set, it is resolved using the food_id → item.Id map.
+func resolveItemId(mealItemId, itemFoodId *uuid.UUID, foodIdToItemId map[uuid.UUID]uuid.UUID) *uuid.UUID {
+	if mealItemId != nil {
+		return mealItemId
+	}
+	if itemFoodId != nil {
+		if resolved, ok := foodIdToItemId[*itemFoodId]; ok {
+			return &resolved
+		}
+	}
+	return nil
 }
 
 func (r *mealRepository) ListDistinctTypes(userId uuid.UUID, hour *int) ([]string, error) {
@@ -364,4 +362,40 @@ func (r *mealRepository) Delete(id, userId uuid.UUID) error {
 		return domain.ErrMealNotFound
 	}
 	return nil
+}
+
+func buildMealItem(mealId uuid.UUID, item domain.MealItem) mealItem {
+	var inputUnit *string
+	if item.InputUnit != "" {
+		inputUnit = &item.InputUnit
+	}
+	var normalizedUnit *string
+	if item.NormalizedUnit != "" {
+		normalizedUnit = &item.NormalizedUnit
+	}
+	var normalizedQty *float64
+	if item.NormalizedQuantity != 0 {
+		nq := item.NormalizedQuantity
+		normalizedQty = &nq
+	}
+	var method *string
+	if item.MeasurementMethod != "" {
+		mv := string(item.MeasurementMethod)
+		method = &mv
+	}
+	return mealItem{
+		MealId:             mealId,
+		FoodId:             item.FoodId,
+		InputQuantity:      item.InputQuantity,
+		InputUnit:          inputUnit,
+		NormalizedQuantity: normalizedQty,
+		NormalizedUnit:     normalizedUnit,
+		Calories:           item.Calories,
+		ProteinGrams:       item.ProteinGrams,
+		CarbsGrams:         item.CarbsGrams,
+		FatGrams:           item.FatGrams,
+		FiberGrams:         item.FiberGrams,
+		Notes:              item.Notes,
+		MeasurementMethod:  method,
+	}
 }
