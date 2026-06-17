@@ -60,7 +60,22 @@ type UpdateParams struct {
 
 type ListParams struct {
 	types.PaginationParams
-	Date *time.Time
+	Date        *time.Time
+	From        *time.Time
+	To          *time.Time
+	Type        *string
+	Tag         *string
+	FoodId      *uuid.UUID
+	MinCalories *float64
+	MaxCalories *float64
+	MinProtein  *float64
+	MaxProtein  *float64
+	MinCarbs    *float64
+	MaxCarbs    *float64
+	MinFat      *float64
+	MaxFat      *float64
+	MinFiber    *float64
+	MaxFiber    *float64
 }
 
 type NutritionPreviewItem struct {

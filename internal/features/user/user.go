@@ -21,7 +21,8 @@ type userFeature struct {
 
 func NewUserFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHandler http_errors.HttpErrorHandler) *userFeature {
 	userRepository := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepository)
+	profilePhotoRepository := repository.NewProfilePhotoRepository(db)
+	userService := service.NewUserService(userRepository, profilePhotoRepository)
 	authorizedService := service.NewAuthorizedUserService(userService, authorizer)
 	userHandler := handler.NewUserHandler(authorizedService)
 

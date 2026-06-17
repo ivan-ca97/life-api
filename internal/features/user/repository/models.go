@@ -14,6 +14,7 @@ type user struct {
 	PasswordHash string     `gorm:""`
 	GoogleId     *string    `gorm:"uniqueIndex"`
 	Active       bool       `gorm:"not null;default:true"`
+	PhotoUrl     string     `gorm:"not null;default:''"`
 	HeightCm     *int       `gorm:""`
 	BirthDate    *time.Time `gorm:"type:date"`
 	Sex          *string    `gorm:""`
@@ -27,6 +28,7 @@ func (m *user) toDomain() *domain.User {
 		PasswordHash: m.PasswordHash,
 		GoogleId:     m.GoogleId,
 		Active:       m.Active,
+		PhotoUrl:     m.PhotoUrl,
 		HeightCm:     m.HeightCm,
 		BirthDate:    m.BirthDate,
 		Sex:          m.Sex,
@@ -41,6 +43,7 @@ func userFromDomain(u *domain.User) *user {
 		PasswordHash: u.PasswordHash,
 		GoogleId:     u.GoogleId,
 		Active:       u.Active,
+		PhotoUrl:     u.PhotoUrl,
 		HeightCm:     u.HeightCm,
 		BirthDate:    u.BirthDate,
 		Sex:          u.Sex,

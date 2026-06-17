@@ -134,6 +134,18 @@ func (r *userRepository) Update(id uuid.UUID, params ports.UpdateParams) (*domai
 	return user, nil
 }
 
+func (r *userRepository) UpdatePhotoUrl(id uuid.UUID, url string) error {
+	err := r.db.
+		Model(&user{}).
+		Where("id = ?", id).
+		Update("photo_url", url).
+		Error
+	if err != nil {
+		return cerr.NewInternalError("updating user photo url", err)
+	}
+	return nil
+}
+
 func (r *userRepository) Deactivate(id uuid.UUID) error {
 	err := r.db.
 		Model(&user{}).

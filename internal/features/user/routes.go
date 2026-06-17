@@ -17,4 +17,6 @@ func (f *userFeature) ProtectedRoutes(r chi.Router) {
 	r.Get("/", endpoint.JSON(f.errorHandler, f.userHandler.GetById))
 	r.Patch("/", endpoint.JSON(f.errorHandler, f.userHandler.Update))
 	r.Delete("/", endpoint.JSON(f.errorHandler, f.userHandler.Deactivate))
+	r.Post("/profile-photos", endpoint.JSON(f.errorHandler, f.userHandler.AddProfilePhoto))
+	r.Get("/profile-photos", endpoint.JSON(f.errorHandler, f.userHandler.ListProfilePhotos))
 }

@@ -19,10 +19,11 @@ type authorizedFitnessAdvisorService struct {
 var _ ports.AuthorizedFitnessAdvisorService = (*authorizedFitnessAdvisorService)(nil)
 
 func NewAuthorizedFitnessAdvisorService(base ports.FitnessAdvisorService, authorizer auth.AuthorizationService) *authorizedFitnessAdvisorService {
-	return &authorizedFitnessAdvisorService{
+	service := &authorizedFitnessAdvisorService{
 		base:       base,
 		authorizer: authorizer,
 	}
+	return service
 }
 
 func (s *authorizedFitnessAdvisorService) EstimateCalories(ctx context.Context, userId uuid.UUID, request domain.EstimateRequest) (*domain.EstimateResult, error) {

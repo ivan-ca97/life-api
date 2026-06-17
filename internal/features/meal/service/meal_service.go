@@ -16,6 +16,13 @@ import (
 
 const unitPorcion = "porcion"
 
+type resolvedUnit struct {
+	NormalizedQty     float64
+	NormalizedUnit    string
+	PortionId         *uuid.UUID
+	PortionEquivalent *float64
+}
+
 type nutritionTotals struct {
 	Calories     *float64
 	ProteinGrams *float64
@@ -240,13 +247,13 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 			return nil, cerr.NewBadRequestError(fmt.Sprintf("food %s not found", item.FoodId))
 		}
 
-		normalizedQty, normalizedUnit, err := resolveUnit(item, food)
+		ru, err := resolveUnit(item, food)
 		if err != nil {
 			return nil, err
 		}
 
 		baseInStandard, _, _ := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
-		ratio := normalizedQty / baseInStandard
+		ratio := ru.NormalizedQty / baseInStandard
 
 		itemCalories := scale(food.DefaultCalories, ratio)
 		itemProtein := scale(food.DefaultProteinGrams, ratio)
@@ -261,24 +268,26 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 		result.Totals.FiberGrams = addPtr(result.Totals.FiberGrams, itemFiber)
 
 		result.Items[i] = domain.MealItem{
-			FoodId:             item.FoodId,
-			InputQuantity:      item.Quantity,
-			InputUnit:          item.Unit,
-			NormalizedQuantity: normalizedQty,
-			NormalizedUnit:     normalizedUnit,
-			Calories:           itemCalories,
-			ProteinGrams:       itemProtein,
-			CarbsGrams:         itemCarbs,
-			FatGrams:           itemFat,
-			FiberGrams:         itemFiber,
-			Notes:              item.Notes,
-			MeasurementMethod:  item.MeasurementMethod,
+			FoodId:                 item.FoodId,
+			InputQuantity:          item.Quantity,
+			InputUnit:              item.Unit,
+			InputPortionId:         ru.PortionId,
+			InputPortionEquivalent: ru.PortionEquivalent,
+			NormalizedQuantity:     ru.NormalizedQty,
+			NormalizedUnit:         ru.NormalizedUnit,
+			Calories:               itemCalories,
+			ProteinGrams:           itemProtein,
+			CarbsGrams:             itemCarbs,
+			FatGrams:               itemFat,
+			FiberGrams:             itemFiber,
+			Notes:                  item.Notes,
+			MeasurementMethod:      item.MeasurementMethod,
 		}
 	}
 	return result, nil
 }
 
-func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty float64, normalizedUnit string, err error) {
+func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, error) {
 	dim := units.Dimension(food.MeasurementType)
 	standardUnit := units.StandardUnit[dim]
 
@@ -286,15 +295,17 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty 
 	if item.Unit == unitPorcion {
 		baseStd, _, err := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
 		if err != nil {
-			return 0, "", cerr.NewBadRequestError(fmt.Sprintf("food %s has invalid base unit '%s'", food.Id, food.BaseUnit))
+			return resolvedUnit{}, cerr.NewBadRequestError(fmt.Sprintf("food %s has invalid base unit '%s'", food.Id, food.BaseUnit))
 		}
-		return item.Quantity * baseStd, standardUnit, nil
+		ru := resolvedUnit{NormalizedQty: item.Quantity * baseStd, NormalizedUnit: standardUnit}
+		return ru, nil
 	}
 
 	// Metric unit of the same dimension: automatic conversion
 	if unitDim, ok := units.GetDimension(item.Unit); ok && unitDim == dim {
 		qty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-		return qty, standardUnit, nil
+		ru := resolvedUnit{NormalizedQty: qty, NormalizedUnit: standardUnit}
+		return ru, nil
 	}
 
 	// Cross-dimension via density (mass food + volume unit, or volume food + mass unit)
@@ -302,28 +313,33 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (normalizedQty 
 		if unitDim, ok := units.GetDimension(item.Unit); ok {
 			if dim == units.DimensionMass && unitDim == units.DimensionVolume {
 				mlQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				return mlQty * food.VolumeConversion.GramsPerMl, standardUnit, nil
+				ru := resolvedUnit{NormalizedQty: mlQty * food.VolumeConversion.GramsPerMl, NormalizedUnit: standardUnit}
+				return ru, nil
 			}
 			if dim == units.DimensionVolume && unitDim == units.DimensionMass {
 				gQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				return gQty / food.VolumeConversion.GramsPerMl, standardUnit, nil
+				ru := resolvedUnit{NormalizedQty: gQty / food.VolumeConversion.GramsPerMl, NormalizedUnit: standardUnit}
+				return ru, nil
 			}
 		}
 	}
 
-	// "u" via unit conversion
-	if item.Unit == "u" && food.UnitConversion != nil {
-		return item.Quantity * food.UnitConversion.BaseEquivalent, standardUnit, nil
-	}
-
-	// Named portion
+	// Named portion (captures UUID for the portion snapshot)
 	for _, portion := range food.Portions {
 		if item.Unit == portion.Name {
-			return item.Quantity * portion.BaseEquivalent, standardUnit, nil
+			portionId := portion.Id
+			portionEq := portion.BaseEquivalent
+			ru := resolvedUnit{
+				NormalizedQty:     item.Quantity * portion.BaseEquivalent,
+				NormalizedUnit:    standardUnit,
+				PortionId:         &portionId,
+				PortionEquivalent: &portionEq,
+			}
+			return ru, nil
 		}
 	}
 
-	return 0, "", cerr.NewBadRequestError(fmt.Sprintf("unknown unit '%s' for food %s", item.Unit, food.Id))
+	return resolvedUnit{}, cerr.NewBadRequestError(fmt.Sprintf("unknown unit '%s' for food %s", item.Unit, food.Id))
 }
 
 func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []ports.ItemParam) error {

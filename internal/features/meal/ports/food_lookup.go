@@ -11,6 +11,7 @@ type FoodUnitConversion struct {
 }
 
 type FoodPortion struct {
+	Id             uuid.UUID
 	Name           string
 	BaseEquivalent float64
 }

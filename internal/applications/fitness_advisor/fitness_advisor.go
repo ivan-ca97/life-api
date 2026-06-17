@@ -27,13 +27,13 @@ func NewFitnessAdvisorApplication(
 	authorizedService := service.NewAuthorizedFitnessAdvisorService(advisorService, authorizer)
 	advisorHandler := handler.NewFitnessAdvisorHandler(authorizedService)
 
-	return &FitnessAdvisorApplication{
+	application := &FitnessAdvisorApplication{
 		handler:      advisorHandler,
 		errorHandler: errorHandler,
 	}
+	return application
 }
 
-// weightRepositoryLookup adapts WeightEntryRepository to the WeightLookup port.
 type weightRepositoryLookup struct {
 	repository weightPorts.WeightEntryRepository
 }
@@ -41,9 +41,10 @@ type weightRepositoryLookup struct {
 var _ ports.WeightLookup = (*weightRepositoryLookup)(nil)
 
 func newWeightRepositoryLookup(repository weightPorts.WeightEntryRepository) *weightRepositoryLookup {
-	return &weightRepositoryLookup{
+	lookup := &weightRepositoryLookup{
 		repository: repository,
 	}
+	return lookup
 }
 
 func (w *weightRepositoryLookup) LatestWeightKg(userId uuid.UUID) (*float64, error) {

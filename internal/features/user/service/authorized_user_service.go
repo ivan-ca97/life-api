@@ -94,3 +94,19 @@ func (s *authorizedUserService) Deactivate(ctx context.Context, ownerId uuid.UUI
 	}
 	return nil
 }
+
+func (s *authorizedUserService) AddProfilePhoto(ctx context.Context, userId uuid.UUID, url string) (*domain.ProfilePhoto, error) {
+	err := s.authorizer.Authorize(ctx, userId, permissions.UsersUpdate)
+	if err != nil {
+		return nil, err
+	}
+	return s.base.AddProfilePhoto(userId, url)
+}
+
+func (s *authorizedUserService) ListProfilePhotos(ctx context.Context, userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error) {
+	err := s.authorizer.Authorize(ctx, userId, permissions.UsersRead)
+	if err != nil {
+		return types.Page[domain.ProfilePhoto]{}, err
+	}
+	return s.base.ListProfilePhotos(userId, params)
+}

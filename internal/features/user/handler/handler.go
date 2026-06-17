@@ -16,6 +16,8 @@ type UserHandler interface {
 	List(r *http.Request) (*userPage, int, error)
 	Update(r *http.Request) (*userResponse, int, error)
 	Deactivate(r *http.Request) (*api.NoResponse, int, error)
+	AddProfilePhoto(r *http.Request) (*profilePhotoResponse, int, error)
+	ListProfilePhotos(r *http.Request) (*profilePhotoPage, int, error)
 }
 
 type userHandler struct {
@@ -103,4 +105,32 @@ func (h *userHandler) Deactivate(r *http.Request) (*api.NoResponse, int, error) 
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil
+}
+
+func (h *userHandler) AddProfilePhoto(r *http.Request) (*profilePhotoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	request, err := api.DecodeBody[addProfilePhotoRequest](r)
+	if err != nil {
+		return nil, 0, err
+	}
+	photo, err := h.service.AddProfilePhoto(r.Context(), userId, request.Url)
+	if err != nil {
+		return nil, 0, err
+	}
+	return profilePhotoFromDomain(photo), http.StatusCreated, nil
+}
+
+func (h *userHandler) ListProfilePhotos(r *http.Request) (*profilePhotoPage, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	page, err := h.service.ListProfilePhotos(r.Context(), userId, api.PaginationFromRequest(r))
+	if err != nil {
+		return nil, 0, err
+	}
+	return newProfilePhotoPage(page), http.StatusOK, nil
 }

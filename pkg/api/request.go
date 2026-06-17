@@ -47,6 +47,38 @@ func QueryParamDate(r *http.Request, key string) (*time.Time, error) {
 	return &date, nil
 }
 
+func QueryParamFloat(r *http.Request, key string) (*float64, error) {
+	raw := r.URL.Query().Get(key)
+	if raw == "" {
+		return nil, nil
+	}
+	v, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		return nil, cerr.NewBadRequestError(fmt.Sprintf("invalid %s, must be a number", key))
+	}
+	return &v, nil
+}
+
+func QueryParamString(r *http.Request, key string) *string {
+	raw := r.URL.Query().Get(key)
+	if raw == "" {
+		return nil
+	}
+	return &raw
+}
+
+func QueryParamUUID(r *http.Request, key string) (*uuid.UUID, error) {
+	raw := r.URL.Query().Get(key)
+	if raw == "" {
+		return nil, nil
+	}
+	id, err := uuid.Parse(raw)
+	if err != nil {
+		return nil, cerr.NewBadRequestError(fmt.Sprintf("invalid %s, must be a UUID", key))
+	}
+	return &id, nil
+}
+
 func QueryParamInt(r *http.Request, key string) (*int, error) {
 	raw := r.URL.Query().Get(key)
 	if raw == "" {

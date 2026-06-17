@@ -16,4 +16,6 @@ type AuthorizedUserService interface {
 	List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error)
 	Update(ctx context.Context, ownerId uuid.UUID, params UpdateParams) (*domain.User, error)
 	Deactivate(ctx context.Context, ownerId uuid.UUID) error
+	AddProfilePhoto(ctx context.Context, userId uuid.UUID, url string) (*domain.ProfilePhoto, error)
+	ListProfilePhotos(ctx context.Context, userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error)
 }

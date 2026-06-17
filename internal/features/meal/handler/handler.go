@@ -119,9 +119,76 @@ func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	from, err := api.QueryParamDate(r, "from")
+	if err != nil {
+		return nil, 0, err
+	}
+	to, err := api.QueryParamDate(r, "to")
+	if err != nil {
+		return nil, 0, err
+	}
+	foodId, err := api.QueryParamUUID(r, "food_id")
+	if err != nil {
+		return nil, 0, err
+	}
+	minCalories, err := api.QueryParamFloat(r, "min_calories")
+	if err != nil {
+		return nil, 0, err
+	}
+	maxCalories, err := api.QueryParamFloat(r, "max_calories")
+	if err != nil {
+		return nil, 0, err
+	}
+	minProtein, err := api.QueryParamFloat(r, "min_protein")
+	if err != nil {
+		return nil, 0, err
+	}
+	maxProtein, err := api.QueryParamFloat(r, "max_protein")
+	if err != nil {
+		return nil, 0, err
+	}
+	minCarbs, err := api.QueryParamFloat(r, "min_carbs")
+	if err != nil {
+		return nil, 0, err
+	}
+	maxCarbs, err := api.QueryParamFloat(r, "max_carbs")
+	if err != nil {
+		return nil, 0, err
+	}
+	minFat, err := api.QueryParamFloat(r, "min_fat")
+	if err != nil {
+		return nil, 0, err
+	}
+	maxFat, err := api.QueryParamFloat(r, "max_fat")
+	if err != nil {
+		return nil, 0, err
+	}
+	minFiber, err := api.QueryParamFloat(r, "min_fiber")
+	if err != nil {
+		return nil, 0, err
+	}
+	maxFiber, err := api.QueryParamFloat(r, "max_fiber")
+	if err != nil {
+		return nil, 0, err
+	}
 	params := ports.ListParams{
 		PaginationParams: api.PaginationFromRequest(r),
 		Date:             date,
+		From:             from,
+		To:               to,
+		Type:             api.QueryParamString(r, "type"),
+		Tag:              api.QueryParamString(r, "tag"),
+		FoodId:           foodId,
+		MinCalories:      minCalories,
+		MaxCalories:      maxCalories,
+		MinProtein:       minProtein,
+		MaxProtein:       maxProtein,
+		MinCarbs:         minCarbs,
+		MaxCarbs:         maxCarbs,
+		MinFat:           minFat,
+		MaxFat:           maxFat,
+		MinFiber:         minFiber,
+		MaxFiber:         maxFiber,
 	}
 	page, err := h.service.List(r.Context(), userId, params)
 	if err != nil {

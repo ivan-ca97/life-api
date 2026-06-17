@@ -80,7 +80,7 @@ func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID
 		}
 		portions := make([]ports.FoodPortion, len(m.Portions))
 		for i, p := range m.Portions {
-			portions[i] = ports.FoodPortion{Name: p.Name, BaseEquivalent: p.BaseEquivalent}
+			portions[i] = ports.FoodPortion{Id: p.Id, Name: p.Name, BaseEquivalent: p.BaseEquivalent}
 		}
 		nutrition.Portions = portions
 		result[m.Id] = nutrition

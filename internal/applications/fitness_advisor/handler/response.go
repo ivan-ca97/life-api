@@ -10,10 +10,11 @@ type estimateResponse struct {
 }
 
 func estimateResponseFromDomain(result *domain.EstimateResult) *estimateResponse {
-	return &estimateResponse{
+	response := &estimateResponse{
 		Type:              string(result.Type),
 		Value:             result.Value,
 		EstimatedCalories: result.EstimatedCalories,
 		WeightKg:          result.WeightKg,
 	}
+	return response
 }

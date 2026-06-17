@@ -34,21 +34,23 @@ type mealTag struct {
 }
 
 type mealItem struct {
-	Id                 uuid.UUID `gorm:"type:uuid;primaryKey"`
-	MealId             uuid.UUID `gorm:"type:uuid;not null"`
-	FoodId             uuid.UUID `gorm:"type:uuid;not null"`
-	InputQuantity      float64   `gorm:"column:input_quantity;not null;default:1"`
-	InputUnit          *string   `gorm:"column:input_unit"`
-	NormalizedQuantity *float64  `gorm:"column:normalized_quantity"`
-	NormalizedUnit     *string   `gorm:"column:normalized_unit"`
-	Calories           *float64
-	ProteinGrams       *float64
-	CarbsGrams         *float64
-	FatGrams           *float64
-	FiberGrams         *float64
-	Notes              string       `gorm:"not null;default:''"`
-	MeasurementMethod  *string      `gorm:"column:measurement_method"`
-	Food               mealItemFood `gorm:"foreignKey:FoodId;references:Id"`
+	Id                     uuid.UUID  `gorm:"type:uuid;primaryKey"`
+	MealId                 uuid.UUID  `gorm:"type:uuid;not null"`
+	FoodId                 uuid.UUID  `gorm:"type:uuid;not null"`
+	InputQuantity          float64    `gorm:"column:input_quantity;not null;default:1"`
+	InputUnit              *string    `gorm:"column:input_unit"`
+	InputPortionId         *uuid.UUID `gorm:"column:input_portion_id;type:uuid"`
+	InputPortionEquivalent *float64   `gorm:"column:input_portion_equivalent"`
+	NormalizedQuantity     *float64   `gorm:"column:normalized_quantity"`
+	NormalizedUnit         *string    `gorm:"column:normalized_unit"`
+	Calories               *float64
+	ProteinGrams           *float64
+	CarbsGrams             *float64
+	FatGrams               *float64
+	FiberGrams             *float64
+	Notes                  string       `gorm:"not null;default:''"`
+	MeasurementMethod      *string      `gorm:"column:measurement_method"`
+	Food                   mealItemFood `gorm:"foreignKey:FoodId;references:Id"`
 }
 
 type mealItemFood struct {
@@ -97,21 +99,23 @@ func (m *meal) toDomain() *domain.Meal {
 			method = domain.MeasurementMethod(*item.MeasurementMethod)
 		}
 		items[i] = domain.MealItem{
-			Id:                 item.Id,
-			MealId:             item.MealId,
-			FoodId:             item.FoodId,
-			FoodName:           item.Food.Name,
-			InputQuantity:      item.InputQuantity,
-			InputUnit:          inputUnit,
-			NormalizedQuantity: normalizedQty,
-			NormalizedUnit:     normalizedUnit,
-			Calories:           item.Calories,
-			ProteinGrams:       item.ProteinGrams,
-			CarbsGrams:         item.CarbsGrams,
-			FatGrams:           item.FatGrams,
-			FiberGrams:         item.FiberGrams,
-			Notes:              item.Notes,
-			MeasurementMethod:  method,
+			Id:                     item.Id,
+			MealId:                 item.MealId,
+			FoodId:                 item.FoodId,
+			FoodName:               item.Food.Name,
+			InputQuantity:          item.InputQuantity,
+			InputUnit:              inputUnit,
+			InputPortionId:         item.InputPortionId,
+			InputPortionEquivalent: item.InputPortionEquivalent,
+			NormalizedQuantity:     normalizedQty,
+			NormalizedUnit:         normalizedUnit,
+			Calories:               item.Calories,
+			ProteinGrams:           item.ProteinGrams,
+			CarbsGrams:             item.CarbsGrams,
+			FatGrams:               item.FatGrams,
+			FiberGrams:             item.FiberGrams,
+			Notes:                  item.Notes,
+			MeasurementMethod:      method,
 		}
 	}
 	photos := make([]domain.MealPhoto, len(m.Photos))

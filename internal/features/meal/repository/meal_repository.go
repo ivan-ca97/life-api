@@ -107,18 +107,14 @@ func (r *mealRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 	var total int64
 
 	countQuery := r.db.Model(&meal{}).Where("user_id = ?", userId)
-	if params.Date != nil {
-		countQuery = countQuery.Where("date = ?", *params.Date)
-	}
+	countQuery = applyMealFilters(countQuery, params)
 	err := countQuery.Count(&total).Error
 	if err != nil {
 		return types.Page[domain.Meal]{}, cerr.NewInternalError("counting meals", err)
 	}
 
 	findQuery := r.db.Preload("Tags").Preload("Items").Preload("Items.Food").Preload("Photos").Where("user_id = ?", userId)
-	if params.Date != nil {
-		findQuery = findQuery.Where("date = ?", *params.Date)
-	}
+	findQuery = applyMealFilters(findQuery, params)
 	err = findQuery.
 		Limit(params.Limit).
 		Offset(params.Offset).
@@ -353,6 +349,58 @@ func (r *mealRepository) ListDistinctTypes(userId uuid.UUID, hour *int) ([]strin
 	return types, nil
 }
 
+func applyMealFilters(q *gorm.DB, params ports.ListParams) *gorm.DB {
+	if params.Date != nil {
+		q = q.Where("date = ?", *params.Date)
+	}
+	if params.From != nil {
+		q = q.Where("date >= ?", *params.From)
+	}
+	if params.To != nil {
+		q = q.Where("date <= ?", *params.To)
+	}
+	if params.Type != nil {
+		q = q.Where("type = ?", *params.Type)
+	}
+	if params.Tag != nil {
+		q = q.Where("id IN (SELECT meal_id FROM meal_tags WHERE tag = ?)", *params.Tag)
+	}
+	if params.FoodId != nil {
+		q = q.Where("id IN (SELECT meal_id FROM meal_items WHERE food_id = ?)", *params.FoodId)
+	}
+	if params.MinCalories != nil {
+		q = q.Where("calories >= ?", *params.MinCalories)
+	}
+	if params.MaxCalories != nil {
+		q = q.Where("calories <= ?", *params.MaxCalories)
+	}
+	if params.MinProtein != nil {
+		q = q.Where("protein_grams >= ?", *params.MinProtein)
+	}
+	if params.MaxProtein != nil {
+		q = q.Where("protein_grams <= ?", *params.MaxProtein)
+	}
+	if params.MinCarbs != nil {
+		q = q.Where("carbs_grams >= ?", *params.MinCarbs)
+	}
+	if params.MaxCarbs != nil {
+		q = q.Where("carbs_grams <= ?", *params.MaxCarbs)
+	}
+	if params.MinFat != nil {
+		q = q.Where("fat_grams >= ?", *params.MinFat)
+	}
+	if params.MaxFat != nil {
+		q = q.Where("fat_grams <= ?", *params.MaxFat)
+	}
+	if params.MinFiber != nil {
+		q = q.Where("fiber_grams >= ?", *params.MinFiber)
+	}
+	if params.MaxFiber != nil {
+		q = q.Where("fiber_grams <= ?", *params.MaxFiber)
+	}
+	return q
+}
+
 func (r *mealRepository) Delete(id, userId uuid.UUID) error {
 	result := r.db.Where("id = ? AND user_id = ?", id, userId).Delete(&meal{})
 	if result.Error != nil {
@@ -384,18 +432,20 @@ func buildMealItem(mealId uuid.UUID, item domain.MealItem) mealItem {
 		method = &mv
 	}
 	return mealItem{
-		MealId:             mealId,
-		FoodId:             item.FoodId,
-		InputQuantity:      item.InputQuantity,
-		InputUnit:          inputUnit,
-		NormalizedQuantity: normalizedQty,
-		NormalizedUnit:     normalizedUnit,
-		Calories:           item.Calories,
-		ProteinGrams:       item.ProteinGrams,
-		CarbsGrams:         item.CarbsGrams,
-		FatGrams:           item.FatGrams,
-		FiberGrams:         item.FiberGrams,
-		Notes:              item.Notes,
-		MeasurementMethod:  method,
+		MealId:                 mealId,
+		FoodId:                 item.FoodId,
+		InputQuantity:          item.InputQuantity,
+		InputUnit:              inputUnit,
+		InputPortionId:         item.InputPortionId,
+		InputPortionEquivalent: item.InputPortionEquivalent,
+		NormalizedQuantity:     normalizedQty,
+		NormalizedUnit:         normalizedUnit,
+		Calories:               item.Calories,
+		ProteinGrams:           item.ProteinGrams,
+		CarbsGrams:             item.CarbsGrams,
+		FatGrams:               item.FatGrams,
+		FiberGrams:             item.FiberGrams,
+		Notes:                  item.Notes,
+		MeasurementMethod:      method,
 	}
 }

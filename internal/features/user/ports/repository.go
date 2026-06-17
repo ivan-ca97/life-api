@@ -14,6 +14,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*domain.User, error)
 	List(params types.PaginationParams) (types.Page[domain.User], error)
 	Update(id uuid.UUID, params UpdateParams) (*domain.User, error)
+	UpdatePhotoUrl(id uuid.UUID, url string) error
 	Deactivate(id uuid.UUID) error
 	EmailExists(email string) (bool, error)
 }

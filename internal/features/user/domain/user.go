@@ -12,6 +12,7 @@ type User struct {
 	PasswordHash string
 	GoogleId     *string
 	Active       bool
+	PhotoUrl     string
 	HeightCm     *int
 	BirthDate    *time.Time
 	Sex          *string

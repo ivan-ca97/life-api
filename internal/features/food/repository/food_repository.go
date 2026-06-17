@@ -268,24 +268,8 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	}
 
 	if params.Portions != nil {
-		err = r.db.Where("food_id = ?", id).Delete(&foodPortion{}).Error
-		if err != nil {
-			return nil, cerr.NewInternalError("deleting food portions", err)
-		}
-		if len(*params.Portions) > 0 {
-			portions := make([]foodPortion, len(*params.Portions))
-			for i, p := range *params.Portions {
-				portions[i] = foodPortion{
-					Id:             uuid.New(),
-					FoodId:         id,
-					Name:           p.Name,
-					BaseEquivalent: p.BaseEquivalent,
-				}
-			}
-			err = r.db.Create(&portions).Error
-			if err != nil {
-				return nil, cerr.NewInternalError("inserting food portions", err)
-			}
+		if err = r.upsertPortions(id, *params.Portions); err != nil {
+			return nil, err
 		}
 	}
 
@@ -475,6 +459,53 @@ func (r *foodRepository) upsertIngredients(userId uuid.UUID, names []string) ([]
 		ids[i] = newIng.Id
 	}
 	return ids, nil
+}
+
+func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.PortionParam) error {
+	var existing []foodPortion
+	if err := r.db.Where("food_id = ?", foodId).Find(&existing).Error; err != nil {
+		return cerr.NewInternalError("fetching food portions for upsert", err)
+	}
+
+	existingByName := make(map[string]foodPortion, len(existing))
+	for _, p := range existing {
+		existingByName[p.Name] = p
+	}
+
+	incomingNames := make(map[string]bool, len(incoming))
+	for _, p := range incoming {
+		incomingNames[p.Name] = true
+	}
+
+	for _, ex := range existing {
+		if !incomingNames[ex.Name] {
+			if err := r.db.Delete(&foodPortion{}, "id = ?", ex.Id).Error; err != nil {
+				return cerr.NewInternalError("deleting removed food portion", err)
+			}
+		}
+	}
+
+	for _, p := range incoming {
+		if ex, ok := existingByName[p.Name]; ok {
+			if ex.BaseEquivalent != p.BaseEquivalent {
+				if err := r.db.Model(&foodPortion{}).Where("id = ?", ex.Id).Update("base_equivalent", p.BaseEquivalent).Error; err != nil {
+					return cerr.NewInternalError("updating food portion", err)
+				}
+			}
+		} else {
+			newPortion := foodPortion{
+				Id:             uuid.New(),
+				FoodId:         foodId,
+				Name:           p.Name,
+				BaseEquivalent: p.BaseEquivalent,
+			}
+			if err := r.db.Create(&newPortion).Error; err != nil {
+				return cerr.NewInternalError("inserting food portion", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {

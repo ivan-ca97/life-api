@@ -12,14 +12,16 @@ import (
 )
 
 type userService struct {
-	repository ports.UserRepository
+	repository      ports.UserRepository
+	photoRepository ports.ProfilePhotoRepository
 }
 
 var _ ports.UserService = (*userService)(nil)
 
-func NewUserService(repository ports.UserRepository) *userService {
+func NewUserService(repository ports.UserRepository, photoRepository ports.ProfilePhotoRepository) *userService {
 	return &userService{
-		repository: repository,
+		repository:      repository,
+		photoRepository: photoRepository,
 	}
 }
 
@@ -131,4 +133,29 @@ func (s *userService) Deactivate(id uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (s *userService) AddProfilePhoto(userId uuid.UUID, url string) (*domain.ProfilePhoto, error) {
+	if _, err := s.repository.FindById(userId); err != nil {
+		return nil, err
+	}
+	photo := &domain.ProfilePhoto{
+		Id:     uuid.New(),
+		UserId: userId,
+		Url:    url,
+	}
+	if err := s.photoRepository.Create(photo); err != nil {
+		return nil, err
+	}
+	if err := s.repository.UpdatePhotoUrl(userId, url); err != nil {
+		return nil, err
+	}
+	return photo, nil
+}
+
+func (s *userService) ListProfilePhotos(userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error) {
+	if _, err := s.repository.FindById(userId); err != nil {
+		return types.Page[domain.ProfilePhoto]{}, err
+	}
+	return s.photoRepository.ListByUserId(userId, params)
 }

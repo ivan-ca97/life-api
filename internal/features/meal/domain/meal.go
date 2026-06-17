@@ -39,21 +39,23 @@ type MealPhoto struct {
 }
 
 type MealItem struct {
-	Id                 uuid.UUID
-	MealId             uuid.UUID
-	FoodId             uuid.UUID
-	FoodName           string
-	InputQuantity      float64
-	InputUnit          string
-	NormalizedQuantity float64
-	NormalizedUnit     string
-	Calories           *float64
-	ProteinGrams       *float64
-	CarbsGrams         *float64
-	FatGrams           *float64
-	FiberGrams         *float64
-	Notes              string
-	MeasurementMethod  MeasurementMethod
+	Id                     uuid.UUID
+	MealId                 uuid.UUID
+	FoodId                 uuid.UUID
+	FoodName               string
+	InputQuantity          float64
+	InputUnit              string
+	InputPortionId         *uuid.UUID
+	InputPortionEquivalent *float64
+	NormalizedQuantity     float64
+	NormalizedUnit         string
+	Calories               *float64
+	ProteinGrams           *float64
+	CarbsGrams             *float64
+	FatGrams               *float64
+	FiberGrams             *float64
+	Notes                  string
+	MeasurementMethod      MeasurementMethod
 }
 
 type Meal struct {

@@ -26,4 +26,6 @@ type UserService interface {
 	List(params types.PaginationParams) (types.Page[domain.User], error)
 	Update(id uuid.UUID, params UpdateParams) (*domain.User, error)
 	Deactivate(id uuid.UUID) error
+	AddProfilePhoto(userId uuid.UUID, url string) (*domain.ProfilePhoto, error)
+	ListProfilePhotos(userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error)
 }

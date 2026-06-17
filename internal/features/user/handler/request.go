@@ -12,3 +12,7 @@ type updateUserRequest struct {
 	BirthDate *string `json:"birth_date,omitempty"`
 	Sex       *string `json:"sex,omitempty"`
 }
+
+type addProfilePhotoRequest struct {
+	Url string `json:"url"`
+}

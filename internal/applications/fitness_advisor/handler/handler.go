@@ -22,9 +22,10 @@ type fitnessAdvisorHandler struct {
 var _ FitnessAdvisorHandler = (*fitnessAdvisorHandler)(nil)
 
 func NewFitnessAdvisorHandler(service ports.AuthorizedFitnessAdvisorService) *fitnessAdvisorHandler {
-	return &fitnessAdvisorHandler{
+	handler := &fitnessAdvisorHandler{
 		service: service,
 	}
+	return handler
 }
 
 func (h *fitnessAdvisorHandler) EstimateCalories(r *http.Request) (*estimateResponse, int, error) {
@@ -51,6 +52,9 @@ func (h *fitnessAdvisorHandler) EstimateCalories(r *http.Request) (*estimateResp
 	if err != nil {
 		if errors.Is(err, domain.ErrNoWeightData) {
 			return nil, 0, cerr.NewBadRequestError(domain.ErrNoWeightData.Error())
+		}
+		if errors.Is(err, domain.ErrUnsupportedActivityType) {
+			return nil, 0, cerr.NewBadRequestError("unsupported activity type: " + string(estimateReq.Type))
 		}
 		return nil, 0, err
 	}
