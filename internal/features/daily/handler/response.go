@@ -36,14 +36,15 @@ type goalsSummaryResponse struct {
 }
 
 type summaryResponse struct {
-	Date           string                      `json:"date"`
-	Closed         bool                        `json:"closed"`
-	Meals          mealsSummaryResponse        `json:"meals"`
-	Exercise       exerciseSummaryResponse     `json:"exercise"`
-	Weight         *weightEntrySummaryResponse `json:"weight,omitempty"`
-	Goals          *goalsSummaryResponse       `json:"goals,omitempty"`
-	EstimatedBMR   *float64                    `json:"estimated_bmr,omitempty"`
-	CaloricBalance *float64                    `json:"caloric_balance,omitempty"`
+	Date                string                      `json:"date"`
+	Closed              bool                        `json:"closed"`
+	Meals               mealsSummaryResponse        `json:"meals"`
+	Exercise            exerciseSummaryResponse     `json:"exercise"`
+	Weight              *weightEntrySummaryResponse `json:"weight,omitempty"`
+	Goals               *goalsSummaryResponse       `json:"goals,omitempty"`
+	EstimatedBMR        *float64                    `json:"estimated_bmr,omitempty"`
+	StepsCaloriesBurned *float64                    `json:"steps_calories_burned,omitempty"`
+	CaloricBalance      *float64                    `json:"caloric_balance,omitempty"`
 }
 
 type summaryRangeResponse struct {
@@ -113,6 +114,7 @@ func summaryFromDomain(s *domain.DailySummary) *summaryResponse {
 		}
 	}
 	response.EstimatedBMR = s.EstimatedBMR
+	response.StepsCaloriesBurned = s.StepsCaloriesBurned
 	response.CaloricBalance = s.CaloricBalance
 	return response
 }

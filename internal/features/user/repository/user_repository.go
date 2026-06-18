@@ -100,10 +100,41 @@ func (r *userRepository) List(params types.PaginationParams) (types.Page[domain.
 	return result, nil
 }
 
+func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
+	var model user
+	err := r.db.
+		Where("username = ?", username).
+		First(&model).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, domain.ErrUserNotFound
+	}
+	if err != nil {
+		return nil, cerr.NewInternalError("finding user by username", err)
+	}
+	return model.toDomain(), nil
+}
+
+func (r *userRepository) UsernameExists(username string) (bool, error) {
+	var count int64
+	err := r.db.
+		Model(&user{}).
+		Where("username = ?", username).
+		Count(&count).
+		Error
+	if err != nil {
+		return false, cerr.NewInternalError("checking username existence", err)
+	}
+	return count > 0, nil
+}
+
 func (r *userRepository) Update(id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
 	updates := map[string]any{}
 	if params.Email != nil {
 		updates["email"] = *params.Email
+	}
+	if params.Username != nil {
+		updates["username"] = *params.Username
 	}
 	if params.Password != nil {
 		updates["password_hash"] = *params.Password

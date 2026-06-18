@@ -47,6 +47,7 @@ func newProfilePhotoPage(page types.Page[domain.ProfilePhoto]) *profilePhotoPage
 type userResponse struct {
 	Id        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
+	Username  *string   `json:"username,omitempty"`
 	Active    bool      `json:"active"`
 	PhotoUrl  string    `json:"photo_url"`
 	HeightCm  *int      `json:"height_cm,omitempty"`
@@ -64,6 +65,7 @@ func userFromDomain(u *domain.User) *userResponse {
 	return &userResponse{
 		Id:        u.Id,
 		Email:     u.Email,
+		Username:  u.Username,
 		Active:    u.Active,
 		PhotoUrl:  u.PhotoUrl,
 		HeightCm:  u.HeightCm,

@@ -12,6 +12,7 @@ import (
 
 type UpdateParams struct {
 	Email     *string
+	Username  *string
 	Password  *string
 	HeightCm  *int
 	BirthDate *time.Time
@@ -23,6 +24,7 @@ type UserService interface {
 	CreateOAuth(email, googleId string) (*domain.User, error)
 	GetById(id uuid.UUID) (*domain.User, error)
 	GetByEmail(email string) (*domain.User, error)
+	FindByUsername(username string) (*domain.User, error)
 	List(params types.PaginationParams) (types.Page[domain.User], error)
 	Update(id uuid.UUID, params UpdateParams) (*domain.User, error)
 	Deactivate(id uuid.UUID) error

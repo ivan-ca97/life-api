@@ -11,6 +11,7 @@ import (
 type user struct {
 	Id           uuid.UUID  `gorm:"type:uuid;primaryKey"`
 	Email        string     `gorm:"uniqueIndex;not null"`
+	Username     *string    `gorm:"uniqueIndex"`
 	PasswordHash string     `gorm:""`
 	GoogleId     *string    `gorm:"uniqueIndex"`
 	Active       bool       `gorm:"not null;default:true"`
@@ -25,6 +26,7 @@ func (m *user) toDomain() *domain.User {
 	return &domain.User{
 		Id:           m.Id,
 		Email:        m.Email,
+		Username:     m.Username,
 		PasswordHash: m.PasswordHash,
 		GoogleId:     m.GoogleId,
 		Active:       m.Active,
@@ -40,6 +42,7 @@ func userFromDomain(u *domain.User) *user {
 	return &user{
 		Id:           u.Id,
 		Email:        u.Email,
+		Username:     u.Username,
 		PasswordHash: u.PasswordHash,
 		GoogleId:     u.GoogleId,
 		Active:       u.Active,

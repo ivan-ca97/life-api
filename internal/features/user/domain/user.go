@@ -9,6 +9,7 @@ import (
 type User struct {
 	Id           uuid.UUID
 	Email        string
+	Username     *string
 	PasswordHash string
 	GoogleId     *string
 	Active       bool

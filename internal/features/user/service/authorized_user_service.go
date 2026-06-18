@@ -55,6 +55,18 @@ func (s *authorizedUserService) GetById(ctx context.Context, ownerId uuid.UUID) 
 	return user, nil
 }
 
+func (s *authorizedUserService) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+	actorId, err := auth.ActorFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = s.authorizer.Authorize(ctx, actorId, permissions.UsersRead)
+	if err != nil {
+		return nil, err
+	}
+	return s.base.FindByUsername(username)
+}
+
 func (s *authorizedUserService) List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error) {
 	actorId, err := auth.ActorFromContext(ctx)
 	if err != nil {

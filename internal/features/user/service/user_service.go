@@ -98,6 +98,10 @@ func (s *userService) List(params types.PaginationParams) (types.Page[domain.Use
 	return page, nil
 }
 
+func (s *userService) FindByUsername(username string) (*domain.User, error) {
+	return s.repository.FindByUsername(username)
+}
+
 func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
 	if params.Email != nil {
 		exists, err := s.repository.EmailExists(*params.Email)
@@ -106,6 +110,15 @@ func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.U
 		}
 		if exists {
 			return nil, domain.ErrEmailTaken
+		}
+	}
+	if params.Username != nil {
+		exists, err := s.repository.UsernameExists(*params.Username)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, domain.ErrUsernameTaken
 		}
 	}
 	if params.Password != nil {

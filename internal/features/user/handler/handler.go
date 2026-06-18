@@ -13,6 +13,7 @@ import (
 type UserHandler interface {
 	Create(r *http.Request) (*userResponse, int, error)
 	GetById(r *http.Request) (*userResponse, int, error)
+	FindByUsername(r *http.Request) (*userResponse, int, error)
 	List(r *http.Request) (*userPage, int, error)
 	Update(r *http.Request) (*userResponse, int, error)
 	Deactivate(r *http.Request) (*api.NoResponse, int, error)
@@ -64,6 +65,18 @@ func (h *userHandler) List(r *http.Request) (*userPage, int, error) {
 	return newUserPage(page), http.StatusOK, nil
 }
 
+func (h *userHandler) FindByUsername(r *http.Request) (*userResponse, int, error) {
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		return nil, 0, cerr.NewBadRequestError("username query parameter is required")
+	}
+	user, err := h.service.FindByUsername(r.Context(), username)
+	if err != nil {
+		return nil, 0, err
+	}
+	return userFromDomain(user), http.StatusOK, nil
+}
+
 func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
 	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
@@ -83,6 +96,7 @@ func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {
 	}
 	params := ports.UpdateParams{
 		Email:     request.Email,
+		Username:  request.Username,
 		Password:  request.Password,
 		HeightCm:  request.HeightCm,
 		BirthDate: birthDate,

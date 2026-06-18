@@ -57,16 +57,29 @@ func (r *summaryRepository) GetDailySummary(userId uuid.UUID, date time.Time) (*
 		return nil, err
 	}
 
+	steps, err := r.getSteps(userId, date)
+	if err != nil {
+		return nil, err
+	}
+
+	var weightKg *float64
+	if weightEntry != nil {
+		weightKg = &weightEntry.WeightKg
+	} else {
+		weightKg = r.getLatestWeightKg(userId, date)
+	}
+
 	bmr := calculateBMR(profile, weightEntry, date)
 
 	summary := &domain.DailySummary{
-		Date:            date,
-		Closed:          closed,
-		MealsSummary:    *mealsSummary,
-		ExerciseSummary: *exerciseSummary,
-		WeightEntry:     weightEntry,
-		Goals:           goals,
-		EstimatedBMR:    bmr,
+		Date:                date,
+		Closed:              closed,
+		MealsSummary:        *mealsSummary,
+		ExerciseSummary:     *exerciseSummary,
+		WeightEntry:         weightEntry,
+		Goals:               goals,
+		EstimatedBMR:        bmr,
+		StepsCaloriesBurned: calculateStepCalories(steps, weightKg),
 	}
 	applyCaloricBalance(summary)
 	return summary, nil
@@ -103,6 +116,12 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 		return nil, err
 	}
 
+	stepsMap, err := r.getStepsRange(userId, from, to)
+	if err != nil {
+		return nil, err
+	}
+	baselineWeight := r.getLatestWeightKg(userId, from)
+
 	var summaries []domain.DailySummary
 	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
 		key := d.Format("2006-01-02")
@@ -118,11 +137,16 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 			summary.ExerciseSummary = e
 		}
 		var weightEntry *domain.WeightEntrySummary
+		var weightKg *float64
 		if w, ok := weightMap[key]; ok {
 			summary.WeightEntry = &w
 			weightEntry = &w
+			weightKg = &w.WeightKg
+		} else {
+			weightKg = baselineWeight
 		}
 		summary.EstimatedBMR = calculateBMR(profile, weightEntry, d)
+		summary.StepsCaloriesBurned = calculateStepCalories(stepsMap[key], weightKg)
 		applyCaloricBalance(&summary)
 		summaries = append(summaries, summary)
 	}
@@ -355,9 +379,65 @@ func applyCaloricBalance(summary *domain.DailySummary) {
 	if summary.EstimatedBMR == nil {
 		return
 	}
-	balance := summary.MealsSummary.TotalCalories - (*summary.EstimatedBMR + summary.ExerciseSummary.TotalCaloriesBurned)
-	balance = math.Round(balance*100) / 100
+	burned := *summary.EstimatedBMR + summary.ExerciseSummary.TotalCaloriesBurned
+	if summary.StepsCaloriesBurned != nil {
+		burned += *summary.StepsCaloriesBurned
+	}
+	balance := math.Round((summary.MealsSummary.TotalCalories-burned)*100) / 100
 	summary.CaloricBalance = &balance
+}
+
+func (r *summaryRepository) getSteps(userId uuid.UUID, date time.Time) (int, error) {
+	var steps int
+	err := r.db.Raw(`
+		SELECT COALESCE(steps, 0) FROM daily_steps WHERE user_id = ? AND date = ?
+	`, userId, date).Scan(&steps).Error
+	if err != nil {
+		return 0, cerr.NewInternalError("fetching daily steps for summary", err)
+	}
+	return steps, nil
+}
+
+func (r *summaryRepository) getStepsRange(userId uuid.UUID, from, to time.Time) (map[string]int, error) {
+	var results []struct {
+		Date  string
+		Steps int
+	}
+	err := r.db.Raw(`
+		SELECT date::text as date, steps FROM daily_steps
+		WHERE user_id = ? AND date >= ? AND date <= ?
+	`, userId, from, to).Scan(&results).Error
+	if err != nil {
+		return nil, cerr.NewInternalError("fetching daily steps range for summary", err)
+	}
+	m := make(map[string]int, len(results))
+	for _, row := range results {
+		m[row.Date] = row.Steps
+	}
+	return m, nil
+}
+
+func (r *summaryRepository) getLatestWeightKg(userId uuid.UUID, upToDate time.Time) *float64 {
+	var result struct {
+		WeightKg float64
+	}
+	err := r.db.Raw(`
+		SELECT weight_kg FROM weight_entries
+		WHERE user_id = ? AND date <= ?
+		ORDER BY date DESC LIMIT 1
+	`, userId, upToDate).Scan(&result).Error
+	if err != nil || result.WeightKg == 0 {
+		return nil
+	}
+	return &result.WeightKg
+}
+
+func calculateStepCalories(steps int, weightKg *float64) *float64 {
+	if steps == 0 || weightKg == nil {
+		return nil
+	}
+	cal := math.Round(float64(steps)*0.0005**weightKg*100) / 100
+	return &cal
 }
 
 func (r *summaryRepository) GetDailyCheck(userId uuid.UUID, date time.Time) (*domain.DailyCheck, error) {

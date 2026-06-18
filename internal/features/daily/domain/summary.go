@@ -3,14 +3,15 @@ package domain
 import "time"
 
 type DailySummary struct {
-	Date            time.Time
-	Closed          bool
-	MealsSummary    MealsSummary
-	ExerciseSummary ExerciseSummary
-	WeightEntry     *WeightEntrySummary
-	Goals           *GoalsSummary
-	EstimatedBMR    *float64
-	CaloricBalance  *float64
+	Date                time.Time
+	Closed              bool
+	MealsSummary        MealsSummary
+	ExerciseSummary     ExerciseSummary
+	WeightEntry         *WeightEntrySummary
+	Goals               *GoalsSummary
+	EstimatedBMR        *float64
+	StepsCaloriesBurned *float64
+	CaloricBalance      *float64
 }
 
 type MealsSummary struct {

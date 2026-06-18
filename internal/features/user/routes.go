@@ -11,6 +11,7 @@ func (f *userFeature) PublicRoutes(_ chi.Router) {}
 func (f *userFeature) AdminRoutes(r chi.Router) {
 	r.Post("/users", endpoint.JSON(f.errorHandler, f.userHandler.Create))
 	r.Get("/users", endpoint.JSON(f.errorHandler, f.userHandler.List))
+	r.Get("/users/search", endpoint.JSON(f.errorHandler, f.userHandler.FindByUsername))
 }
 
 func (f *userFeature) ProtectedRoutes(r chi.Router) {

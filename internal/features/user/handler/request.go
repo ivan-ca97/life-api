@@ -7,6 +7,7 @@ type createUserRequest struct {
 
 type updateUserRequest struct {
 	Email     *string `json:"email,omitempty"`
+	Username  *string `json:"username,omitempty"`
 	Password  *string `json:"password,omitempty"`
 	HeightCm  *int    `json:"height_cm,omitempty"`
 	BirthDate *string `json:"birth_date,omitempty"`
