@@ -25,6 +25,8 @@ func (r *watchdogRepository) AllPhotoURLs() ([]string, error) {
 		UNION
 		SELECT url FROM daily_photos
 		UNION
+		SELECT url FROM user_profile_photos
+		UNION
 		SELECT photo_url FROM foods WHERE photo_url != ''
 	`).Scan(&urls).Error
 	return urls, err

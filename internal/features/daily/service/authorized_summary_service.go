@@ -50,3 +50,11 @@ func (s *authorizedSummaryService) GetSummaryRange(ctx context.Context, ownerId 
 	}
 	return summaries, nil
 }
+
+func (s *authorizedSummaryService) GetDailyCheck(ctx context.Context, ownerId uuid.UUID, date time.Time) (*domain.DailyCheck, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead)
+	if err != nil {
+		return nil, err
+	}
+	return s.base.GetDailyCheck(ownerId, date)
+}

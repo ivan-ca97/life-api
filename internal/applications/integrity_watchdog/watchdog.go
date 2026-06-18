@@ -35,7 +35,7 @@ func NewWatchdogApplication(
 	var r2Check *checks.R2OrphanCheck
 	if r2AccountId != "" {
 		lister := storage.NewR2Lister(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket)
-		r2Check = checks.NewR2OrphanCheck(lister, repo, r2PublicURL)
+		r2Check = checks.NewR2OrphanCheck(lister, lister, repo, r2PublicURL)
 	}
 
 	sched := scheduler.New(period, dbCheck, r2Check)

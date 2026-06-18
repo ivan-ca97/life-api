@@ -21,4 +21,5 @@ type AuthorizedFoodService interface {
 	ListIngredients(ctx context.Context, ownerId uuid.UUID, query *string) ([]domain.Ingredient, error)
 	ListCommunity(ctx context.Context, params CommunityListParams) (types.Page[domain.Food], error)
 	Copy(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*domain.Food, error)
+	Impact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*ImpactResult, error)
 }

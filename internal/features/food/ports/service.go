@@ -103,6 +103,18 @@ type CommunityListParams struct {
 	Query *string
 }
 
+type PortionImpact struct {
+	PortionId   uuid.UUID
+	PortionName string
+	ItemCount   int64
+}
+
+type ImpactResult struct {
+	TotalItems    int64
+	TotalUsers    int64
+	PortionImpact []PortionImpact
+}
+
 type FoodService interface {
 	Create(userId uuid.UUID, params CreateParams) (*domain.Food, error)
 	GetById(id, userId uuid.UUID) (*domain.Food, error)
@@ -114,4 +126,5 @@ type FoodService interface {
 	ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error)
 	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
 	Copy(actorId, foodId uuid.UUID) (*domain.Food, error)
+	Impact(foodId, userId uuid.UUID) (*ImpactResult, error)
 }

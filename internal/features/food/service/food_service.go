@@ -255,6 +255,13 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 	return result, nil
 }
 
+func (s *foodService) Impact(foodId, userId uuid.UUID) (*ports.ImpactResult, error) {
+	if _, err := s.repository.FindById(foodId, userId); err != nil {
+		return nil, err
+	}
+	return s.repository.Impact(foodId)
+}
+
 func validateMeasurementType(mt string) error {
 	if !domain.IsValidMeasurementType(mt) {
 		return cerr.NewBadRequestError(fmt.Sprintf("invalid measurement_type '%s', must be 'mass', 'volume' or 'unit'", mt))

@@ -180,6 +180,34 @@ type ingredientFrequencyItemResponse struct {
 	LastDate       string    `json:"last_date"`
 }
 
+type portionImpactResponse struct {
+	PortionId   uuid.UUID `json:"portion_id"`
+	PortionName string    `json:"portion_name"`
+	ItemCount   int64     `json:"item_count"`
+}
+
+type impactResponse struct {
+	TotalItems    int64                    `json:"total_items"`
+	TotalUsers    int64                    `json:"total_users"`
+	PortionImpact []portionImpactResponse  `json:"portion_impact"`
+}
+
+func newImpactResponse(r *ports.ImpactResult) *impactResponse {
+	portions := make([]portionImpactResponse, len(r.PortionImpact))
+	for i, p := range r.PortionImpact {
+		portions[i] = portionImpactResponse{
+			PortionId:   p.PortionId,
+			PortionName: p.PortionName,
+			ItemCount:   p.ItemCount,
+		}
+	}
+	return &impactResponse{
+		TotalItems:    r.TotalItems,
+		TotalUsers:    r.TotalUsers,
+		PortionImpact: portions,
+	}
+}
+
 type ingredientFrequencyResponse struct {
 	Items []ingredientFrequencyItemResponse `json:"items"`
 }

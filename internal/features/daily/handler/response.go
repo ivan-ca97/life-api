@@ -50,6 +50,30 @@ type summaryRangeResponse struct {
 	Data []summaryResponse `json:"data"`
 }
 
+type dailyCheckResponse struct {
+	Date                string `json:"date"`
+	Complete            bool   `json:"complete"`
+	MissingMeasurements int    `json:"missing_measurements"`
+	MealsWithoutPhoto   int    `json:"meals_without_photo"`
+	HasDailyPhoto       bool   `json:"has_daily_photo"`
+	HasSteps            bool   `json:"has_steps"`
+	HasExercise         bool   `json:"has_exercise"`
+	HasRecentWeight     bool   `json:"has_recent_weight"`
+}
+
+func dailyCheckFromDomain(c *domain.DailyCheck) *dailyCheckResponse {
+	return &dailyCheckResponse{
+		Date:                c.Date.Format("2006-01-02"),
+		Complete:            c.Complete,
+		MissingMeasurements: c.MissingMeasurements,
+		MealsWithoutPhoto:   c.MealsWithoutPhoto,
+		HasDailyPhoto:       c.HasDailyPhoto,
+		HasSteps:            c.HasSteps,
+		HasExercise:         c.HasExercise,
+		HasRecentWeight:     c.HasRecentWeight,
+	}
+}
+
 func summaryFromDomain(s *domain.DailySummary) *summaryResponse {
 	response := &summaryResponse{
 		Date:   s.Date.Format("2006-01-02"),

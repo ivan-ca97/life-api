@@ -12,6 +12,7 @@ import (
 type SummaryHandler interface {
 	GetSummary(r *http.Request) (*summaryResponse, int, error)
 	GetSummaryRange(r *http.Request) (*summaryRangeResponse, int, error)
+	GetDailyCheck(r *http.Request) (*dailyCheckResponse, int, error)
 }
 
 type summaryHandler struct {
@@ -43,6 +44,25 @@ func (h *summaryHandler) GetSummary(r *http.Request) (*summaryResponse, int, err
 		return nil, 0, err
 	}
 	return summaryFromDomain(summary), http.StatusOK, nil
+}
+
+func (h *summaryHandler) GetDailyCheck(r *http.Request) (*dailyCheckResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	date, err := api.QueryParamDate(r, "date")
+	if err != nil {
+		return nil, 0, err
+	}
+	if date == nil {
+		return nil, 0, cerr.NewBadRequestError("date query parameter is required (format: YYYY-MM-DD)")
+	}
+	check, err := h.service.GetDailyCheck(r.Context(), userId, *date)
+	if err != nil {
+		return nil, 0, err
+	}
+	return dailyCheckFromDomain(check), http.StatusOK, nil
 }
 
 func (h *summaryHandler) GetSummaryRange(r *http.Request) (*summaryRangeResponse, int, error) {

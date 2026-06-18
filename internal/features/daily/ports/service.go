@@ -11,4 +11,5 @@ import (
 type SummaryService interface {
 	GetSummary(userId uuid.UUID, date time.Time) (*domain.DailySummary, error)
 	GetSummaryRange(userId uuid.UUID, from, to time.Time) ([]domain.DailySummary, error)
+	GetDailyCheck(userId uuid.UUID, date time.Time) (*domain.DailyCheck, error)
 }

@@ -21,6 +21,7 @@ func (f *foodFeature) ProtectedRoutes(r chi.Router) {
 	r.Get("/foods/ingredients/frequency", endpoint.JSON(f.errorHandler, f.foodHandler.IngredientFrequency))
 	r.Post("/foods/{id}/copy", endpoint.JSON(f.errorHandler, f.foodHandler.Copy))
 	r.Get("/foods/{id}/units", endpoint.JSON(f.errorHandler, f.foodHandler.ListFoodUnits))
+	r.Get("/foods/{id}/impact", endpoint.JSON(f.errorHandler, f.foodHandler.Impact))
 	r.Get("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.GetById))
 	r.Patch("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.Update))
 	r.Delete("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.Delete))

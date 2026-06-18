@@ -146,3 +146,11 @@ func (s *authorizedFoodService) Copy(ctx context.Context, ownerId uuid.UUID, foo
 	}
 	return food, nil
 }
+
+func (s *authorizedFoodService) Impact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*ports.ImpactResult, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
+	if err != nil {
+		return nil, err
+	}
+	return s.base.Impact(foodId, ownerId)
+}

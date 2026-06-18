@@ -20,4 +20,5 @@ type FoodRepository interface {
 	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error)
 	IsAccessibleBy(foodId, actorId uuid.UUID) (bool, error)
+	Impact(foodId uuid.UUID) (*ImpactResult, error)
 }

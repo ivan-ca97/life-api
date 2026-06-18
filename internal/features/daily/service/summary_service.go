@@ -36,3 +36,7 @@ func (s *summaryService) GetSummaryRange(userId uuid.UUID, from, to time.Time) (
 	}
 	return summaries, nil
 }
+
+func (s *summaryService) GetDailyCheck(userId uuid.UUID, date time.Time) (*domain.DailyCheck, error) {
+	return s.repository.GetDailyCheck(userId, date)
+}

@@ -12,4 +12,5 @@ import (
 type AuthorizedSummaryService interface {
 	GetSummary(ctx context.Context, ownerId uuid.UUID, date time.Time) (*domain.DailySummary, error)
 	GetSummaryRange(ctx context.Context, ownerId uuid.UUID, from, to time.Time) ([]domain.DailySummary, error)
+	GetDailyCheck(ctx context.Context, ownerId uuid.UUID, date time.Time) (*domain.DailyCheck, error)
 }

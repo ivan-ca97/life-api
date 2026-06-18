@@ -34,9 +34,10 @@ type dbIntegrityResponse struct {
 }
 
 type r2OrphanResponse struct {
-	Clean      bool     `json:"clean"`
-	OrphanKeys []string `json:"orphan_keys"`
-	BrokenRefs []string `json:"broken_refs"`
+	Clean       bool     `json:"clean"`
+	OrphanKeys  []string `json:"orphan_keys"`
+	DeletedKeys []string `json:"deleted_keys"`
+	BrokenRefs  []string `json:"broken_refs"`
 }
 
 type lastRunResponse struct {
@@ -74,9 +75,10 @@ func buildStatusResponse(s *scheduler.Scheduler) *statusResponse {
 		}
 		if last.R2 != nil {
 			run.R2 = &r2OrphanResponse{
-				Clean:      last.R2.IsClean(),
-				OrphanKeys: nullSlice(last.R2.OrphanKeys),
-				BrokenRefs: nullSlice(last.R2.BrokenRefs),
+				Clean:       last.R2.IsClean(),
+				OrphanKeys:  nullSlice(last.R2.OrphanKeys),
+				DeletedKeys: nullSlice(last.R2.DeletedKeys),
+				BrokenRefs:  nullSlice(last.R2.BrokenRefs),
 			}
 		}
 		resp.LastRun = run

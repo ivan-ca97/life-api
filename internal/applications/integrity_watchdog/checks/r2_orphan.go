@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/ivan-ca97/life/internal/applications/integrity_watchdog/ports"
@@ -10,22 +11,25 @@ import (
 type R2OrphanResult struct {
 	// Keys in R2 not referenced by any DB record.
 	OrphanKeys []string
+	// Keys that were found as orphans and successfully deleted from R2.
+	DeletedKeys []string
 	// URLs stored in DB that no longer exist in R2.
 	BrokenRefs []string
 }
 
 func (r *R2OrphanResult) IsClean() bool {
-	return len(r.OrphanKeys) == 0 && len(r.BrokenRefs) == 0
+	return len(r.OrphanKeys) == 0 && len(r.DeletedKeys) == 0 && len(r.BrokenRefs) == 0
 }
 
 type R2OrphanCheck struct {
 	lister     ports.ObjectLister
+	deleter    ports.ObjectDeleter // nil = report only, non-nil = auto-delete
 	repository ports.WatchdogRepository
 	publicURL  string
 }
 
-func NewR2OrphanCheck(lister ports.ObjectLister, repository ports.WatchdogRepository, publicURL string) *R2OrphanCheck {
-	return &R2OrphanCheck{lister: lister, repository: repository, publicURL: publicURL}
+func NewR2OrphanCheck(lister ports.ObjectLister, deleter ports.ObjectDeleter, repository ports.WatchdogRepository, publicURL string) *R2OrphanCheck {
+	return &R2OrphanCheck{lister: lister, deleter: deleter, repository: repository, publicURL: publicURL}
 }
 
 func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {
@@ -66,5 +70,19 @@ func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {
 		}
 	}
 
-	return &R2OrphanResult{OrphanKeys: orphans, BrokenRefs: broken}, nil
+	result := &R2OrphanResult{BrokenRefs: broken}
+
+	if c.deleter != nil && len(orphans) > 0 {
+		if err := c.deleter.DeleteKeys(orphans); err != nil {
+			slog.Error("r2 orphan cleanup: delete failed", "error", err, "count", len(orphans))
+			result.OrphanKeys = orphans
+		} else {
+			slog.Info("r2 orphan cleanup: deleted orphans", "count", len(orphans))
+			result.DeletedKeys = orphans
+		}
+	} else {
+		result.OrphanKeys = orphans
+	}
+
+	return result, nil
 }

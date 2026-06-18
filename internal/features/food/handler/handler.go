@@ -23,6 +23,7 @@ type FoodHandler interface {
 	ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, error)
 	ListCommunity(r *http.Request) (*foodPage, int, error)
 	Copy(r *http.Request) (*foodResponse, int, error)
+	Impact(r *http.Request) (*impactResponse, int, error)
 }
 
 type foodHandler struct {
@@ -357,4 +358,20 @@ func (h *foodHandler) Copy(r *http.Request) (*foodResponse, int, error) {
 		return nil, 0, err
 	}
 	return foodFromDomain(food), http.StatusCreated, nil
+}
+
+func (h *foodHandler) Impact(r *http.Request) (*impactResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	id, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	result, err := h.service.Impact(r.Context(), userId, id)
+	if err != nil {
+		return nil, 0, err
+	}
+	return newImpactResponse(result), http.StatusOK, nil
 }

@@ -360,6 +360,75 @@ func applyCaloricBalance(summary *domain.DailySummary) {
 	summary.CaloricBalance = &balance
 }
 
+func (r *summaryRepository) GetDailyCheck(userId uuid.UUID, date time.Time) (*domain.DailyCheck, error) {
+	var missingMeasurements int64
+	if err := r.db.Raw(`
+		SELECT COUNT(mi.id)
+		FROM meal_items mi
+		JOIN meals m ON m.id = mi.meal_id
+		WHERE m.user_id = ? AND m.date = ?
+		  AND (mi.measurement_method IS NULL OR mi.measurement_method = '')
+	`, userId, date).Scan(&missingMeasurements).Error; err != nil {
+		return nil, cerr.NewInternalError("checking missing measurements", err)
+	}
+
+	var mealsWithoutPhoto int64
+	if err := r.db.Raw(`
+		SELECT COUNT(m.id)
+		FROM meals m
+		WHERE m.user_id = ? AND m.date = ?
+		  AND NOT EXISTS (SELECT 1 FROM meal_photos mp WHERE mp.meal_id = m.id)
+	`, userId, date).Scan(&mealsWithoutPhoto).Error; err != nil {
+		return nil, cerr.NewInternalError("checking meals without photo", err)
+	}
+
+	var dailyPhotoCount int64
+	if err := r.db.Raw(`
+		SELECT COUNT(*) FROM daily_photos WHERE user_id = ? AND date = ?
+	`, userId, date).Scan(&dailyPhotoCount).Error; err != nil {
+		return nil, cerr.NewInternalError("checking daily photo", err)
+	}
+
+	var stepsCount int64
+	if err := r.db.Raw(`
+		SELECT COUNT(*) FROM daily_steps WHERE user_id = ? AND date = ?
+	`, userId, date).Scan(&stepsCount).Error; err != nil {
+		return nil, cerr.NewInternalError("checking daily steps", err)
+	}
+
+	var exerciseCount int64
+	if err := r.db.Raw(`
+		SELECT COUNT(*) FROM exercises WHERE user_id = ? AND date = ?
+	`, userId, date).Scan(&exerciseCount).Error; err != nil {
+		return nil, cerr.NewInternalError("checking exercises", err)
+	}
+
+	weekAgo := date.AddDate(0, 0, -6)
+	var recentWeightCount int64
+	if err := r.db.Raw(`
+		SELECT COUNT(*) FROM weight_entries
+		WHERE user_id = ? AND date >= ? AND date <= ?
+	`, userId, weekAgo, date).Scan(&recentWeightCount).Error; err != nil {
+		return nil, cerr.NewInternalError("checking recent weight", err)
+	}
+
+	check := &domain.DailyCheck{
+		Date:                date,
+		MissingMeasurements: int(missingMeasurements),
+		MealsWithoutPhoto:   int(mealsWithoutPhoto),
+		HasDailyPhoto:       dailyPhotoCount > 0,
+		HasSteps:            stepsCount > 0,
+		HasExercise:         exerciseCount > 0,
+		HasRecentWeight:     recentWeightCount > 0,
+	}
+	check.Complete = check.MissingMeasurements == 0 &&
+		check.MealsWithoutPhoto == 0 &&
+		check.HasDailyPhoto &&
+		check.HasSteps &&
+		check.HasRecentWeight
+	return check, nil
+}
+
 func (r *summaryRepository) isDateClosed(userId uuid.UUID, date time.Time) (bool, error) {
 	var count int64
 	err := r.db.
