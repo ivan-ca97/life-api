@@ -6,6 +6,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/api"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/daily/domain"
 	"github.com/ivan-ca97/life/internal/features/daily/ports"
@@ -111,6 +112,33 @@ func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionRespon
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, 0, cerr.NewBadRequestError("invalid date format, expected YYYY-MM-DD")
+	}
+	if err := validate.NonNegativePtr(req.Calories, "calories"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.ProteinGrams, "protein_grams"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.CarbsGrams, "carbs_grams"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.FatGrams, "fat_grams"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.FiberGrams, "fiber_grams"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.CaloriesBurned, "calories_burned"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativeIntPtr(req.Steps, "steps"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativeIntPtr(req.DurationSeconds, "duration_seconds"); err != nil {
+		return nil, 0, err
+	}
+	if err := validate.NonNegativePtr(req.DistanceMeters, "distance_meters"); err != nil {
+		return nil, 0, err
 	}
 	correction := &domain.Correction{
 		Date:            date,

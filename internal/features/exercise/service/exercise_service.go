@@ -5,6 +5,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/exercise/domain"
 	"github.com/ivan-ca97/life/internal/features/exercise/ports"
@@ -33,8 +34,38 @@ func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*
 		return nil, dayclosure.ErrDayClosed
 	}
 
+	if err := validate.NonEmpty(params.Name, "name"); err != nil {
+		return nil, err
+	}
 	if !domain.IsValidExerciseType(params.Type) {
 		return nil, domain.ErrInvalidExerciseType
+	}
+	if err := validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.Steps, "steps"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.DistanceMeters, "distance_meters"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.TotalSets, "total_sets"); err != nil {
+		return nil, err
 	}
 	avgSpeed, avgPace := computeSpeedAndPace(params.DistanceMeters, params.DurationSeconds)
 	exercise := &domain.Exercise{
@@ -98,6 +129,33 @@ func (s *exerciseService) Update(id, userId uuid.UUID, params ports.UpdateParams
 
 	if params.Type != nil && !domain.IsValidExerciseType(*params.Type) {
 		return nil, domain.ErrInvalidExerciseType
+	}
+	if err := validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.Steps, "steps"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.DistanceMeters, "distance_meters"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg"); err != nil {
+		return nil, err
+	}
+	if err := validate.NonNegativeIntPtr(params.TotalSets, "total_sets"); err != nil {
+		return nil, err
 	}
 	if params.DistanceMeters != nil || params.DurationSeconds != nil {
 		distance := current.DistanceMeters

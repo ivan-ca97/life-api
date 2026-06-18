@@ -39,4 +39,7 @@ const (
 
 	StepsRead  = "steps:read"
 	StepsWrite = "steps:write"
+
+	MeasurementsRead  = "measurements:read"
+	MeasurementsWrite = "measurements:write"
 )

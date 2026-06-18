@@ -67,16 +67,8 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 	}
 
 	if len(m.Tags) > 0 {
-		tags := make([]mealTag, len(m.Tags))
-		for i, t := range m.Tags {
-			tags[i] = mealTag{
-				MealId: m.Id,
-				Tag:    t,
-			}
-		}
-		err = r.db.Create(&tags).Error
-		if err != nil {
-			return cerr.NewInternalError("inserting meal tags", err)
+		if err := r.upsertTags(m.Id, m.UserId, m.Tags); err != nil {
+			return err
 		}
 	}
 
@@ -86,7 +78,7 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 func (r *mealRepository) FindById(id, userId uuid.UUID) (*domain.Meal, error) {
 	var model meal
 	err := r.db.
-		Preload("Tags").
+		Preload("Tags.Tag").
 		Preload("Items").
 		Preload("Items.Food").
 		Preload("Photos").
@@ -113,7 +105,7 @@ func (r *mealRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 		return types.Page[domain.Meal]{}, cerr.NewInternalError("counting meals", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Items").Preload("Items.Food").Preload("Photos").Where("user_id = ?", userId)
+	findQuery := r.db.Preload("Tags.Tag").Preload("Items").Preload("Items.Food").Preload("Photos").Where("user_id = ?", userId)
 	findQuery = applyMealFilters(findQuery, params)
 	err = findQuery.
 		Limit(params.Limit).
@@ -189,21 +181,12 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	}
 
 	if params.Tags != nil {
-		err = r.db.Where("meal_id = ?", id).Delete(&mealTag{}).Error
-		if err != nil {
-			return nil, cerr.NewInternalError("deleting meal tags", err)
+		if err = r.db.Where("meal_id = ?", id).Delete(&mealTagMap{}).Error; err != nil {
+			return nil, cerr.NewInternalError("deleting meal tag map", err)
 		}
 		if len(*params.Tags) > 0 {
-			tags := make([]mealTag, len(*params.Tags))
-			for i, t := range *params.Tags {
-				tags[i] = mealTag{
-					MealId: id,
-					Tag:    t,
-				}
-			}
-			err = r.db.Create(&tags).Error
-			if err != nil {
-				return nil, cerr.NewInternalError("inserting meal tags", err)
+			if err = r.upsertTags(id, userId, *params.Tags); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -363,7 +346,7 @@ func applyMealFilters(q *gorm.DB, params ports.ListParams) *gorm.DB {
 		q = q.Where("type = ?", *params.Type)
 	}
 	if params.Tag != nil {
-		q = q.Where("id IN (SELECT meal_id FROM meal_tags WHERE tag = ?)", *params.Tag)
+		q = q.Where("id IN (SELECT mtm.meal_id FROM meal_tag_map mtm JOIN meal_tags mt ON mt.id = mtm.tag_id WHERE mt.name = ?)", *params.Tag)
 	}
 	if params.FoodId != nil {
 		q = q.Where("id IN (SELECT meal_id FROM meal_items WHERE food_id = ?)", *params.FoodId)
@@ -448,4 +431,26 @@ func buildMealItem(mealId uuid.UUID, item domain.MealItem) mealItem {
 		Notes:                  item.Notes,
 		MeasurementMethod:      method,
 	}
+}
+
+func (r *mealRepository) upsertTags(mealId, userId uuid.UUID, names []string) error {
+	entries := make([]mealTag, len(names))
+	for i, name := range names {
+		entries[i] = mealTag{Id: uuid.New(), UserId: userId, Name: name}
+	}
+	if err := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
+		DoNothing: true,
+	}).Create(&entries).Error; err != nil {
+		return cerr.NewInternalError("upserting meal tags", err)
+	}
+	var tags []mealTag
+	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+		return cerr.NewInternalError("fetching meal tag ids", err)
+	}
+	maps := make([]mealTagMap, len(tags))
+	for i, t := range tags {
+		maps[i] = mealTagMap{MealId: mealId, TagId: t.Id}
+	}
+	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
 }

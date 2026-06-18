@@ -5,6 +5,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/weight/domain"
 	"github.com/ivan-ca97/life/internal/features/weight/ports"
@@ -25,6 +26,12 @@ func NewWeightEntryService(repository ports.WeightEntryRepository, closureChecke
 }
 
 func (s *weightEntryService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.WeightEntry, error) {
+	if err := validate.InRange(params.WeightKg, 30, 500, "weight_kg"); err != nil {
+		return nil, err
+	}
+	if err := validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage"); err != nil {
+		return nil, err
+	}
 	closed, err := s.closureChecker.IsClosed(userId, params.Date)
 	if err != nil {
 		return nil, err
@@ -66,6 +73,12 @@ func (s *weightEntryService) List(userId uuid.UUID, params ports.ListParams) (ty
 }
 
 func (s *weightEntryService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.WeightEntry, error) {
+	if err := validate.InRangePtr(params.WeightKg, 30, 500, "weight_kg"); err != nil {
+		return nil, err
+	}
+	if err := validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage"); err != nil {
+		return nil, err
+	}
 	entry, err := s.repository.FindById(id, userId)
 	if err != nil {
 		return nil, err

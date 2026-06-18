@@ -23,15 +23,26 @@ type meal struct {
 	Notes        string      `gorm:"not null;default:''"`
 	CreatedAt    time.Time   `gorm:"not null;autoCreateTime"`
 	UpdatedAt    time.Time   `gorm:"not null;autoUpdateTime"`
-	Tags         []mealTag   `gorm:"foreignKey:MealId"`
+	Tags         []mealTagMap `gorm:"foreignKey:MealId"`
 	Items        []mealItem  `gorm:"foreignKey:MealId"`
 	Photos       []mealPhoto `gorm:"foreignKey:MealId"`
 }
 
 type mealTag struct {
-	MealId uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Tag    string    `gorm:"primaryKey"`
+	Id     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId uuid.UUID `gorm:"type:uuid;not null"`
+	Name   string    `gorm:"not null"`
 }
+
+func (mealTag) TableName() string { return "meal_tags" }
+
+type mealTagMap struct {
+	MealId uuid.UUID `gorm:"type:uuid;primaryKey"`
+	TagId  uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Tag    mealTag   `gorm:"foreignKey:TagId;references:Id"`
+}
+
+func (mealTagMap) TableName() string { return "meal_tag_map" }
 
 type mealItem struct {
 	Id                     uuid.UUID  `gorm:"type:uuid;primaryKey"`
@@ -78,7 +89,7 @@ func (mealPhoto) TableName() string {
 func (m *meal) toDomain() *domain.Meal {
 	tags := make([]string, len(m.Tags))
 	for i, t := range m.Tags {
-		tags[i] = t.Tag
+		tags[i] = t.Tag.Name
 	}
 	items := make([]domain.MealItem, len(m.Items))
 	for i, item := range m.Items {

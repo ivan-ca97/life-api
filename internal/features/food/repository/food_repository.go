@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
@@ -36,16 +37,8 @@ func (r *foodRepository) Create(f *domain.Food) error {
 		return cerr.NewInternalError("inserting food", err)
 	}
 	if len(f.Tags) > 0 {
-		tags := make([]foodTag, len(f.Tags))
-		for i, t := range f.Tags {
-			tags[i] = foodTag{
-				FoodId: f.Id,
-				Tag:    t,
-			}
-		}
-		err = r.db.Create(&tags).Error
-		if err != nil {
-			return cerr.NewInternalError("inserting food tags", err)
+		if err := r.upsertTags(f.Id, f.UserId, f.Tags); err != nil {
+			return err
 		}
 	}
 	if len(f.Ingredients) > 0 {
@@ -85,7 +78,7 @@ func (r *foodRepository) Create(f *domain.Food) error {
 func (r *foodRepository) FindById(id, userId uuid.UUID) (*domain.Food, error) {
 	var model food
 	err := r.db.
-		Preload("Tags").
+		Preload("Tags.Tag").
 		Preload("Ingredients").
 		Preload("Ingredients.Ingredient").
 		Preload("Portions").
@@ -110,19 +103,19 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 		countQuery = countQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
 	}
 	if params.Tag != nil {
-		countQuery = countQuery.Where("id IN (SELECT food_id FROM food_tags WHERE tag = ?)", *params.Tag)
+		countQuery = countQuery.Where("id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)", *params.Tag)
 	}
 	err := countQuery.Count(&total).Error
 	if err != nil {
 		return types.Page[domain.Food]{}, cerr.NewInternalError("counting foods", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("user_id = ?", userId)
+	findQuery := r.db.Preload("Tags.Tag").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("user_id = ?", userId)
 	if params.Query != nil {
 		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
 	}
 	if params.Tag != nil {
-		findQuery = findQuery.Where("id IN (SELECT food_id FROM food_tags WHERE tag = ?)", *params.Tag)
+		findQuery = findQuery.Where("id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)", *params.Tag)
 	}
 	orderClause := "name ASC"
 	if params.Sort != nil {
@@ -232,18 +225,12 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	}
 
 	if params.Tags != nil {
-		err = r.db.Where("food_id = ?", id).Delete(&foodTag{}).Error
-		if err != nil {
-			return nil, cerr.NewInternalError("deleting food tags", err)
+		if err = r.db.Where("food_id = ?", id).Delete(&foodTagMap{}).Error; err != nil {
+			return nil, cerr.NewInternalError("deleting food tag map", err)
 		}
 		if len(*params.Tags) > 0 {
-			tags := make([]foodTag, len(*params.Tags))
-			for i, t := range *params.Tags {
-				tags[i] = foodTag{FoodId: id, Tag: t}
-			}
-			err = r.db.Create(&tags).Error
-			if err != nil {
-				return nil, cerr.NewInternalError("inserting food tags", err)
+			if err = r.upsertTags(id, userId, *params.Tags); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -290,7 +277,7 @@ func (r *foodRepository) Delete(id, userId uuid.UUID) error {
 func (r *foodRepository) FindByIdGlobal(id uuid.UUID) (*domain.Food, error) {
 	var model food
 	err := r.db.
-		Preload("Tags").
+		Preload("Tags.Tag").
 		Preload("Ingredients").
 		Preload("Ingredients.Ingredient").
 		Preload("Portions").
@@ -319,7 +306,7 @@ func (r *foodRepository) ListCommunity(params ports.CommunityListParams) (types.
 		return types.Page[domain.Food]{}, cerr.NewInternalError("counting community foods", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("public = true")
+	findQuery := r.db.Preload("Tags.Tag").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("public = true")
 	if params.Query != nil {
 		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
 	}
@@ -576,7 +563,7 @@ func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParam
 		args = append(args, *params.To)
 	}
 	if params.Tag != nil {
-		query += " AND f.id IN (SELECT food_id FROM food_tags WHERE tag = ?)"
+		query += " AND f.id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)"
 		args = append(args, *params.Tag)
 	}
 
@@ -588,4 +575,26 @@ func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParam
 		return nil, cerr.NewInternalError("querying food frequency", err)
 	}
 	return results, nil
+}
+
+func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) error {
+	entries := make([]foodTag, len(names))
+	for i, name := range names {
+		entries[i] = foodTag{Id: uuid.New(), UserId: userId, Name: name}
+	}
+	if err := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
+		DoNothing: true,
+	}).Create(&entries).Error; err != nil {
+		return cerr.NewInternalError("upserting food tags", err)
+	}
+	var tags []foodTag
+	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+		return cerr.NewInternalError("fetching food tag ids", err)
+	}
+	maps := make([]foodTagMap, len(tags))
+	for i, t := range tags {
+		maps[i] = foodTagMap{FoodId: foodId, TagId: t.Id}
+	}
+	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
 }

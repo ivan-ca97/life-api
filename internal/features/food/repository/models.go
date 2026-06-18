@@ -28,15 +28,26 @@ type food struct {
 	UnitNote            *string
 	CreatedAt           time.Time     `gorm:"not null;autoCreateTime"`
 	UpdatedAt           time.Time     `gorm:"not null;autoUpdateTime"`
-	Tags                []foodTag     `gorm:"foreignKey:FoodId"`
+	Tags                []foodTagMap  `gorm:"foreignKey:FoodId"`
 	Ingredients         []foodIngredient `gorm:"foreignKey:FoodId"`
 	Portions            []foodPortion `gorm:"foreignKey:FoodId"`
 }
 
 type foodTag struct {
-	FoodId uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Tag    string    `gorm:"primaryKey"`
+	Id     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId uuid.UUID `gorm:"type:uuid;not null"`
+	Name   string    `gorm:"not null"`
 }
+
+func (foodTag) TableName() string { return "food_tags" }
+
+type foodTagMap struct {
+	FoodId uuid.UUID `gorm:"type:uuid;primaryKey"`
+	TagId  uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Tag    foodTag   `gorm:"foreignKey:TagId;references:Id"`
+}
+
+func (foodTagMap) TableName() string { return "food_tag_map" }
 
 type ingredient struct {
 	Id     uuid.UUID `gorm:"type:uuid;primaryKey"`
@@ -68,7 +79,7 @@ func (foodPortion) TableName() string {
 func (f *food) toDomain() *domain.Food {
 	tags := make([]string, len(f.Tags))
 	for i, t := range f.Tags {
-		tags[i] = t.Tag
+		tags[i] = t.Tag.Name
 	}
 	ingredients := make([]domain.Ingredient, len(f.Ingredients))
 	for i, fi := range f.Ingredients {

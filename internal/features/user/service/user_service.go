@@ -6,6 +6,7 @@ import (
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/user/domain"
 	"github.com/ivan-ca97/life/internal/features/user/ports"
@@ -26,6 +27,12 @@ func NewUserService(repository ports.UserRepository, photoRepository ports.Profi
 }
 
 func (s *userService) Create(email, password string) (*domain.User, error) {
+	if err := validate.Email(email); err != nil {
+		return nil, err
+	}
+	if err := validate.PasswordMinLength(password); err != nil {
+		return nil, err
+	}
 	exists, err := s.repository.EmailExists(email)
 	if err != nil {
 		return nil, err
@@ -104,6 +111,9 @@ func (s *userService) FindByUsername(username string) (*domain.User, error) {
 
 func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
 	if params.Email != nil {
+		if err := validate.Email(*params.Email); err != nil {
+			return nil, err
+		}
 		exists, err := s.repository.EmailExists(*params.Email)
 		if err != nil {
 			return nil, err
@@ -113,12 +123,33 @@ func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.U
 		}
 	}
 	if params.Username != nil {
+		if err := validate.NonEmpty(*params.Username, "username"); err != nil {
+			return nil, err
+		}
+		if err := validate.MaxLength(*params.Username, 50, "username"); err != nil {
+			return nil, err
+		}
 		exists, err := s.repository.UsernameExists(*params.Username)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
 			return nil, domain.ErrUsernameTaken
+		}
+	}
+	if params.HeightCm != nil {
+		if err := validate.InRange(float64(*params.HeightCm), 50, 300, "height_cm"); err != nil {
+			return nil, err
+		}
+	}
+	if params.BirthDate != nil {
+		if err := validate.NotFuture(*params.BirthDate, "birth_date"); err != nil {
+			return nil, err
+		}
+	}
+	if params.Sex != nil {
+		if err := validate.OneOf(*params.Sex, []string{"male", "female", "other"}, "sex"); err != nil {
+			return nil, err
 		}
 	}
 	if params.Password != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
@@ -33,16 +34,8 @@ func (r *exerciseRepository) Create(e *domain.Exercise) error {
 		return cerr.NewInternalError("inserting exercise", err)
 	}
 	if len(e.Tags) > 0 {
-		tags := make([]exerciseTag, len(e.Tags))
-		for i, t := range e.Tags {
-			tags[i] = exerciseTag{
-				ExerciseId: e.Id,
-				Tag:        t,
-			}
-		}
-		err = r.db.Create(&tags).Error
-		if err != nil {
-			return cerr.NewInternalError("inserting exercise tags", err)
+		if err := r.upsertTags(e.Id, e.UserId, e.Tags); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -51,7 +44,7 @@ func (r *exerciseRepository) Create(e *domain.Exercise) error {
 func (r *exerciseRepository) FindById(id, userId uuid.UUID) (*domain.Exercise, error) {
 	var model exercise
 	err := r.db.
-		Preload("Tags").
+		Preload("Tags.Tag").
 		Where("id = ? AND user_id = ?", id, userId).
 		First(&model).
 		Error
@@ -77,7 +70,7 @@ func (r *exerciseRepository) List(userId uuid.UUID, params ports.ListParams) (ty
 		return types.Page[domain.Exercise]{}, cerr.NewInternalError("counting exercises", err)
 	}
 
-	findQuery := r.db.Preload("Tags").Where("user_id = ?", userId)
+	findQuery := r.db.Preload("Tags.Tag").Where("user_id = ?", userId)
 	if params.Date != nil {
 		findQuery = findQuery.Where("date = ?", *params.Date)
 	}
@@ -176,26 +169,39 @@ func (r *exerciseRepository) Update(id, userId uuid.UUID, params ports.UpdatePar
 	}
 
 	if params.Tags != nil {
-		err = r.db.Where("exercise_id = ?", id).Delete(&exerciseTag{}).Error
-		if err != nil {
-			return nil, cerr.NewInternalError("deleting exercise tags", err)
+		if err = r.db.Where("exercise_id = ?", id).Delete(&exerciseTagMap{}).Error; err != nil {
+			return nil, cerr.NewInternalError("deleting exercise tag map", err)
 		}
 		if len(*params.Tags) > 0 {
-			tags := make([]exerciseTag, len(*params.Tags))
-			for i, t := range *params.Tags {
-				tags[i] = exerciseTag{
-					ExerciseId: id,
-					Tag:        t,
-				}
-			}
-			err = r.db.Create(&tags).Error
-			if err != nil {
-				return nil, cerr.NewInternalError("inserting exercise tags", err)
+			if err = r.upsertTags(id, userId, *params.Tags); err != nil {
+				return nil, err
 			}
 		}
 	}
 
 	return r.FindById(id, userId)
+}
+
+func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []string) error {
+	entries := make([]exerciseTag, len(names))
+	for i, name := range names {
+		entries[i] = exerciseTag{Id: uuid.New(), UserId: userId, Name: name}
+	}
+	if err := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
+		DoNothing: true,
+	}).Create(&entries).Error; err != nil {
+		return cerr.NewInternalError("upserting exercise tags", err)
+	}
+	var tags []exerciseTag
+	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+		return cerr.NewInternalError("fetching exercise tag ids", err)
+	}
+	maps := make([]exerciseTagMap, len(tags))
+	for i, t := range tags {
+		maps[i] = exerciseTagMap{ExerciseId: exerciseId, TagId: t.Id}
+	}
+	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
 }
 
 func (r *exerciseRepository) Delete(id, userId uuid.UUID) error {

@@ -31,18 +31,29 @@ type exercise struct {
 	ExternalId              *string
 	CreatedAt               time.Time     `gorm:"not null;autoCreateTime"`
 	UpdatedAt               time.Time     `gorm:"not null;autoUpdateTime"`
-	Tags                    []exerciseTag `gorm:"foreignKey:ExerciseId"`
+	Tags                    []exerciseTagMap `gorm:"foreignKey:ExerciseId"`
 }
 
 type exerciseTag struct {
-	ExerciseId uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Tag        string    `gorm:"primaryKey"`
+	Id     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId uuid.UUID `gorm:"type:uuid;not null"`
+	Name   string    `gorm:"not null"`
 }
+
+func (exerciseTag) TableName() string { return "exercise_tags" }
+
+type exerciseTagMap struct {
+	ExerciseId uuid.UUID   `gorm:"type:uuid;primaryKey"`
+	TagId      uuid.UUID   `gorm:"type:uuid;primaryKey"`
+	Tag        exerciseTag `gorm:"foreignKey:TagId;references:Id"`
+}
+
+func (exerciseTagMap) TableName() string { return "exercise_tag_map" }
 
 func (m *exercise) toDomain() *domain.Exercise {
 	tags := make([]string, len(m.Tags))
 	for i, t := range m.Tags {
-		tags[i] = t.Tag
+		tags[i] = t.Tag.Name
 	}
 	return &domain.Exercise{
 		Id:                      m.Id,
