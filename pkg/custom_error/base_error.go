@@ -57,6 +57,14 @@ func NewBadRequestError(msg string) *BaseHttpError {
 	}
 }
 
+func NewTooManyRequestsError(msg string) *BaseHttpError {
+	return &BaseHttpError{
+		msg:        msg,
+		statusCode: http.StatusTooManyRequests,
+		severity:   slog.LevelWarn,
+	}
+}
+
 // internalError wraps an unexpected error with context for logging.
 // The public message is always "internal server error" — the cause is only logged.
 type internalError struct {
