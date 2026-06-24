@@ -17,5 +17,6 @@ type ExerciseRepository interface {
 	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Exercise, error)
 	Delete(id, userId uuid.UUID) error
 	ExistsByDateAndName(userId uuid.UUID, date time.Time, name string) (bool, error)
+	FindByDateAndName(userId uuid.UUID, date time.Time, name string) (*domain.Exercise, error)
 	ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error)
 }

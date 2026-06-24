@@ -25,6 +25,11 @@ tasks:
     cmds:
       - "{{.COMPOSE}} exec db psql -U life -d life"
 
+  db:clear-hc:
+    desc: Delete all Health Connect imported exercises and sync logs (dev only)
+    cmds:
+      - "{{.COMPOSE}} exec db psql -U life -d life -c \"DELETE FROM exercises WHERE import_source = 'health_connect'; DELETE FROM sync_logs;\""
+
   api:debug:
     desc: Start API with Delve debugger
     deps: [db:up]
@@ -68,3 +73,14 @@ tasks:
     cmds:
       - task: setup:env
       - task: db:up
+
+  tunnel:up:
+    desc: Start Tailscale funnel (https://ivan.tailc7ed08.ts.net → localhost:8080)
+    cmds:
+      - tailscale funnel --bg 8080
+      - task: tunnel:health
+
+  tunnel:health:
+    desc: Check health endpoint via tunnel
+    cmds:
+      - curl -s https://ivan.tailc7ed08.ts.net/health

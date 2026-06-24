@@ -30,6 +30,7 @@ type exerciseResponse struct {
 	TotalSets               *int       `json:"total_sets,omitempty"`
 	Tags                    []string   `json:"tags"`
 	Notes                   string     `json:"notes"`
+	ImportSource            *string    `json:"import_source,omitempty"`
 	CreatedAt               time.Time  `json:"created_at"`
 	UpdatedAt               time.Time  `json:"updated_at"`
 }
@@ -59,6 +60,7 @@ func exerciseFromDomain(e *domain.Exercise) *exerciseResponse {
 		TotalSets:               e.TotalSets,
 		Tags:                    tags,
 		Notes:                   e.Notes,
+		ImportSource:            e.ImportSource,
 		CreatedAt:               e.CreatedAt,
 		UpdatedAt:               e.UpdatedAt,
 	}

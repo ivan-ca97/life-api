@@ -35,10 +35,8 @@ const (
 
 	SharesRead   = "shares:read"
 	SharesCreate = "shares:create"
+	SharesUpdate = "shares:update"
 	SharesDelete = "shares:delete"
-
-	StepsRead  = "steps:read"
-	StepsWrite = "steps:write"
 
 	MeasurementsRead  = "measurements:read"
 	MeasurementsWrite = "measurements:write"

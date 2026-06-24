@@ -390,10 +390,10 @@ func applyCaloricBalance(summary *domain.DailySummary) {
 func (r *summaryRepository) getSteps(userId uuid.UUID, date time.Time) (int, error) {
 	var steps int
 	err := r.db.Raw(`
-		SELECT COALESCE(steps, 0) FROM daily_steps WHERE user_id = ? AND date = ?
+		SELECT COALESCE(SUM(steps), 0) FROM exercises WHERE user_id = ? AND date = ?
 	`, userId, date).Scan(&steps).Error
 	if err != nil {
-		return 0, cerr.NewInternalError("fetching daily steps for summary", err)
+		return 0, cerr.NewInternalError("fetching daily steps from exercises for summary", err)
 	}
 	return steps, nil
 }
@@ -404,11 +404,13 @@ func (r *summaryRepository) getStepsRange(userId uuid.UUID, from, to time.Time) 
 		Steps int
 	}
 	err := r.db.Raw(`
-		SELECT date::text as date, steps FROM daily_steps
+		SELECT date::text as date, COALESCE(SUM(steps), 0) as steps
+		FROM exercises
 		WHERE user_id = ? AND date >= ? AND date <= ?
+		GROUP BY date
 	`, userId, from, to).Scan(&results).Error
 	if err != nil {
-		return nil, cerr.NewInternalError("fetching daily steps range for summary", err)
+		return nil, cerr.NewInternalError("fetching daily steps range from exercises for summary", err)
 	}
 	m := make(map[string]int, len(results))
 	for _, row := range results {
@@ -471,7 +473,7 @@ func (r *summaryRepository) GetDailyCheck(userId uuid.UUID, date time.Time) (*do
 
 	var stepsCount int64
 	if err := r.db.Raw(`
-		SELECT COUNT(*) FROM daily_steps WHERE user_id = ? AND date = ?
+		SELECT COUNT(*) FROM exercises WHERE user_id = ? AND date = ? AND steps IS NOT NULL AND steps > 0
 	`, userId, date).Scan(&stepsCount).Error; err != nil {
 		return nil, cerr.NewInternalError("checking daily steps", err)
 	}

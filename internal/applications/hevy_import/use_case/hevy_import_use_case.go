@@ -97,12 +97,18 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 			return nil, err
 		}
 		if exists {
-			result.Skipped++
+			existing, err := uc.exerciseRepository.FindByDateAndName(userId, ex.date, ex.exerciseName)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := uc.exerciseRepository.Update(existing.Id, userId, buildEnrichParams(ex)); err != nil {
+				return nil, err
+			}
+			result.Enriched++
 			result.Results = append(result.Results, ports.ImportResultItem{
 				Date:   dateString,
 				Name:   ex.exerciseName,
-				Status: "skipped",
-				Reason: "duplicate",
+				Status: "enriched",
 			})
 			continue
 		}
@@ -284,7 +290,31 @@ func aggregate(rows []hevyRow) []aggregatedExercise {
 	return result
 }
 
+func buildEnrichParams(ex aggregatedExercise) exercisePorts.UpdateParams {
+	totalSets := len(ex.sets)
+	notes := buildNotes(ex.sets)
+	tags := []string{ex.sessionTitle}
+	importSource := exerciseDomain.ImportSourceHealthConnectHevy
+
+	params := exercisePorts.UpdateParams{
+		TotalSets:    &totalSets,
+		Notes:        &notes,
+		Tags:         &tags,
+		ImportSource: &importSource,
+	}
+
+	var totalVolume float64
+	for _, set := range ex.sets {
+		if set.weightKg != nil && set.reps != nil {
+			totalVolume += *set.weightKg * float64(*set.reps)
+			params.TotalVolumeKg = &totalVolume
+		}
+	}
+	return params
+}
+
 func buildCreateParams(ex aggregatedExercise) exercisePorts.CreateParams {
+	importSource := exerciseDomain.ImportSourceHevy
 	startedAt := ex.startedAt
 	durationSecs := ex.durationSecs
 	totalSets := len(ex.sets)
@@ -315,6 +345,7 @@ func buildCreateParams(ex aggregatedExercise) exercisePorts.CreateParams {
 		TotalSets:       &totalSets,
 		Tags:            []string{ex.sessionTitle},
 		Notes:           notes,
+		ImportSource:    &importSource,
 	}
 	return params
 }

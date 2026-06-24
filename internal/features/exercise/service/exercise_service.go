@@ -90,6 +90,7 @@ func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*
 		Tags:                    params.Tags,
 		Notes:                   params.Notes,
 		ExternalId:              params.ExternalId,
+		ImportSource:            params.ImportSource,
 	}
 	err = s.repository.Create(exercise)
 	if err != nil {

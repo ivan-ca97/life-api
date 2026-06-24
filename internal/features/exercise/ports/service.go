@@ -28,6 +28,7 @@ type CreateParams struct {
 	Tags                    []string
 	Notes                   string
 	ExternalId              *string
+	ImportSource            *string
 }
 
 type UpdateParams struct {
@@ -49,6 +50,7 @@ type UpdateParams struct {
 	TotalSets               *int
 	Tags                    *[]string
 	Notes                   *string
+	ImportSource            *string
 }
 
 type ListParams struct {

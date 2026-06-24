@@ -29,6 +29,7 @@ type exercise struct {
 	TotalSets               *int
 	Notes                   string `gorm:"not null;default:''"`
 	ExternalId              *string
+	ImportSource            *string
 	CreatedAt               time.Time     `gorm:"not null;autoCreateTime"`
 	UpdatedAt               time.Time     `gorm:"not null;autoUpdateTime"`
 	Tags                    []exerciseTagMap `gorm:"foreignKey:ExerciseId"`
@@ -77,6 +78,7 @@ func (m *exercise) toDomain() *domain.Exercise {
 		Tags:                    tags,
 		Notes:                   m.Notes,
 		ExternalId:              m.ExternalId,
+		ImportSource:            m.ImportSource,
 		CreatedAt:               m.CreatedAt,
 		UpdatedAt:               m.UpdatedAt,
 	}
@@ -104,6 +106,7 @@ func exerciseFromDomain(e *domain.Exercise) *exercise {
 		TotalSets:               e.TotalSets,
 		Notes:                   e.Notes,
 		ExternalId:              e.ExternalId,
+		ImportSource:            e.ImportSource,
 		CreatedAt:               e.CreatedAt,
 		UpdatedAt:               e.UpdatedAt,
 	}

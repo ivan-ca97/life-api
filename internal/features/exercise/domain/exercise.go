@@ -15,6 +15,12 @@ const (
 	ExerciseTypeManualAdjustment = "manual_adjustment"
 )
 
+const (
+	ImportSourceHealthConnect     = "health_connect"
+	ImportSourceHevy              = "hevy"
+	ImportSourceHealthConnectHevy = "health_connect+hevy"
+)
+
 func IsValidExerciseType(exerciseType string) bool {
 	switch exerciseType {
 	case ExerciseTypeWeightlifting, ExerciseTypeWalking, ExerciseTypeCycling,
@@ -46,6 +52,7 @@ type Exercise struct {
 	Tags                    []string
 	Notes                   string
 	ExternalId              *string
+	ImportSource            *string
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 }

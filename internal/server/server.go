@@ -17,6 +17,7 @@ import (
 
 	authenticationApp "github.com/ivan-ca97/life/internal/applications/authentication"
 	authorizationApp "github.com/ivan-ca97/life/internal/applications/authorization"
+	dataExportApp "github.com/ivan-ca97/life/internal/applications/data_export"
 	fitnessAdvisorApp "github.com/ivan-ca97/life/internal/applications/fitness_advisor"
 	healthConnectImportApp "github.com/ivan-ca97/life/internal/applications/health_connect_import"
 	hevyImportApp "github.com/ivan-ca97/life/internal/applications/hevy_import"
@@ -31,7 +32,6 @@ import (
 	"github.com/ivan-ca97/life/internal/features/media"
 	"github.com/ivan-ca97/life/internal/features/user"
 	"github.com/ivan-ca97/life/internal/features/measurements"
-	"github.com/ivan-ca97/life/internal/features/steps"
 	"github.com/ivan-ca97/life/internal/features/weight"
 )
 
@@ -71,6 +71,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 		errorHandler,
 	)
 	weightFeature := weight.NewWeightFeature(database, authorizer, closureChecker, errorHandler)
+	goalFeature := goal.NewGoalFeature(database, authorizer, errorHandler)
 	healthConnectImportApplication := healthConnectImportApp.NewHealthConnectImportApplication(
 		database,
 		weightFeature.WeightEntryService(),
@@ -80,9 +81,8 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 		authorizer,
 		errorHandler,
 	)
-	goalFeature := goal.NewGoalFeature(database, authorizer, errorHandler)
-	stepsFeature := steps.NewStepsFeature(database, authorizer, errorHandler)
 	measurementsFeature := measurements.NewMeasurementsFeature(database, authorizer, errorHandler)
+	dataExport := dataExportApp.NewDataExportApplication(database, authorizer, errorHandler)
 	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, errorHandler)
 	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
 	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
@@ -132,9 +132,9 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 				dailyFeature.ProtectedRoutes(r)
 				authorizationApplication.ProtectedRoutes(r)
 				mediaFeature.ProtectedRoutes(r)
-				stepsFeature.ProtectedRoutes(r)
 				measurementsFeature.ProtectedRoutes(r)
 				fitnessAdvisor.ProtectedRoutes(r)
+				dataExport.ProtectedRoutes(r)
 			})
 		})
 	})

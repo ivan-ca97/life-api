@@ -160,6 +160,9 @@ func (r *exerciseRepository) Update(id, userId uuid.UUID, params ports.UpdatePar
 	if params.Notes != nil {
 		updates["notes"] = *params.Notes
 	}
+	if params.ImportSource != nil {
+		updates["import_source"] = *params.ImportSource
+	}
 
 	if len(updates) > 0 {
 		err = r.db.Model(&exercise{}).Where("id = ? AND user_id = ?", id, userId).Updates(updates).Error
@@ -226,6 +229,21 @@ func (r *exerciseRepository) ExistsByDateAndName(userId uuid.UUID, date time.Tim
 		return false, cerr.NewInternalError("checking exercise existence", err)
 	}
 	return count > 0, nil
+}
+
+func (r *exerciseRepository) FindByDateAndName(userId uuid.UUID, date time.Time, name string) (*domain.Exercise, error) {
+	var model exercise
+	err := r.db.
+		Preload("Tags.Tag").
+		Where("user_id = ? AND date = ? AND name = ?", userId, date, name).
+		First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, domain.ErrExerciseNotFound
+	}
+	if err != nil {
+		return nil, cerr.NewInternalError("finding exercise by date and name", err)
+	}
+	return model.toDomain(), nil
 }
 
 func (r *exerciseRepository) ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error) {

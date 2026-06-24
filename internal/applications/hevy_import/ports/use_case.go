@@ -15,10 +15,11 @@ type ImportResultItem struct {
 }
 
 type ImportResult struct {
-	Created int
-	Skipped int
-	Blocked int
-	Results []ImportResultItem
+	Created  int
+	Enriched int
+	Skipped  int
+	Blocked  int
+	Results  []ImportResultItem
 }
 
 type HevyImportUseCase interface {

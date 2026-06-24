@@ -12,10 +12,11 @@ type importResultItemResponse struct {
 }
 
 type importResponse struct {
-	Created int                        `json:"created"`
-	Skipped int                        `json:"skipped"`
-	Blocked int                        `json:"blocked"`
-	Results []importResultItemResponse `json:"results"`
+	Created  int                        `json:"created"`
+	Enriched int                        `json:"enriched"`
+	Skipped  int                        `json:"skipped"`
+	Blocked  int                        `json:"blocked"`
+	Results  []importResultItemResponse `json:"results"`
 }
 
 func importResponseFromResult(result *ports.ImportResult) *importResponse {
@@ -29,9 +30,10 @@ func importResponseFromResult(result *ports.ImportResult) *importResponse {
 		}
 	}
 	return &importResponse{
-		Created: result.Created,
-		Skipped: result.Skipped,
-		Blocked: result.Blocked,
-		Results: items,
+		Created:  result.Created,
+		Enriched: result.Enriched,
+		Skipped:  result.Skipped,
+		Blocked:  result.Blocked,
+		Results:  items,
 	}
 }
