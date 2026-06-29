@@ -1,0 +1,39 @@
+package meal_ai
+
+import (
+	"github.com/ivan-ca97/life/pkg/api/http_errors"
+	"github.com/ivan-ca97/life/pkg/auth"
+
+	foodPorts "github.com/ivan-ca97/life/internal/features/food/ports"
+
+	"github.com/ivan-ca97/life/internal/applications/meal_ai/handler"
+	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
+	"github.com/ivan-ca97/life/internal/applications/meal_ai/use_case"
+)
+
+type mealAIApplication struct {
+	handler      handler.MealAIHandler
+	errorHandler http_errors.HttpErrorHandler
+}
+
+// NewMealAIApplication wires the meal estimation feature. completer is satisfied
+// by *openai.Client and model is its model id (e.g. "gpt-4o"); quota is the
+// ai_usage feature's QuotaGuard.
+func NewMealAIApplication(
+	foodService foodPorts.FoodService,
+	quota ports.QuotaGuard,
+	completer ports.Completer,
+	model string,
+	authorizer auth.AuthorizationService,
+	errorHandler http_errors.HttpErrorHandler,
+) *mealAIApplication {
+	foodSearch := &foodSearchAdapter{foodService: foodService}
+	imageFetcher := newHTTPImageFetcher()
+	estimationUseCase := use_case.NewMealEstimationUseCase(completer, foodSearch, imageFetcher, quota, authorizer, model)
+	mealAIHandler := handler.NewMealAIHandler(estimationUseCase)
+
+	return &mealAIApplication{
+		handler:      mealAIHandler,
+		errorHandler: errorHandler,
+	}
+}
