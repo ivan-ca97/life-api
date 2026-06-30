@@ -81,6 +81,10 @@ func (e *internalError) Log() map[string]string {
 	return m
 }
 
+// Unwrap exposes the underlying cause for errors.Is/As and logging, while the
+// public Error() message stays the generic "internal server error".
+func (e *internalError) Unwrap() error { return e.cause }
+
 func NewInternalError(logContext string, cause error) *internalError {
 	return &internalError{
 		BaseHttpError: &BaseHttpError{

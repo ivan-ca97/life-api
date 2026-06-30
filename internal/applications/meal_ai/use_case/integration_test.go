@@ -2,6 +2,7 @@ package use_case
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -80,6 +81,9 @@ func TestEstimate_Integration(t *testing.T) {
 
 	estimate, err := uc.Estimate(context.Background(), input)
 	if err != nil {
+		if cause := errors.Unwrap(err); cause != nil {
+			t.Fatalf("real estimation failed: %v\n  cause: %v", err, cause)
+		}
 		t.Fatalf("real estimation failed: %v", err)
 	}
 
