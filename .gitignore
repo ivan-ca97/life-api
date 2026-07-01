@@ -5,3 +5,6 @@ migrations/
 
 .env
 env/dev.yml
+
+docs/ai-asistente-plan.md
+docs/ai-frontend-endpoints.md
