@@ -11,7 +11,7 @@ import (
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/use_case"
 )
 
-type mealAIApplication struct {
+type MealAIApplication struct {
 	handler      handler.MealAIHandler
 	errorHandler http_errors.HttpErrorHandler
 }
@@ -26,13 +26,13 @@ func NewMealAIApplication(
 	model string,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
-) *mealAIApplication {
+) *MealAIApplication {
 	foodSearch := &foodSearchAdapter{foodService: foodService}
 	imageFetcher := newHTTPImageFetcher()
 	estimationUseCase := use_case.NewMealEstimationUseCase(completer, foodSearch, imageFetcher, quota, authorizer, model)
 	mealAIHandler := handler.NewMealAIHandler(estimationUseCase)
 
-	return &mealAIApplication{
+	return &MealAIApplication{
 		handler:      mealAIHandler,
 		errorHandler: errorHandler,
 	}
