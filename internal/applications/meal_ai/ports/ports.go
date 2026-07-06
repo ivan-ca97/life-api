@@ -57,6 +57,11 @@ type QuotaGuard = aiUsagePorts.QuotaGuard
 
 type UsageDelta = aiUsagePorts.UsageDelta
 
+// InteractionLogger records one user-facing AI interaction (best-effort).
+type InteractionLogger = aiUsagePorts.InteractionLogger
+
+type InteractionEntry = aiUsagePorts.InteractionEntry
+
 // Correction is a user adjustment to a prior assumption, fed back for
 // re-estimation (still a single stateless call).
 type Correction struct {

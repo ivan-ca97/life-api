@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,5 +62,47 @@ func (m *aiUsage) toDomain() *domain.Usage {
 		InputTokens:  m.InputTokens,
 		OutputTokens: m.OutputTokens,
 		CostUSD:      float64(m.CostUsdMicros) / 1_000_000,
+	}
+}
+
+type aiInteraction struct {
+	Id            uuid.UUID  `gorm:"type:uuid;primaryKey"`
+	UserId        uuid.UUID  `gorm:"type:uuid;not null"`
+	CreatedAt     time.Time  `gorm:"not null;autoCreateTime"`
+	Operation     string     `gorm:"not null"`
+	Provider      string     `gorm:"not null"`
+	Model         string     `gorm:"not null"`
+	Status        string     `gorm:"not null"`
+	ErrorType     string     `gorm:"not null;default:''"`
+	InputTokens   int64      `gorm:"not null;default:0"`
+	OutputTokens  int64      `gorm:"not null;default:0"`
+	CostUsdMicros int64      `gorm:"column:cost_usd_micros;not null;default:0"`
+	LatencyMs     int        `gorm:"not null;default:0"`
+	ProviderCalls int        `gorm:"not null;default:0"`
+	CorrelationId *uuid.UUID `gorm:"type:uuid"`
+	InputSummary  string     `gorm:"not null;default:''"`
+	Metadata      []byte     `gorm:"type:jsonb;not null;default:'{}'"`
+}
+
+func (aiInteraction) TableName() string { return "ai_interaction" }
+
+func (m *aiInteraction) toDomain() domain.Interaction {
+	return domain.Interaction{
+		Id:            m.Id,
+		UserId:        m.UserId,
+		CreatedAt:     m.CreatedAt,
+		Operation:     m.Operation,
+		Provider:      m.Provider,
+		Model:         m.Model,
+		Status:        m.Status,
+		ErrorType:     m.ErrorType,
+		InputTokens:   m.InputTokens,
+		OutputTokens:  m.OutputTokens,
+		CostUSD:       float64(m.CostUsdMicros) / 1_000_000,
+		LatencyMs:     m.LatencyMs,
+		ProviderCalls: m.ProviderCalls,
+		CorrelationId: m.CorrelationId,
+		InputSummary:  m.InputSummary,
+		Metadata:      json.RawMessage(m.Metadata),
 	}
 }

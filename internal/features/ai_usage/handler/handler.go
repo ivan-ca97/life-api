@@ -16,6 +16,7 @@ type AiUsageHandler interface {
 	UpdateTier(r *http.Request) (*tierResponse, int, error)
 	AssignUserTier(r *http.Request) (*api.NoResponse, int, error)
 	GetUserUsage(r *http.Request) (*usageResponse, int, error)
+	ListInteractions(r *http.Request) (*interactionListResponse, int, error)
 }
 
 type aiUsageHandler struct {
@@ -135,4 +136,19 @@ func (h *aiUsageHandler) GetUserUsage(r *http.Request) (*usageResponse, int, err
 		return nil, 0, err
 	}
 	return usageFromDomain(summary), http.StatusOK, nil
+}
+
+func (h *aiUsageHandler) ListInteractions(r *http.Request) (*interactionListResponse, int, error) {
+	userId, err := api.QueryParamUUID(r, "user_id")
+	if err != nil {
+		return nil, 0, err
+	}
+	page, err := h.service.ListInteractions(r.Context(), ports.InteractionFilter{
+		PaginationParams: api.PaginationFromRequest(r),
+		UserId:           userId,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	return interactionsFromPage(page), http.StatusOK, nil
 }

@@ -33,3 +33,6 @@ func NewAiUsageFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorH
 
 // QuotaGuard exposes the spend-limit checks the meal AI feature consumes.
 func (f *aiUsageFeature) QuotaGuard() ports.QuotaGuard { return f.service }
+
+// InteractionLogger exposes the interaction log the meal AI feature writes to.
+func (f *aiUsageFeature) InteractionLogger() ports.InteractionLogger { return f.service }

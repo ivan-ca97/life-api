@@ -50,6 +50,7 @@ func (c *Client) Complete(ctx context.Context, req CompletionRequest) (*Completi
 		}
 		usage.InputTokens += response.Usage.PromptTokens
 		usage.OutputTokens += response.Usage.CompletionTokens
+		usage.Calls++
 
 		if len(response.Choices) == 0 {
 			return nil, fmt.Errorf("openai: response had no choices")

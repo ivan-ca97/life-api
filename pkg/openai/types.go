@@ -52,6 +52,8 @@ type CompletionRequest struct {
 type Usage struct {
 	InputTokens  int
 	OutputTokens int
+	// Calls is the number of API round trips made (>1 when the tool-call loop ran).
+	Calls int
 }
 
 // CompletionResult is the output of Complete. Content is the final assistant

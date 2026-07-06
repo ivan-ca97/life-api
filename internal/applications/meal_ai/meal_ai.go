@@ -17,11 +17,12 @@ type MealAIApplication struct {
 }
 
 // NewMealAIApplication wires the meal estimation feature. completer is satisfied
-// by *openai.Client and model is its model id (e.g. "gpt-4o"); quota is the
-// ai_usage feature's QuotaGuard.
+// by *openai.Client and model is its model id (e.g. "gpt-4o"); quota and logger
+// come from the ai_usage feature.
 func NewMealAIApplication(
 	foodService foodPorts.FoodService,
 	quota ports.QuotaGuard,
+	logger ports.InteractionLogger,
 	completer ports.Completer,
 	model string,
 	authorizer auth.AuthorizationService,
@@ -29,7 +30,7 @@ func NewMealAIApplication(
 ) *MealAIApplication {
 	foodSearch := &foodSearchAdapter{foodService: foodService}
 	imageFetcher := newHTTPImageFetcher()
-	estimationUseCase := use_case.NewMealEstimationUseCase(completer, foodSearch, imageFetcher, quota, authorizer, model)
+	estimationUseCase := use_case.NewMealEstimationUseCase(completer, foodSearch, imageFetcher, quota, logger, authorizer, model)
 	mealAIHandler := handler.NewMealAIHandler(estimationUseCase)
 
 	return &MealAIApplication{

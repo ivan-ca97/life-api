@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"errors"
 	"math"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/ai_usage/domain"
 	"github.com/ivan-ca97/life/internal/features/ai_usage/ports"
@@ -223,4 +225,64 @@ func (r *repository) AddUsage(userId uuid.UUID, periodStart time.Time, delta por
 		return cerr.NewInternalError("recording ai usage", err)
 	}
 	return nil
+}
+
+func (r *repository) InsertInteraction(entry ports.InteractionEntry) error {
+	metadata := []byte("{}")
+	if entry.Metadata != nil {
+		encoded, err := json.Marshal(entry.Metadata)
+		if err == nil {
+			metadata = encoded
+		}
+	}
+	model := &aiInteraction{
+		Id:            uuid.New(),
+		UserId:        entry.UserId,
+		Operation:     entry.Operation,
+		Provider:      entry.Provider,
+		Model:         entry.Model,
+		Status:        entry.Status,
+		ErrorType:     entry.ErrorType,
+		InputTokens:   entry.InputTokens,
+		OutputTokens:  entry.OutputTokens,
+		CostUsdMicros: int64(math.Round(entry.CostUSD * 1_000_000)),
+		LatencyMs:     entry.LatencyMs,
+		ProviderCalls: entry.ProviderCalls,
+		CorrelationId: entry.CorrelationId,
+		InputSummary:  entry.InputSummary,
+		Metadata:      metadata,
+	}
+	if err := r.db.Create(model).Error; err != nil {
+		return cerr.NewInternalError("recording ai interaction", err)
+	}
+	return nil
+}
+
+func (r *repository) ListInteractions(filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
+	q := r.db.Model(&aiInteraction{})
+	if filter.UserId != nil {
+		q = q.Where("user_id = ?", *filter.UserId)
+	}
+
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return types.Page[domain.Interaction]{}, cerr.NewInternalError("counting ai interactions", err)
+	}
+
+	var models []aiInteraction
+	err := q.Order("created_at DESC").Limit(filter.Limit).Offset(filter.Offset).Find(&models).Error
+	if err != nil {
+		return types.Page[domain.Interaction]{}, cerr.NewInternalError("listing ai interactions", err)
+	}
+
+	items := make([]domain.Interaction, len(models))
+	for i, m := range models {
+		items[i] = m.toDomain()
+	}
+	return types.Page[domain.Interaction]{
+		Items:  items,
+		Total:  total,
+		Limit:  filter.Limit,
+		Offset: filter.Offset,
+	}, nil
 }

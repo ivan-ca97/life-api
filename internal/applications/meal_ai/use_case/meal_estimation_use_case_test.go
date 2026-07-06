@@ -35,7 +35,7 @@ func (m *mockCompleter) Complete(ctx context.Context, req openai.CompletionReque
 	  "needs_clarification": false,
 	  "clarification_question": null
 	}`
-	return &openai.CompletionResult{Content: final, Usage: openai.Usage{InputTokens: 100, OutputTokens: 50}}, nil
+	return &openai.CompletionResult{Content: final, Usage: openai.Usage{InputTokens: 100, OutputTokens: 50, Calls: 2}}, nil
 }
 
 type mockFoodSearch struct{ called bool }
@@ -70,12 +70,20 @@ func (stubAuthorizer) Authorize(ctx context.Context, ownerId uuid.UUID, permissi
 }
 func (stubAuthorizer) AuthorizeAdmin(ctx context.Context) error { return nil }
 
+type mockLogger struct{ entry *ports.InteractionEntry }
+
+func (m *mockLogger) LogInteraction(entry ports.InteractionEntry) error {
+	m.entry = &entry
+	return nil
+}
+
 func TestEstimate_HappyPath(t *testing.T) {
 	completer := &mockCompleter{}
 	foodSearch := &mockFoodSearch{}
 	quota := &mockQuota{}
+	logger := &mockLogger{}
 
-	uc := NewMealEstimationUseCase(completer, foodSearch, &mockImageFetcher{}, quota, stubAuthorizer{}, "gpt-4o")
+	uc := NewMealEstimationUseCase(completer, foodSearch, &mockImageFetcher{}, quota, logger, stubAuthorizer{}, "gpt-4o")
 
 	estimate, err := uc.Estimate(context.Background(), ports.EstimateInput{
 		UserId:            uuid.New(),
@@ -105,10 +113,25 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if quota.recorded == nil || quota.recorded.CostUSD != wantCost {
 		t.Errorf("usage not recorded correctly: %+v", quota.recorded)
 	}
+
+	// The interaction must be logged with the right metadata.
+	if logger.entry == nil {
+		t.Fatal("interaction was not logged")
+	}
+	e := logger.entry
+	if e.Operation != "meal_estimate" || e.Provider != "openai" || e.Model != "gpt-4o" {
+		t.Errorf("unexpected interaction identity: %+v", e)
+	}
+	if e.Status != "ok" || e.CostUSD != wantCost || e.ProviderCalls != 2 {
+		t.Errorf("unexpected interaction metrics: status=%s cost=%v calls=%d", e.Status, e.CostUSD, e.ProviderCalls)
+	}
+	if e.Metadata["photo_count"] != 1 || e.Metadata["item_count"] != 1 || e.Metadata["suggestion_count"] != 0 {
+		t.Errorf("unexpected interaction metadata: %+v", e.Metadata)
+	}
 }
 
 func TestEstimate_NoInput(t *testing.T) {
-	uc := NewMealEstimationUseCase(&mockCompleter{}, &mockFoodSearch{}, &mockImageFetcher{}, &mockQuota{}, stubAuthorizer{}, "gpt-4o")
+	uc := NewMealEstimationUseCase(&mockCompleter{}, &mockFoodSearch{}, &mockImageFetcher{}, &mockQuota{}, &mockLogger{}, stubAuthorizer{}, "gpt-4o")
 	_, err := uc.Estimate(context.Background(), ports.EstimateInput{UserId: uuid.New()})
 	if err == nil {
 		t.Fatal("expected an error when no photos and no instructions are given")

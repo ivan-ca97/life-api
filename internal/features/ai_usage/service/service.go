@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/ai_usage/domain"
 	"github.com/ivan-ca97/life/internal/features/ai_usage/ports"
@@ -111,4 +112,26 @@ func (s *service) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*doma
 
 func (s *service) AssignTier(userId, tierId uuid.UUID) error {
 	return s.repository.AssignTier(userId, tierId)
+}
+
+func (s *service) LogInteraction(entry ports.InteractionEntry) error {
+	entry.InputSummary = truncateRunes(entry.InputSummary, domain.MaxInputSummaryLen)
+	return s.repository.InsertInteraction(entry)
+}
+
+func (s *service) ListInteractions(filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 50
+	}
+	return s.repository.ListInteractions(filter)
+}
+
+// truncateRunes caps a string to n runes, keeping it valid UTF-8 (Postgres TEXT
+// rejects invalid byte sequences, so a plain byte slice could fail on insert).
+func truncateRunes(s string, n int) string {
+	runes := []rune(s)
+	if len(runes) <= n {
+		return s
+	}
+	return string(runes[:n])
 }

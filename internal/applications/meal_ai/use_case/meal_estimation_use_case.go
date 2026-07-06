@@ -3,7 +3,9 @@ package use_case
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -19,6 +21,9 @@ import (
 const (
 	maxPhotos       = 4
 	foodSearchLimit = 8
+
+	providerOpenAI        = "openai"
+	operationMealEstimate = "meal_estimate"
 )
 
 type mealEstimationUseCase struct {
@@ -26,6 +31,7 @@ type mealEstimationUseCase struct {
 	foodSearch   ports.FoodSearch
 	imageFetcher ports.ImageFetcher
 	quota        ports.QuotaGuard
+	logger       ports.InteractionLogger
 	authorizer   auth.AuthorizationService
 	model        string
 }
@@ -37,6 +43,7 @@ func NewMealEstimationUseCase(
 	foodSearch ports.FoodSearch,
 	imageFetcher ports.ImageFetcher,
 	quota ports.QuotaGuard,
+	logger ports.InteractionLogger,
 	authorizer auth.AuthorizationService,
 	model string,
 ) *mealEstimationUseCase {
@@ -45,6 +52,7 @@ func NewMealEstimationUseCase(
 		foodSearch:   foodSearch,
 		imageFetcher: imageFetcher,
 		quota:        quota,
+		logger:       logger,
 		authorizer:   authorizer,
 		model:        model,
 	}
@@ -82,13 +90,17 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 		},
 	}
 
+	start := time.Now()
 	result, err := u.completer.Complete(ctx, request)
+	latencyMs := int(time.Since(start).Milliseconds())
 	if err != nil {
+		u.logInteraction(input, providerErrorOutcome(err), openai.Usage{}, 0, latencyMs, nil)
 		return nil, cerr.NewInternalError("meal ai estimation", err)
 	}
 
 	var output modelOutput
 	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+		u.logInteraction(input, interactionOutcome{status: "error", errorType: "decode"}, result.Usage, 0, latencyMs, nil)
 		return nil, cerr.NewInternalError("decoding meal ai estimate", err)
 	}
 
@@ -109,7 +121,50 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 		OutputTokens: int64(result.Usage.OutputTokens),
 		CostUSD:      cost,
 	}
+
+	u.logInteraction(input, interactionOutcome{status: "ok"}, result.Usage, cost, latencyMs, estimate)
 	return estimate, nil
+}
+
+// interactionOutcome carries the status/error-type for one logged interaction.
+type interactionOutcome struct {
+	status    string
+	errorType string
+}
+
+// providerErrorOutcome maps a completer error to an interaction outcome, keeping
+// the provider's error type (e.g. "insufficient_quota") when available.
+func providerErrorOutcome(err error) interactionOutcome {
+	var apiErr *openai.APIError
+	if errors.As(err, &apiErr) {
+		return interactionOutcome{status: "error", errorType: apiErr.Type}
+	}
+	return interactionOutcome{status: "error", errorType: "provider"}
+}
+
+// logInteraction records one interaction, best-effort (a logging failure must
+// not affect the estimate). estimate is nil on failure.
+func (u *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcome interactionOutcome, usage openai.Usage, cost float64, latencyMs int, estimate *domain.MealEstimate) {
+	metadata := map[string]any{"photo_count": len(input.PhotoURLs)}
+	if estimate != nil {
+		metadata["item_count"] = len(estimate.MatchedItems)
+		metadata["suggestion_count"] = len(estimate.NewFoodSuggestions)
+	}
+	_ = u.logger.LogInteraction(ports.InteractionEntry{
+		UserId:        input.UserId,
+		Operation:     operationMealEstimate,
+		Provider:      providerOpenAI,
+		Model:         u.model,
+		Status:        outcome.status,
+		ErrorType:     outcome.errorType,
+		InputTokens:   int64(usage.InputTokens),
+		OutputTokens:  int64(usage.OutputTokens),
+		CostUSD:       cost,
+		LatencyMs:     latencyMs,
+		ProviderCalls: usage.Calls,
+		InputSummary:  input.Instructions,
+		Metadata:      metadata,
+	})
 }
 
 func (u *mealEstimationUseCase) fetchImages(ctx context.Context, urls []string) ([]openai.Image, error) {

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/auth"
+	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/ai_usage/domain"
 	"github.com/ivan-ca97/life/internal/features/ai_usage/ports"
@@ -75,4 +76,11 @@ func (s *authorizedService) GetUserUsage(ctx context.Context, userId uuid.UUID) 
 		return nil, err
 	}
 	return s.base.GetUsage(userId)
+}
+
+func (s *authorizedService) ListInteractions(ctx context.Context, filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
+	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+		return types.Page[domain.Interaction]{}, err
+	}
+	return s.base.ListInteractions(filter)
 }
