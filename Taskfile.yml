@@ -61,23 +61,6 @@ tasks:
     cmds:
       - go build ./...
 
-  ai:test:
-    desc: "Run the OpenAI meal-estimation integration test (reads OPENAI_API_KEY from env/dev.yml). Optional: IMAGE=path/to/photo.jpg"
-    vars:
-      IMAGE: '{{.IMAGE | default ""}}'
-    cmds:
-      - |
-        KEY=$(grep -E '^[[:space:]]*OPENAI_API_KEY:' env/dev.yml | head -n1 \
-          | sed -E 's/^[[:space:]]*OPENAI_API_KEY:[[:space:]]*//; s/^"//; s/"[[:space:]]*$//; s/[[:space:]]*$//' | tr -d '\r')
-        if [ -z "$KEY" ]; then
-          echo "OPENAI_API_KEY está vacía en env/dev.yml — pegá tu key ahí primero." >&2
-          exit 1
-        fi
-        MODEL=$(grep -E '^[[:space:]]*OPENAI_MODEL:' env/dev.yml | head -n1 \
-          | sed -E 's/^[[:space:]]*OPENAI_MODEL:[[:space:]]*//; s/^"//; s/"[[:space:]]*$//; s/[[:space:]]*$//' | tr -d '\r')
-        OPENAI_API_KEY="$KEY" OPENAI_MODEL="${MODEL:-gpt-4o}" OPENAI_TEST_IMAGE="{{.IMAGE}}" \
-          go test -run Integration -v ./internal/applications/meal_ai/use_case/
-
   setup:env:
     desc: Create dev.yml from example
     cmds:
