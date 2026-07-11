@@ -69,23 +69,23 @@ func newHTTPImageFetcher() *httpImageFetcher {
 }
 
 func (f *httpImageFetcher) Fetch(ctx context.Context, url string) (llm.Image, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return llm.Image{}, err
 	}
-	resp, err := f.client.Do(req)
+	response, err := f.client.Do(request)
 	if err != nil {
 		return llm.Image{}, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return llm.Image{}, errFetchStatus(resp.StatusCode)
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return llm.Image{}, errFetchStatus(response.StatusCode)
 	}
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return llm.Image{}, err
 	}
-	mediaType := resp.Header.Get("Content-Type")
+	mediaType := response.Header.Get("Content-Type")
 	if mediaType == "" {
 		mediaType = "image/jpeg"
 	}

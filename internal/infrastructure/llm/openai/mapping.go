@@ -46,11 +46,17 @@ func messageContent(text string, images []llm.Image) json.RawMessage {
 	}
 	parts := make([]any, 0, len(images)+1)
 	if text != "" {
-		parts = append(parts, textPart{Type: "text", Text: text})
+		textContent := textPart{
+			Type: "text",
+			Text: text,
+		}
+		parts = append(parts, textContent)
 	}
 	for _, image := range images {
 		dataUri := fmt.Sprintf("data:%s;base64,%s", image.MediaType, base64.StdEncoding.EncodeToString(image.Data))
-		part := imagePart{Type: "image_url"}
+		part := imagePart{
+			Type: "image_url",
+		}
 		part.ImageUrl.Url = dataUri
 		parts = append(parts, part)
 	}

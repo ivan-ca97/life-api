@@ -9,9 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 	"github.com/ivan-ca97/life/pkg/auth"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+
+	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/domain"
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
@@ -59,8 +60,8 @@ func NewMealEstimationUseCase(
 	}
 }
 
-func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.EstimateInput) (*domain.MealEstimate, error) {
-	if err := u.authorizer.Authorize(ctx, input.UserId, permissions.MealsCreate); err != nil {
+func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.EstimateInput) (*domain.MealEstimate, error) {
+	if err := uc.authorizer.Authorize(ctx, input.UserId, permissions.MealsCreate); err != nil {
 		return nil, err
 	}
 	if len(input.PhotoUrls) == 0 && strings.TrimSpace(input.Instructions) == "" {
@@ -69,60 +70,66 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 	if len(input.PhotoUrls) > maxPhotos {
 		return nil, domain.ErrTooManyPhotos
 	}
-	if err := u.quota.CheckQuota(input.UserId); err != nil {
+	if err := uc.quota.CheckQuota(input.UserId); err != nil {
 		return nil, err
 	}
 
-	images, err := u.fetchImages(ctx, input.PhotoUrls)
+	images, err := uc.fetchImages(ctx, input.PhotoUrls)
 	if err != nil {
 		return nil, err
 	}
 
+	responseSchema := &llm.ResponseSchema{
+		Name:   "meal_estimate",
+		Strict: true,
+		Schema: estimateSchema,
+	}
 	prompt := llm.Prompt{
 		Conversation:   llm.SingleTurn(buildSystemPrompt(input.AssumeOnlyVisible), buildUserText(input.Instructions, input.Corrections), images),
-		Tools:          []llm.Tool{u.searchFoodsTool(input.UserId)},
-		ResponseSchema: &llm.ResponseSchema{Name: "meal_estimate", Strict: true, Schema: estimateSchema},
+		Tools:          []llm.Tool{uc.searchFoodsTool(input.UserId)},
+		ResponseSchema: responseSchema,
 	}
 
 	start := time.Now()
-	result, err := u.client.Complete(ctx, prompt)
+	result, err := uc.client.Complete(ctx, prompt)
 	latencyMs := int(time.Since(start).Milliseconds())
 	if err != nil {
-		u.logInteraction(input, providerErrorOutcome(err), llm.Usage{}, 0, latencyMs, nil)
+		uc.logInteraction(input, providerErrorOutcome(err), llm.Usage{}, 0, latencyMs, nil)
 		return nil, cerr.NewInternalError("meal ai estimation", err)
 	}
 
 	var output modelOutput
 	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
-		u.logInteraction(input, interactionOutcome{status: "error", errorType: "decode"}, result.Usage, 0, latencyMs, nil)
+		uc.logInteraction(input, errorOutcome("decode"), result.Usage, 0, latencyMs, nil)
 		return nil, cerr.NewInternalError("decoding meal ai estimate", err)
 	}
 
-	cost := u.cost(result.Usage)
+	cost := uc.cost(result.Usage)
 	// Record usage against the user's monthly quota (best effort: a recording
 	// failure must not discard a successful estimate).
-	_ = u.quota.RecordUsage(input.UserId, ports.UsageDelta{
+	delta := ports.UsageDelta{
 		Requests:     1,
 		InputTokens:  int64(result.Usage.InputTokens),
 		OutputTokens: int64(result.Usage.OutputTokens),
 		CostUsd:      cost,
-	})
+	}
+	_ = uc.quota.RecordUsage(input.UserId, delta)
 
 	estimate := output.toDomain()
 	estimate.Usage = domain.Usage{
-		Model:        u.client.Model(),
+		Model:        uc.client.Model(),
 		InputTokens:  int64(result.Usage.InputTokens),
 		OutputTokens: int64(result.Usage.OutputTokens),
 		CostUsd:      cost,
 	}
 
-	u.logInteraction(input, interactionOutcome{status: "ok"}, result.Usage, cost, latencyMs, estimate)
+	uc.logInteraction(input, okOutcome(), result.Usage, cost, latencyMs, estimate)
 	return estimate, nil
 }
 
 // cost prices the usage best-effort; a pricing failure yields 0.
-func (u *mealEstimationUseCase) cost(usage llm.Usage) float64 {
-	cost, err := u.pricer.CostUSD(u.client.Provider(), u.client.Model(), int64(usage.InputTokens), int64(usage.OutputTokens), time.Now())
+func (uc *mealEstimationUseCase) cost(usage llm.Usage) float64 {
+	cost, err := uc.pricer.CostUSD(uc.client.Provider(), uc.client.Model(), int64(usage.InputTokens), int64(usage.OutputTokens), time.Now())
 	if err != nil {
 		return 0
 	}
@@ -135,29 +142,42 @@ type interactionOutcome struct {
 	errorType string
 }
 
+func okOutcome() interactionOutcome {
+	return interactionOutcome{
+		status: "ok",
+	}
+}
+
+func errorOutcome(errorType string) interactionOutcome {
+	return interactionOutcome{
+		status:    "error",
+		errorType: errorType,
+	}
+}
+
 // providerErrorOutcome maps a completer error to an interaction outcome, keeping
 // the provider's error type (e.g. "insufficient_quota") when available.
 func providerErrorOutcome(err error) interactionOutcome {
 	var providerErr *llm.ProviderError
 	if errors.As(err, &providerErr) {
-		return interactionOutcome{status: "error", errorType: providerErr.Type}
+		return errorOutcome(providerErr.Type)
 	}
-	return interactionOutcome{status: "error", errorType: "provider"}
+	return errorOutcome("provider")
 }
 
 // logInteraction records one interaction, best-effort (a logging failure must
 // not affect the estimate). estimate is nil on failure.
-func (u *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcome interactionOutcome, usage llm.Usage, cost float64, latencyMs int, estimate *domain.MealEstimate) {
+func (uc *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcome interactionOutcome, usage llm.Usage, cost float64, latencyMs int, estimate *domain.MealEstimate) {
 	metadata := map[string]any{"photo_count": len(input.PhotoUrls)}
 	if estimate != nil {
 		metadata["item_count"] = len(estimate.MatchedItems)
 		metadata["suggestion_count"] = len(estimate.NewFoodSuggestions)
 	}
-	_ = u.logger.LogInteraction(ports.InteractionEntry{
+	entry := ports.InteractionEntry{
 		UserId:        input.UserId,
 		Operation:     operationMealEstimate,
-		Provider:      u.client.Provider(),
-		Model:         u.client.Model(),
+		Provider:      uc.client.Provider(),
+		Model:         uc.client.Model(),
 		Status:        outcome.status,
 		ErrorType:     outcome.errorType,
 		InputTokens:   int64(usage.InputTokens),
@@ -167,13 +187,14 @@ func (u *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcom
 		ProviderCalls: usage.Calls,
 		InputSummary:  input.Instructions,
 		Metadata:      metadata,
-	})
+	}
+	_ = uc.logger.LogInteraction(entry)
 }
 
-func (u *mealEstimationUseCase) fetchImages(ctx context.Context, urls []string) ([]llm.Image, error) {
+func (uc *mealEstimationUseCase) fetchImages(ctx context.Context, urls []string) ([]llm.Image, error) {
 	images := make([]llm.Image, 0, len(urls))
 	for _, url := range urls {
-		image, err := u.imageFetcher.Fetch(ctx, url)
+		image, err := uc.imageFetcher.Fetch(ctx, url)
 		if err != nil {
 			return nil, cerr.NewBadRequestError("could not load one of the photos")
 		}
@@ -187,9 +208,9 @@ type searchFoodsArgs struct {
 }
 
 // searchFoodsTool is the capability the model calls to look up the user's catalog.
-func (u *mealEstimationUseCase) searchFoodsTool(userId uuid.UUID) llm.Tool {
+func (uc *mealEstimationUseCase) searchFoodsTool(userId uuid.UUID) llm.Tool {
 	call := func(ctx context.Context, args searchFoodsArgs) ([]candidateJSON, error) {
-		candidates, err := u.foodSearch.Search(userId, args.Query, foodSearchLimit)
+		candidates, err := uc.foodSearch.Search(userId, args.Query, foodSearchLimit)
 		if err != nil {
 			return nil, err
 		}

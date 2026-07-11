@@ -19,13 +19,13 @@ type aiUsageFeature struct {
 }
 
 func NewAiUsageFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHandler http_errors.HttpErrorHandler) *aiUsageFeature {
-	repo := repository.NewRepository(db)
-	svc := service.NewService(repo)
-	authorizedService := service.NewAuthorizedService(svc, authorizer)
+	usageRepository := repository.NewRepository(db)
+	usageService := service.NewService(usageRepository)
+	authorizedService := service.NewAuthorizedService(usageService, authorizer)
 	aiUsageHandler := handler.NewAiUsageHandler(authorizedService)
 
 	return &aiUsageFeature{
-		service:      svc,
+		service:      usageService,
 		handler:      aiUsageHandler,
 		errorHandler: errorHandler,
 	}

@@ -58,7 +58,7 @@ type estimateResponse struct {
 }
 
 func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
-	resp := &estimateResponse{
+	response := &estimateResponse{
 		Totals: totalsResponse{
 			Calories:     e.Totals.Calories,
 			ProteinGrams: e.Totals.ProteinGrams,
@@ -77,7 +77,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 		},
 	}
 	for _, m := range e.MatchedItems {
-		resp.MatchedItems = append(resp.MatchedItems, matchedItemResponse{
+		response.MatchedItems = append(response.MatchedItems, matchedItemResponse{
 			FoodId:            m.FoodId,
 			FoodName:          m.FoodName,
 			EstimatedQuantity: m.EstimatedQuantity,
@@ -88,7 +88,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 		})
 	}
 	for _, s := range e.NewFoodSuggestions {
-		resp.NewFoodSuggestions = append(resp.NewFoodSuggestions, newFoodSuggestionResponse{
+		response.NewFoodSuggestions = append(response.NewFoodSuggestions, newFoodSuggestionResponse{
 			Name:              s.Name,
 			EstimatedQuantity: s.EstimatedQuantity,
 			Unit:              s.Unit,
@@ -106,5 +106,5 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			},
 		})
 	}
-	return resp
+	return response
 }

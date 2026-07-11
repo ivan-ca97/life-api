@@ -70,16 +70,17 @@ func (h *aiUsageHandler) CreateTier(r *http.Request) (*tierResponse, int, error)
 	if err != nil {
 		return nil, 0, err
 	}
-	tier, err := h.service.CreateTier(r.Context(), ports.CreateTierParams{
+	params := ports.CreateTierParams{
 		Name:            request.Name,
 		MonthlyLimitUsd: request.MonthlyLimitUsd,
 		Enabled:         request.Enabled,
-	})
+	}
+	tier, err := h.service.CreateTier(r.Context(), params)
 	if err != nil {
 		return nil, 0, err
 	}
-	resp := tierFromDomain(*tier)
-	return &resp, http.StatusCreated, nil
+	response := tierFromDomain(*tier)
+	return &response, http.StatusCreated, nil
 }
 
 func (h *aiUsageHandler) UpdateTier(r *http.Request) (*tierResponse, int, error) {
@@ -108,8 +109,8 @@ func (h *aiUsageHandler) UpdateTier(r *http.Request) (*tierResponse, int, error)
 	if err != nil {
 		return nil, 0, err
 	}
-	resp := tierFromDomain(*tier)
-	return &resp, http.StatusOK, nil
+	response := tierFromDomain(*tier)
+	return &response, http.StatusOK, nil
 }
 
 func (h *aiUsageHandler) DeleteTier(r *http.Request) (*api.NoResponse, int, error) {
