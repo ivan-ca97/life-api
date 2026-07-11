@@ -4,9 +4,9 @@ import "time"
 
 type Option func(*client)
 
-func WithBaseURL(baseURL string) Option {
+func WithBaseUrl(baseUrl string) Option {
 	return func(c *client) {
-		c.baseURL = baseURL
+		c.baseUrl = baseUrl
 	}
 }
 

@@ -33,12 +33,12 @@ func (s *authorizedService) GetMyUsage(ctx context.Context) (*domain.UsageSummar
 	return s.base.GetUsage(actorId)
 }
 
-func (s *authorizedService) SetMySelfLimit(ctx context.Context, selfLimitUSD *float64) error {
+func (s *authorizedService) SetMySelfLimit(ctx context.Context, selfLimitUsd *float64) error {
 	actorId, err := auth.ActorFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	return s.base.SetSelfLimit(actorId, selfLimitUSD)
+	return s.base.SetSelfLimit(actorId, selfLimitUsd)
 }
 
 // --- admin operations: require the admin role ---

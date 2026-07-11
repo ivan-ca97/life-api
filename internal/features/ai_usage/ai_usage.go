@@ -38,5 +38,5 @@ func (f *aiUsageFeature) QuotaGuard() ports.QuotaGuard { return f.service }
 func (f *aiUsageFeature) InteractionLogger() ports.InteractionLogger { return f.service }
 
 // Service exposes the base service so consumers (e.g. meal_ai) can depend on it
-// through their own narrow interfaces — e.g. a pricer with just CostUSD.
+// through their own narrow interfaces — e.g. a pricer with just CostUsd.
 func (f *aiUsageFeature) Service() ports.Service { return f.service }

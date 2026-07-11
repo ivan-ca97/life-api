@@ -39,7 +39,7 @@ func (h *mealAIHandler) Estimate(r *http.Request) (*estimateResponse, int, error
 
 	estimate, err := h.useCase.Estimate(r.Context(), ports.EstimateInput{
 		UserId:            userId,
-		PhotoURLs:         request.PhotoURLs,
+		PhotoUrls:         request.PhotoUrls,
 		Instructions:      request.Instructions,
 		AssumeOnlyVisible: request.AssumeOnlyVisible,
 		Corrections:       corrections,

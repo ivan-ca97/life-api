@@ -43,7 +43,7 @@ func (h *aiUsageHandler) SetMySelfLimit(r *http.Request) (*usageResponse, int, e
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.SetMySelfLimit(r.Context(), request.SelfLimitUSD); err != nil {
+	if err := h.service.SetMySelfLimit(r.Context(), request.SelfLimitUsd); err != nil {
 		return nil, 0, err
 	}
 	summary, err := h.service.GetMyUsage(r.Context())
@@ -72,7 +72,7 @@ func (h *aiUsageHandler) CreateTier(r *http.Request) (*tierResponse, int, error)
 	}
 	tier, err := h.service.CreateTier(r.Context(), ports.CreateTierParams{
 		Name:            request.Name,
-		MonthlyLimitUSD: request.MonthlyLimitUSD,
+		MonthlyLimitUsd: request.MonthlyLimitUsd,
 		Enabled:         request.Enabled,
 	})
 	if err != nil {
@@ -99,10 +99,10 @@ func (h *aiUsageHandler) UpdateTier(r *http.Request) (*tierResponse, int, error)
 	switch {
 	case request.Unlimited != nil && *request.Unlimited:
 		var none *float64
-		params.MonthlyLimitUSD = &none
-	case request.MonthlyLimitUSD != nil:
-		limit := request.MonthlyLimitUSD
-		params.MonthlyLimitUSD = &limit
+		params.MonthlyLimitUsd = &none
+	case request.MonthlyLimitUsd != nil:
+		limit := request.MonthlyLimitUsd
+		params.MonthlyLimitUsd = &limit
 	}
 	tier, err := h.service.UpdateTier(r.Context(), tierId, params)
 	if err != nil {

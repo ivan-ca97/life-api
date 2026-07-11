@@ -12,7 +12,7 @@ import (
 type tierResponse struct {
 	Id              string   `json:"id"`
 	Name            string   `json:"name"`
-	MonthlyLimitUSD *float64 `json:"monthly_limit_usd"`
+	MonthlyLimitUsd *float64 `json:"monthly_limit_usd"`
 	IsDefault       bool     `json:"is_default"`
 	Enabled         bool     `json:"enabled"`
 }
@@ -21,7 +21,7 @@ func tierFromDomain(t domain.Tier) tierResponse {
 	return tierResponse{
 		Id:              t.Id.String(),
 		Name:            t.Name,
-		MonthlyLimitUSD: t.MonthlyLimitUSD,
+		MonthlyLimitUsd: t.MonthlyLimitUsd,
 		IsDefault:       t.IsDefault,
 		Enabled:         t.Enabled,
 	}
@@ -36,8 +36,8 @@ type usageResponse struct {
 	Requests          int      `json:"requests"`
 	InputTokens       int64    `json:"input_tokens"`
 	OutputTokens      int64    `json:"output_tokens"`
-	CostUSD           float64  `json:"cost_usd"`
-	EffectiveLimitUSD *float64 `json:"effective_limit_usd"`
+	CostUsd           float64  `json:"cost_usd"`
+	EffectiveLimitUsd *float64 `json:"effective_limit_usd"`
 	TierName          string   `json:"tier_name"`
 }
 
@@ -47,8 +47,8 @@ func usageFromDomain(u *domain.UsageSummary) *usageResponse {
 		Requests:          u.Requests,
 		InputTokens:       u.InputTokens,
 		OutputTokens:      u.OutputTokens,
-		CostUSD:           u.CostUSD,
-		EffectiveLimitUSD: u.EffectiveLimitUSD,
+		CostUsd:           u.CostUsd,
+		EffectiveLimitUsd: u.EffectiveLimitUsd,
 		TierName:          u.TierName,
 	}
 }
@@ -64,7 +64,7 @@ type interactionResponse struct {
 	ErrorType     string          `json:"error_type,omitempty"`
 	InputTokens   int64           `json:"input_tokens"`
 	OutputTokens  int64           `json:"output_tokens"`
-	CostUSD       float64         `json:"cost_usd"`
+	CostUsd       float64         `json:"cost_usd"`
 	LatencyMs     int             `json:"latency_ms"`
 	ProviderCalls int             `json:"provider_calls"`
 	CorrelationId *string         `json:"correlation_id,omitempty"`
@@ -98,7 +98,7 @@ func interactionsFromPage(page types.Page[domain.Interaction]) *interactionListR
 			ErrorType:     it.ErrorType,
 			InputTokens:   it.InputTokens,
 			OutputTokens:  it.OutputTokens,
-			CostUSD:       it.CostUSD,
+			CostUsd:       it.CostUsd,
 			LatencyMs:     it.LatencyMs,
 			ProviderCalls: it.ProviderCalls,
 			CorrelationId: correlationId,

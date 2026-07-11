@@ -101,7 +101,7 @@ func TestComplete_ToolLoopAndStructuredOutput(t *testing.T) {
 		},
 	}
 
-	client := NewClient("test-key", "gpt-4o", WithBaseURL(server.URL), WithMaxToolCalls(8))
+	client := NewClient("test-key", "gpt-4o", WithBaseUrl(server.URL), WithMaxToolCalls(8))
 	result, err := client.Complete(context.Background(), prompt)
 	if err != nil {
 		t.Fatalf("Complete returned error: %v", err)
@@ -125,7 +125,7 @@ func TestComplete_ProviderError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient("test-key", "gpt-4o", WithBaseURL(server.URL))
+	client := NewClient("test-key", "gpt-4o", WithBaseUrl(server.URL))
 	_, err := client.Complete(context.Background(), llm.Prompt{Conversation: llm.SingleTurn("", "hi", nil)})
 
 	var providerError *llm.ProviderError
@@ -143,7 +143,7 @@ func TestComplete_Truncated(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient("test-key", "gpt-4o", WithBaseURL(server.URL))
+	client := NewClient("test-key", "gpt-4o", WithBaseUrl(server.URL))
 	_, err := client.Complete(context.Background(), llm.Prompt{Conversation: llm.SingleTurn("", "hi", nil)})
 	if !errors.Is(err, llm.ErrTruncated) {
 		t.Fatalf("expected llm.ErrTruncated, got %v", err)
@@ -159,7 +159,7 @@ func TestComplete_MaxToolCalls(t *testing.T) {
 	loopTool := llm.NewCapability("loop", "loops", json.RawMessage(`{"type":"object"}`),
 		func(ctx context.Context, args struct{}) (string, error) { return "again", nil })
 
-	client := NewClient("test-key", "gpt-4o", WithBaseURL(server.URL), WithMaxToolCalls(3))
+	client := NewClient("test-key", "gpt-4o", WithBaseUrl(server.URL), WithMaxToolCalls(3))
 	prompt := llm.Prompt{
 		Conversation: llm.SingleTurn("", "hi", nil),
 		Tools:        []llm.Tool{loopTool},

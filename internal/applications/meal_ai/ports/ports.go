@@ -71,7 +71,7 @@ type Correction struct {
 
 type EstimateInput struct {
 	UserId            uuid.UUID
-	PhotoURLs         []string
+	PhotoUrls         []string
 	Instructions      string
 	AssumeOnlyVisible bool
 	Corrections       []Correction

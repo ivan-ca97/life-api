@@ -12,7 +12,7 @@ import (
 
 type UpdateTierParams struct {
 	Name            *string
-	MonthlyLimitUSD **float64 // double pointer: distinguishes "unset" from "set to NULL (unlimited)"
+	MonthlyLimitUsd **float64 // double pointer: distinguishes "unset" from "set to NULL (unlimited)"
 	Enabled         *bool
 }
 
@@ -21,7 +21,7 @@ type UsageDelta struct {
 	Requests     int
 	InputTokens  int64
 	OutputTokens int64
-	CostUSD      float64
+	CostUsd      float64
 }
 
 // InteractionEntry is the metadata recorded for one user-facing AI interaction.
@@ -35,7 +35,7 @@ type InteractionEntry struct {
 	ErrorType     string
 	InputTokens   int64
 	OutputTokens  int64
-	CostUSD       float64
+	CostUsd       float64
 	LatencyMs     int
 	ProviderCalls int
 	CorrelationId *uuid.UUID
@@ -64,7 +64,7 @@ type Repository interface {
 	// when the user has no explicit assignment.
 	GetAllocation(userId uuid.UUID) (*domain.Allocation, error)
 	AssignTier(userId, tierId uuid.UUID) error
-	SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error
+	SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 
 	// Usage accounting, partitioned by month.
 	GetUsage(userId uuid.UUID, periodStart time.Time) (*domain.Usage, error)

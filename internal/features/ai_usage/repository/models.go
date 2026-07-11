@@ -34,7 +34,7 @@ func (m *aiModelPrice) toDomain() *domain.ModelPrice {
 type aiTier struct {
 	Id              uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Name            string    `gorm:"not null;unique"`
-	MonthlyLimitUSD *float64  `gorm:"column:monthly_limit_usd"`
+	MonthlyLimitUsd *float64  `gorm:"column:monthly_limit_usd"`
 	IsDefault       bool      `gorm:"not null;default:false"`
 	Enabled         bool      `gorm:"not null;default:true"`
 	CreatedAt       time.Time `gorm:"not null;autoCreateTime"`
@@ -47,7 +47,7 @@ func (m *aiTier) toDomain() domain.Tier {
 	return domain.Tier{
 		Id:              m.Id,
 		Name:            m.Name,
-		MonthlyLimitUSD: m.MonthlyLimitUSD,
+		MonthlyLimitUsd: m.MonthlyLimitUsd,
 		IsDefault:       m.IsDefault,
 		Enabled:         m.Enabled,
 		CreatedAt:       m.CreatedAt,
@@ -58,7 +58,7 @@ func (m *aiTier) toDomain() domain.Tier {
 type aiUserTier struct {
 	UserId       uuid.UUID `gorm:"type:uuid;primaryKey"`
 	TierId       uuid.UUID `gorm:"type:uuid;not null"`
-	SelfLimitUSD *float64  `gorm:"column:self_limit_usd"`
+	SelfLimitUsd *float64  `gorm:"column:self_limit_usd"`
 	UpdatedAt    time.Time `gorm:"not null;autoUpdateTime"`
 }
 
@@ -83,7 +83,7 @@ func (m *aiUsage) toDomain() *domain.Usage {
 		Requests:     m.Requests,
 		InputTokens:  m.InputTokens,
 		OutputTokens: m.OutputTokens,
-		CostUSD:      float64(m.CostUsdMicros) / 1_000_000,
+		CostUsd:      float64(m.CostUsdMicros) / 1_000_000,
 	}
 }
 
@@ -120,7 +120,7 @@ func (m *aiInteraction) toDomain() domain.Interaction {
 		ErrorType:     m.ErrorType,
 		InputTokens:   m.InputTokens,
 		OutputTokens:  m.OutputTokens,
-		CostUSD:       float64(m.CostUsdMicros) / 1_000_000,
+		CostUsd:       float64(m.CostUsdMicros) / 1_000_000,
 		LatencyMs:     m.LatencyMs,
 		ProviderCalls: m.ProviderCalls,
 		CorrelationId: m.CorrelationId,

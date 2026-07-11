@@ -44,7 +44,7 @@ type usageResponse struct {
 	Model        string  `json:"model"`
 	InputTokens  int64   `json:"input_tokens"`
 	OutputTokens int64   `json:"output_tokens"`
-	CostUSD      float64 `json:"cost_usd"`
+	CostUsd      float64 `json:"cost_usd"`
 }
 
 type estimateResponse struct {
@@ -73,7 +73,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			Model:        e.Usage.Model,
 			InputTokens:  e.Usage.InputTokens,
 			OutputTokens: e.Usage.OutputTokens,
-			CostUSD:      e.Usage.CostUSD,
+			CostUsd:      e.Usage.CostUsd,
 		},
 	}
 	for _, m := range e.MatchedItems {

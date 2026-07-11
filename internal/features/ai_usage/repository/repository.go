@@ -67,7 +67,7 @@ func (r *repository) CreateTier(tier *domain.Tier) error {
 	model := &aiTier{
 		Id:              tier.Id,
 		Name:            tier.Name,
-		MonthlyLimitUSD: tier.MonthlyLimitUSD,
+		MonthlyLimitUsd: tier.MonthlyLimitUsd,
 		IsDefault:       tier.IsDefault,
 		Enabled:         tier.Enabled,
 	}
@@ -83,8 +83,8 @@ func (r *repository) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*d
 	if params.Name != nil {
 		updates["name"] = *params.Name
 	}
-	if params.MonthlyLimitUSD != nil {
-		updates["monthly_limit_usd"] = *params.MonthlyLimitUSD // may be nil -> NULL (unlimited)
+	if params.MonthlyLimitUsd != nil {
+		updates["monthly_limit_usd"] = *params.MonthlyLimitUsd // may be nil -> NULL (unlimited)
 	}
 	if params.Enabled != nil {
 		updates["enabled"] = *params.Enabled
@@ -150,7 +150,7 @@ func (r *repository) GetAllocation(userId uuid.UUID) (*domain.Allocation, error)
 	}
 	return &domain.Allocation{
 		Tier:         tierModel.toDomain(),
-		SelfLimitUSD: userTier.SelfLimitUSD,
+		SelfLimitUsd: userTier.SelfLimitUsd,
 	}, nil
 }
 
@@ -206,7 +206,7 @@ func (r *repository) DeleteTier(id uuid.UUID) error {
 	return nil
 }
 
-func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error {
+func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error {
 	// Upsert: the row may not exist yet for a user on the default tier. We need a
 	// tier_id to satisfy NOT NULL, so default-tier users get the default assigned.
 	var existing aiUserTier
@@ -216,7 +216,7 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error
 		if err != nil {
 			return err
 		}
-		row := &aiUserTier{UserId: userId, TierId: tier.Id, SelfLimitUSD: selfLimitUSD}
+		row := &aiUserTier{UserId: userId, TierId: tier.Id, SelfLimitUsd: selfLimitUsd}
 		if err := r.db.Create(row).Error; err != nil {
 			return cerr.NewInternalError("setting ai self limit", err)
 		}
@@ -227,7 +227,7 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error
 	}
 	res := r.db.Model(&aiUserTier{}).
 		Where("user_id = ?", userId).
-		Updates(map[string]any{"self_limit_usd": selfLimitUSD})
+		Updates(map[string]any{"self_limit_usd": selfLimitUsd})
 	if res.Error != nil {
 		return cerr.NewInternalError("setting ai self limit", res.Error)
 	}
@@ -248,7 +248,7 @@ func (r *repository) GetUsage(userId uuid.UUID, periodStart time.Time) (*domain.
 }
 
 func (r *repository) AddUsage(userId uuid.UUID, periodStart time.Time, delta ports.UsageDelta) error {
-	micros := int64(math.Round(delta.CostUSD * 1_000_000))
+	micros := int64(math.Round(delta.CostUsd * 1_000_000))
 	model := &aiUsage{
 		UserId:        userId,
 		PeriodStart:   periodStart,
@@ -293,7 +293,7 @@ func (r *repository) InsertInteraction(entry ports.InteractionEntry) error {
 		ErrorType:     entry.ErrorType,
 		InputTokens:   entry.InputTokens,
 		OutputTokens:  entry.OutputTokens,
-		CostUsdMicros: int64(math.Round(entry.CostUSD * 1_000_000)),
+		CostUsdMicros: int64(math.Round(entry.CostUsd * 1_000_000)),
 		LatencyMs:     entry.LatencyMs,
 		ProviderCalls: entry.ProviderCalls,
 		CorrelationId: entry.CorrelationId,

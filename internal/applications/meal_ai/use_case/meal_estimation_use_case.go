@@ -62,17 +62,17 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 	if err := u.authorizer.Authorize(ctx, input.UserId, permissions.MealsCreate); err != nil {
 		return nil, err
 	}
-	if len(input.PhotoURLs) == 0 && strings.TrimSpace(input.Instructions) == "" {
+	if len(input.PhotoUrls) == 0 && strings.TrimSpace(input.Instructions) == "" {
 		return nil, domain.ErrNoInput
 	}
-	if len(input.PhotoURLs) > maxPhotos {
+	if len(input.PhotoUrls) > maxPhotos {
 		return nil, domain.ErrTooManyPhotos
 	}
 	if err := u.quota.CheckQuota(input.UserId); err != nil {
 		return nil, err
 	}
 
-	images, err := u.fetchImages(ctx, input.PhotoURLs)
+	images, err := u.fetchImages(ctx, input.PhotoUrls)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 		Requests:     1,
 		InputTokens:  int64(result.Usage.InputTokens),
 		OutputTokens: int64(result.Usage.OutputTokens),
-		CostUSD:      cost,
+		CostUsd:      cost,
 	})
 
 	estimate := output.toDomain()
@@ -119,7 +119,7 @@ func (u *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estima
 		Model:        u.model,
 		InputTokens:  int64(result.Usage.InputTokens),
 		OutputTokens: int64(result.Usage.OutputTokens),
-		CostUSD:      cost,
+		CostUsd:      cost,
 	}
 
 	u.logInteraction(input, interactionOutcome{status: "ok"}, result.Usage, cost, latencyMs, estimate)
@@ -145,7 +145,7 @@ func providerErrorOutcome(err error) interactionOutcome {
 // logInteraction records one interaction, best-effort (a logging failure must
 // not affect the estimate). estimate is nil on failure.
 func (u *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcome interactionOutcome, usage openai.Usage, cost float64, latencyMs int, estimate *domain.MealEstimate) {
-	metadata := map[string]any{"photo_count": len(input.PhotoURLs)}
+	metadata := map[string]any{"photo_count": len(input.PhotoUrls)}
 	if estimate != nil {
 		metadata["item_count"] = len(estimate.MatchedItems)
 		metadata["suggestion_count"] = len(estimate.NewFoodSuggestions)
@@ -159,7 +159,7 @@ func (u *mealEstimationUseCase) logInteraction(input ports.EstimateInput, outcom
 		ErrorType:     outcome.errorType,
 		InputTokens:   int64(usage.InputTokens),
 		OutputTokens:  int64(usage.OutputTokens),
-		CostUSD:       cost,
+		CostUsd:       cost,
 		LatencyMs:     latencyMs,
 		ProviderCalls: usage.Calls,
 		InputSummary:  input.Instructions,

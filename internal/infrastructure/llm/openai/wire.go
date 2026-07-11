@@ -60,8 +60,8 @@ type textPart struct {
 
 type imagePart struct {
 	Type     string `json:"type"`
-	ImageURL struct {
-		URL string `json:"url"`
+	ImageUrl struct {
+		Url string `json:"url"`
 	} `json:"image_url"`
 }
 

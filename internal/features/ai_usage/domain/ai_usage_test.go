@@ -7,7 +7,7 @@ import (
 
 func ptr(v float64) *float64 { return &v }
 
-func TestEffectiveLimitUSD(t *testing.T) {
+func TestEffectiveLimitUsd(t *testing.T) {
 	cases := []struct {
 		name      string
 		tierLimit *float64
@@ -24,9 +24,9 @@ func TestEffectiveLimitUSD(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got := Allocation{
-				Tier:         Tier{MonthlyLimitUSD: c.tierLimit},
-				SelfLimitUSD: c.selfLimit,
-			}.EffectiveLimitUSD()
+				Tier:         Tier{MonthlyLimitUsd: c.tierLimit},
+				SelfLimitUsd: c.selfLimit,
+			}.EffectiveLimitUsd()
 			switch {
 			case c.want == nil && got != nil:
 				t.Fatalf("expected unlimited (nil), got %v", *got)

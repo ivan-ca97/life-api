@@ -6,7 +6,7 @@ type correctionRequest struct {
 }
 
 type estimateMealRequest struct {
-	PhotoURLs         []string            `json:"photo_urls"`
+	PhotoUrls         []string            `json:"photo_urls"`
 	Instructions      string              `json:"instructions"`
 	AssumeOnlyVisible bool                `json:"assume_only_visible"`
 	Corrections       []correctionRequest `json:"corrections"`

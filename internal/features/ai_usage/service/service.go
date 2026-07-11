@@ -35,7 +35,7 @@ func (s *service) CheckQuota(userId uuid.UUID) error {
 	if !allocation.Tier.Enabled {
 		return domain.ErrTierDisabled
 	}
-	limit := allocation.EffectiveLimitUSD()
+	limit := allocation.EffectiveLimitUsd()
 	if limit == nil {
 		return nil // unlimited
 	}
@@ -43,7 +43,7 @@ func (s *service) CheckQuota(userId uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-	if domain.OverLimit(usage.CostUSD, limit) {
+	if domain.OverLimit(usage.CostUsd, limit) {
 		return domain.ErrQuotaExceeded
 	}
 	return nil
@@ -67,17 +67,17 @@ func (s *service) GetUsage(userId uuid.UUID) (*domain.UsageSummary, error) {
 		Requests:          usage.Requests,
 		InputTokens:       usage.InputTokens,
 		OutputTokens:      usage.OutputTokens,
-		CostUSD:           usage.CostUSD,
-		EffectiveLimitUSD: allocation.EffectiveLimitUSD(),
+		CostUsd:           usage.CostUsd,
+		EffectiveLimitUsd: allocation.EffectiveLimitUsd(),
 		TierName:          allocation.Tier.Name,
 	}, nil
 }
 
-func (s *service) SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error {
-	if selfLimitUSD != nil && *selfLimitUSD < 0 {
+func (s *service) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error {
+	if selfLimitUsd != nil && *selfLimitUsd < 0 {
 		return cerr.NewBadRequestError("self limit cannot be negative")
 	}
-	return s.repository.SetSelfLimit(userId, selfLimitUSD)
+	return s.repository.SetSelfLimit(userId, selfLimitUsd)
 }
 
 func (s *service) ListTiers() ([]domain.Tier, error) {
@@ -88,13 +88,13 @@ func (s *service) CreateTier(params ports.CreateTierParams) (*domain.Tier, error
 	if params.Name == "" {
 		return nil, cerr.NewBadRequestError("tier name is required")
 	}
-	if params.MonthlyLimitUSD != nil && *params.MonthlyLimitUSD < 0 {
+	if params.MonthlyLimitUsd != nil && *params.MonthlyLimitUsd < 0 {
 		return nil, cerr.NewBadRequestError("monthly limit cannot be negative")
 	}
 	tier := &domain.Tier{
 		Id:              uuid.New(),
 		Name:            params.Name,
-		MonthlyLimitUSD: params.MonthlyLimitUSD,
+		MonthlyLimitUsd: params.MonthlyLimitUsd,
 		Enabled:         params.Enabled,
 	}
 	if err := s.repository.CreateTier(tier); err != nil {
@@ -107,7 +107,7 @@ func (s *service) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*doma
 	if params.Name != nil && *params.Name == "" {
 		return nil, cerr.NewBadRequestError("tier name cannot be empty")
 	}
-	if params.MonthlyLimitUSD != nil && *params.MonthlyLimitUSD != nil && **params.MonthlyLimitUSD < 0 {
+	if params.MonthlyLimitUsd != nil && *params.MonthlyLimitUsd != nil && **params.MonthlyLimitUsd < 0 {
 		return nil, cerr.NewBadRequestError("monthly limit cannot be negative")
 	}
 	return s.repository.UpdateTier(id, params)
@@ -121,9 +121,9 @@ func (s *service) DeleteTier(id uuid.UUID) error {
 	return s.repository.DeleteTier(id)
 }
 
-// CostUSD prices the tokens with the rate effective at `at`. Returns 0 when no
+// CostUsd prices the tokens with the rate effective at `at`. Returns 0 when no
 // price is on record for the provider/model (treat as "unpriced", not free).
-func (s *service) CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
+func (s *service) CostUsd(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
 	price, err := s.repository.FindPrice(provider, model, at)
 	if err != nil {
 		return 0, err

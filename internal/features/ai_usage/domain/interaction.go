@@ -33,7 +33,7 @@ type Interaction struct {
 	ErrorType     string
 	InputTokens   int64
 	OutputTokens  int64
-	CostUSD       float64
+	CostUsd       float64
 	LatencyMs     int
 	ProviderCalls int
 	CorrelationId *uuid.UUID

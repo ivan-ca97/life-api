@@ -15,7 +15,7 @@ import (
 const (
 	providerName = "openai"
 
-	defaultBaseURL      = "https://api.openai.com/v1"
+	defaultBaseUrl      = "https://api.openai.com/v1"
 	defaultTimeout      = 60 * time.Second
 	defaultMaxToolCalls = 8
 )
@@ -23,7 +23,7 @@ const (
 type client struct {
 	apiKey       string
 	model        string
-	baseURL      string
+	baseUrl      string
 	maxToolCalls int
 	httpClient   *http.Client
 }
@@ -34,7 +34,7 @@ func NewClient(apiKey, model string, options ...Option) *client {
 	c := &client{
 		apiKey:       apiKey,
 		model:        model,
-		baseURL:      defaultBaseURL,
+		baseUrl:      defaultBaseUrl,
 		maxToolCalls: defaultMaxToolCalls,
 		httpClient:   &http.Client{Timeout: defaultTimeout},
 	}
@@ -63,7 +63,7 @@ func (c *client) send(ctx context.Context, body chatRequest) (*chatResponse, err
 		return nil, fmt.Errorf("openai: marshal request: %w", err)
 	}
 
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/chat/completions", bytes.NewReader(payload))
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseUrl+"/chat/completions", bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("openai: build request: %w", err)
 	}

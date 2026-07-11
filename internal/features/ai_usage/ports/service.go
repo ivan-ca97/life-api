@@ -13,7 +13,7 @@ import (
 
 type CreateTierParams struct {
 	Name            string
-	MonthlyLimitUSD *float64
+	MonthlyLimitUsd *float64
 	Enabled         bool
 }
 
@@ -25,7 +25,7 @@ type Service interface {
 	InteractionLogger
 
 	GetUsage(userId uuid.UUID) (*domain.UsageSummary, error)
-	SetSelfLimit(userId uuid.UUID, selfLimitUSD *float64) error
+	SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 
 	ListTiers() ([]domain.Tier, error)
 	CreateTier(params CreateTierParams) (*domain.Tier, error)
@@ -35,8 +35,8 @@ type Service interface {
 
 	ListInteractions(filter InteractionFilter) (types.Page[domain.Interaction], error)
 
-	// CostUSD prices token usage with the rate effective at the given time.
-	CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
+	// CostUsd prices token usage with the rate effective at the given time.
+	CostUsd(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
 }
 
 // QuotaGuard is the narrow contract the meal AI feature consumes to enforce
@@ -59,7 +59,7 @@ type InteractionLogger interface {
 // the actor from context; tier administration requires the admin role.
 type AuthorizedService interface {
 	GetMyUsage(ctx context.Context) (*domain.UsageSummary, error)
-	SetMySelfLimit(ctx context.Context, selfLimitUSD *float64) error
+	SetMySelfLimit(ctx context.Context, selfLimitUsd *float64) error
 
 	ListTiers(ctx context.Context) ([]domain.Tier, error)
 	CreateTier(ctx context.Context, params CreateTierParams) (*domain.Tier, error)

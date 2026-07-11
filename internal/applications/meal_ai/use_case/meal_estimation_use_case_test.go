@@ -87,7 +87,7 @@ func TestEstimate_HappyPath(t *testing.T) {
 
 	estimate, err := uc.Estimate(context.Background(), ports.EstimateInput{
 		UserId:            uuid.New(),
-		PhotoURLs:         []string{"https://example.com/meal.jpg"},
+		PhotoUrls:         []string{"https://example.com/meal.jpg"},
 		AssumeOnlyVisible: true,
 	})
 	if err != nil {
@@ -107,10 +107,10 @@ func TestEstimate_HappyPath(t *testing.T) {
 		t.Errorf("expected totals.calories 330, got %v", estimate.Totals.Calories)
 	}
 	wantCost := openai.CostUSD("gpt-4o", openai.Usage{InputTokens: 100, OutputTokens: 50})
-	if estimate.Usage.CostUSD != wantCost {
-		t.Errorf("expected cost %v, got %v", wantCost, estimate.Usage.CostUSD)
+	if estimate.Usage.CostUsd != wantCost {
+		t.Errorf("expected cost %v, got %v", wantCost, estimate.Usage.CostUsd)
 	}
-	if quota.recorded == nil || quota.recorded.CostUSD != wantCost {
+	if quota.recorded == nil || quota.recorded.CostUsd != wantCost {
 		t.Errorf("usage not recorded correctly: %+v", quota.recorded)
 	}
 
@@ -122,8 +122,8 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if e.Operation != "meal_estimate" || e.Provider != "openai" || e.Model != "gpt-4o" {
 		t.Errorf("unexpected interaction identity: %+v", e)
 	}
-	if e.Status != "ok" || e.CostUSD != wantCost || e.ProviderCalls != 2 {
-		t.Errorf("unexpected interaction metrics: status=%s cost=%v calls=%d", e.Status, e.CostUSD, e.ProviderCalls)
+	if e.Status != "ok" || e.CostUsd != wantCost || e.ProviderCalls != 2 {
+		t.Errorf("unexpected interaction metrics: status=%s cost=%v calls=%d", e.Status, e.CostUsd, e.ProviderCalls)
 	}
 	if e.Metadata["photo_count"] != 1 || e.Metadata["item_count"] != 1 || e.Metadata["suggestion_count"] != 0 {
 		t.Errorf("unexpected interaction metadata: %+v", e.Metadata)

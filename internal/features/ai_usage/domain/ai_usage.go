@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// Tier is an AI spend plan managed by an admin. MonthlyLimitUSD is nil for an
+// Tier is an AI spend plan managed by an admin. MonthlyLimitUsd is nil for an
 // unlimited tier.
 type Tier struct {
 	Id              uuid.UUID
 	Name            string
-	MonthlyLimitUSD *float64
+	MonthlyLimitUsd *float64
 	IsDefault       bool
 	Enabled         bool
 	CreatedAt       time.Time
@@ -22,15 +22,15 @@ type Tier struct {
 // self-imposed cap they can set for themselves.
 type Allocation struct {
 	Tier         Tier
-	SelfLimitUSD *float64
+	SelfLimitUsd *float64
 }
 
-// EffectiveLimitUSD is the binding monthly spend cap in USD, or nil when the
+// EffectiveLimitUsd is the binding monthly spend cap in USD, or nil when the
 // user is effectively unlimited. It is the smaller of the tier limit and the
 // user's self-imposed limit, ignoring whichever is unset. This is what lets an
 // "unlimited" user still protect themselves with a self-limit.
-func (a Allocation) EffectiveLimitUSD() *float64 {
-	return minLimit(a.Tier.MonthlyLimitUSD, a.SelfLimitUSD)
+func (a Allocation) EffectiveLimitUsd() *float64 {
+	return minLimit(a.Tier.MonthlyLimitUsd, a.SelfLimitUsd)
 }
 
 func minLimit(a, b *float64) *float64 {
@@ -53,7 +53,7 @@ type Usage struct {
 	Requests     int
 	InputTokens  int64
 	OutputTokens int64
-	CostUSD      float64
+	CostUsd      float64
 }
 
 // UsageSummary is what the user (or an admin) sees: consumption plus the
@@ -63,15 +63,15 @@ type UsageSummary struct {
 	Requests          int
 	InputTokens       int64
 	OutputTokens      int64
-	CostUSD           float64
-	EffectiveLimitUSD *float64
+	CostUsd           float64
+	EffectiveLimitUsd *float64
 	TierName          string
 }
 
 // OverLimit reports whether an accumulated cost has reached a limit. A nil limit
 // is unlimited and never over.
-func OverLimit(costUSD float64, limit *float64) bool {
-	return limit != nil && costUSD >= *limit
+func OverLimit(costUsd float64, limit *float64) bool {
+	return limit != nil && costUsd >= *limit
 }
 
 // PeriodStart returns the first day (UTC, date-only) of the month containing t.

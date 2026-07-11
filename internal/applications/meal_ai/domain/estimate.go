@@ -63,5 +63,5 @@ type Usage struct {
 	Model        string
 	InputTokens  int64
 	OutputTokens int64
-	CostUSD      float64
+	CostUsd      float64
 }
