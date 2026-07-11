@@ -108,7 +108,9 @@ func (s *Scheduler) runAsync(ctx context.Context) {
 }
 
 func (s *Scheduler) runAll(ctx context.Context) *RunResult {
-	result := &RunResult{StartedAt: time.Now()}
+	result := &RunResult{
+		StartedAt: time.Now(),
+	}
 	slog.Info("integrity watchdog: run started")
 
 	dbResult, err := s.dbCheck.Run()

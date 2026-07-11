@@ -25,28 +25,32 @@ func NewAuthorizedDailyPhotoService(base ports.PhotoService, authorizer auth.Aut
 }
 
 func (s *authorizedDailyPhotoService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreatePhotoParams) (*domain.DailyPhoto, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.Create(ownerId, params)
 }
 
 func (s *authorizedDailyPhotoService) List(ctx context.Context, ownerId uuid.UUID, date time.Time) ([]domain.DailyPhoto, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyRead)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.List(ownerId, date)
 }
 
 func (s *authorizedDailyPhotoService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdatePhotoParams) (*domain.DailyPhoto, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.Update(id, ownerId, params)
 }
 
 func (s *authorizedDailyPhotoService) Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.DailyUpdate)
+	if err != nil {
 		return err
 	}
 	return s.base.Delete(id, ownerId)

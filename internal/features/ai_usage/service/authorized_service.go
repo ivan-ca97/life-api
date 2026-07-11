@@ -44,49 +44,56 @@ func (s *authorizedService) SetMySelfLimit(ctx context.Context, selfLimitUsd *fl
 // --- admin operations: require the admin role ---
 
 func (s *authorizedService) ListTiers(ctx context.Context) ([]domain.Tier, error) {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.ListTiers()
 }
 
 func (s *authorizedService) CreateTier(ctx context.Context, params ports.CreateTierParams) (*domain.Tier, error) {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.CreateTier(params)
 }
 
 func (s *authorizedService) UpdateTier(ctx context.Context, id uuid.UUID, params ports.UpdateTierParams) (*domain.Tier, error) {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.UpdateTier(id, params)
 }
 
 func (s *authorizedService) DeleteTier(ctx context.Context, id uuid.UUID) error {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return err
 	}
 	return s.base.DeleteTier(id)
 }
 
 func (s *authorizedService) AssignUserTier(ctx context.Context, userId, tierId uuid.UUID) error {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return err
 	}
 	return s.base.AssignTier(userId, tierId)
 }
 
 func (s *authorizedService) GetUserUsage(ctx context.Context, userId uuid.UUID) (*domain.UsageSummary, error) {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.GetUsage(userId)
 }
 
 func (s *authorizedService) ListInteractions(ctx context.Context, filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
-	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+	err := s.authorizer.AuthorizeAdmin(ctx)
+	if err != nil {
 		return types.Page[domain.Interaction]{}, err
 	}
 	return s.base.ListInteractions(filter)

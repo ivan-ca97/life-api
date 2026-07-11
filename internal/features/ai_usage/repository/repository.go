@@ -46,7 +46,8 @@ func (r *repository) FindPrice(provider, model string, at time.Time) (*domain.Mo
 
 func (r *repository) ListTiers() ([]domain.Tier, error) {
 	var models []aiTier
-	if err := r.db.Order("name ASC").Find(&models).Error; err != nil {
+	err := r.db.Order("name ASC").Find(&models).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("listing ai tiers", err)
 	}
 	tiers := make([]domain.Tier, len(models))
@@ -58,7 +59,8 @@ func (r *repository) ListTiers() ([]domain.Tier, error) {
 
 func (r *repository) CreateTier(tier *domain.Tier) error {
 	var count int64
-	if err := r.db.Model(&aiTier{}).Where("name = ?", tier.Name).Count(&count).Error; err != nil {
+	err := r.db.Model(&aiTier{}).Where("name = ?", tier.Name).Count(&count).Error
+	if err != nil {
 		return cerr.NewInternalError("checking ai tier name", err)
 	}
 	if count > 0 {
@@ -71,7 +73,8 @@ func (r *repository) CreateTier(tier *domain.Tier) error {
 		IsDefault:       tier.IsDefault,
 		Enabled:         tier.Enabled,
 	}
-	if err := r.db.Create(model).Error; err != nil {
+	err = r.db.Create(model).Error
+	if err != nil {
 		return cerr.NewInternalError("creating ai tier", err)
 	}
 	*tier = model.toDomain()
@@ -91,11 +94,11 @@ func (r *repository) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*d
 	}
 
 	if len(updates) > 0 {
-		res := r.db.Model(&aiTier{}).Where("id = ?", id).Updates(updates)
-		if res.Error != nil {
-			return nil, cerr.NewInternalError("updating ai tier", res.Error)
+		result := r.db.Model(&aiTier{}).Where("id = ?", id).Updates(updates)
+		if result.Error != nil {
+			return nil, cerr.NewInternalError("updating ai tier", result.Error)
 		}
-		if res.RowsAffected == 0 {
+		if result.RowsAffected == 0 {
 			return nil, domain.ErrTierNotFound
 		}
 	}
@@ -193,14 +196,16 @@ func (r *repository) DeleteTier(id uuid.UUID) error {
 	}
 
 	var assigned int64
-	if err := r.db.Model(&aiUserTier{}).Where("tier_id = ?", id).Count(&assigned).Error; err != nil {
+	err = r.db.Model(&aiUserTier{}).Where("tier_id = ?", id).Count(&assigned).Error
+	if err != nil {
 		return cerr.NewInternalError("checking ai tier usage", err)
 	}
 	if assigned > 0 {
 		return domain.ErrTierInUse
 	}
 
-	if err := r.db.Where("id = ?", id).Delete(&aiTier{}).Error; err != nil {
+	err = r.db.Where("id = ?", id).Delete(&aiTier{}).Error
+	if err != nil {
 		return cerr.NewInternalError("deleting ai tier", err)
 	}
 	return nil
@@ -217,7 +222,8 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 			return err
 		}
 		row := &aiUserTier{UserId: userId, TierId: tier.Id, SelfLimitUsd: selfLimitUsd}
-		if err := r.db.Create(row).Error; err != nil {
+		err = r.db.Create(row).Error
+		if err != nil {
 			return cerr.NewInternalError("setting ai self limit", err)
 		}
 		return nil
@@ -225,11 +231,11 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 	if err != nil {
 		return cerr.NewInternalError("loading user ai tier", err)
 	}
-	res := r.db.Model(&aiUserTier{}).
+	result := r.db.Model(&aiUserTier{}).
 		Where("user_id = ?", userId).
 		Updates(map[string]any{"self_limit_usd": selfLimitUsd})
-	if res.Error != nil {
-		return cerr.NewInternalError("setting ai self limit", res.Error)
+	if result.Error != nil {
+		return cerr.NewInternalError("setting ai self limit", result.Error)
 	}
 	return nil
 }
@@ -300,7 +306,8 @@ func (r *repository) InsertInteraction(entry ports.InteractionEntry) error {
 		InputSummary:  entry.InputSummary,
 		Metadata:      metadata,
 	}
-	if err := r.db.Create(model).Error; err != nil {
+	err := r.db.Create(model).Error
+	if err != nil {
 		return cerr.NewInternalError("recording ai interaction", err)
 	}
 	return nil
@@ -313,12 +320,13 @@ func (r *repository) ListInteractions(filter ports.InteractionFilter) (types.Pag
 	}
 
 	var total int64
-	if err := q.Count(&total).Error; err != nil {
+	err := q.Count(&total).Error
+	if err != nil {
 		return types.Page[domain.Interaction]{}, cerr.NewInternalError("counting ai interactions", err)
 	}
 
 	var models []aiInteraction
-	err := q.Order("created_at DESC").Limit(filter.Limit).Offset(filter.Offset).Find(&models).Error
+	err = q.Order("created_at DESC").Limit(filter.Limit).Offset(filter.Offset).Find(&models).Error
 	if err != nil {
 		return types.Page[domain.Interaction]{}, cerr.NewInternalError("listing ai interactions", err)
 	}

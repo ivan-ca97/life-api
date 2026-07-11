@@ -27,7 +27,8 @@ func NewWatchdogHandler(s *scheduler.Scheduler, authorizer auth.AuthorizationSer
 }
 
 func (h *watchdogHandler) Trigger(r *http.Request) (*statusResponse, int, error) {
-	if err := h.authorizer.AuthorizeAdmin(r.Context()); err != nil {
+	err := h.authorizer.AuthorizeAdmin(r.Context())
+	if err != nil {
 		return nil, 0, err
 	}
 	if !h.scheduler.Trigger() {
@@ -37,14 +38,16 @@ func (h *watchdogHandler) Trigger(r *http.Request) (*statusResponse, int, error)
 }
 
 func (h *watchdogHandler) Status(r *http.Request) (*statusResponse, int, error) {
-	if err := h.authorizer.AuthorizeAdmin(r.Context()); err != nil {
+	err := h.authorizer.AuthorizeAdmin(r.Context())
+	if err != nil {
 		return nil, 0, err
 	}
 	return buildStatusResponse(h.scheduler), http.StatusOK, nil
 }
 
 func (h *watchdogHandler) Configure(r *http.Request) (*statusResponse, int, error) {
-	if err := h.authorizer.AuthorizeAdmin(r.Context()); err != nil {
+	err := h.authorizer.AuthorizeAdmin(r.Context())
+	if err != nil {
 		return nil, 0, err
 	}
 	request, err := api.DecodeBody[configureRequest](r)

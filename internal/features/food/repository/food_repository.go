@@ -37,7 +37,8 @@ func (r *foodRepository) Create(f *domain.Food) error {
 		return cerr.NewInternalError("inserting food", err)
 	}
 	if len(f.Tags) > 0 {
-		if err := r.upsertTags(f.Id, f.UserId, f.Tags); err != nil {
+		err := r.upsertTags(f.Id, f.UserId, f.Tags)
+		if err != nil {
 			return err
 		}
 	}
@@ -450,7 +451,8 @@ func (r *foodRepository) upsertIngredients(userId uuid.UUID, names []string) ([]
 
 func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.PortionParam) error {
 	var existing []foodPortion
-	if err := r.db.Where("food_id = ?", foodId).Find(&existing).Error; err != nil {
+	err := r.db.Where("food_id = ?", foodId).Find(&existing).Error
+	if err != nil {
 		return cerr.NewInternalError("fetching food portions for upsert", err)
 	}
 
@@ -466,16 +468,19 @@ func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.Porti
 
 	for _, ex := range existing {
 		if !incomingNames[ex.Name] {
-			if err := r.db.Delete(&foodPortion{}, "id = ?", ex.Id).Error; err != nil {
+			err := r.db.Delete(&foodPortion{}, "id = ?", ex.Id).Error
+			if err != nil {
 				return cerr.NewInternalError("deleting removed food portion", err)
 			}
 		}
 	}
 
 	for _, p := range incoming {
-		if ex, ok := existingByName[p.Name]; ok {
+		ex, ok := existingByName[p.Name]
+		if ok {
 			if ex.BaseEquivalent != p.BaseEquivalent {
-				if err := r.db.Model(&foodPortion{}).Where("id = ?", ex.Id).Update("base_equivalent", p.BaseEquivalent).Error; err != nil {
+				err := r.db.Model(&foodPortion{}).Where("id = ?", ex.Id).Update("base_equivalent", p.BaseEquivalent).Error
+				if err != nil {
 					return cerr.NewInternalError("updating food portion", err)
 				}
 			}
@@ -486,7 +491,8 @@ func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.Porti
 				Name:           p.Name,
 				BaseEquivalent: p.BaseEquivalent,
 			}
-			if err := r.db.Create(&newPortion).Error; err != nil {
+			err := r.db.Create(&newPortion).Error
+			if err != nil {
 				return cerr.NewInternalError("inserting food portion", err)
 			}
 		}
@@ -497,7 +503,8 @@ func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.Porti
 
 func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
 	var totalItems int64
-	if err := r.db.Raw(`SELECT COUNT(*) FROM meal_items WHERE food_id = ?`, foodId).Scan(&totalItems).Error; err != nil {
+	err := r.db.Raw(`SELECT COUNT(*) FROM meal_items WHERE food_id = ?`, foodId).Scan(&totalItems).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("counting food impact items", err)
 	}
 
@@ -589,7 +596,8 @@ func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) er
 		return cerr.NewInternalError("upserting food tags", err)
 	}
 	var tags []foodTag
-	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+	err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
+	if err != nil {
 		return cerr.NewInternalError("fetching food tag ids", err)
 	}
 	maps := make([]foodTagMap, len(tags))

@@ -22,7 +22,8 @@ func newMockServer(t *testing.T, trips []roundTrip) *httptest.Server {
 	t.Helper()
 	call := 0
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		if got := r.Header.Get("Authorization"); got != "Bearer test-key" {
+		got := r.Header.Get("Authorization")
+		if got != "Bearer test-key" {
 			t.Errorf("missing/wrong auth header: %q", got)
 		}
 		body, _ := io.ReadAll(r.Body)

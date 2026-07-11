@@ -29,13 +29,13 @@ func NewWatchdogApplication(
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *WatchdogApplication {
-	repo := repository.NewWatchdogRepository(db)
-	dbCheck := checks.NewDBIntegrityCheck(repo)
+	watchdogRepository := repository.NewWatchdogRepository(db)
+	dbCheck := checks.NewDBIntegrityCheck(watchdogRepository)
 
 	var r2Check *checks.R2OrphanCheck
 	if r2AccountId != "" {
 		lister := storage.NewR2Lister(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket)
-		r2Check = checks.NewR2OrphanCheck(lister, lister, repo, r2PublicURL)
+		r2Check = checks.NewR2OrphanCheck(lister, lister, watchdogRepository, r2PublicURL)
 	}
 
 	sched := scheduler.New(period, dbCheck, r2Check)

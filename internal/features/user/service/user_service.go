@@ -27,10 +27,12 @@ func NewUserService(repository ports.UserRepository, photoRepository ports.Profi
 }
 
 func (s *userService) Create(email, password string) (*domain.User, error) {
-	if err := validate.Email(email); err != nil {
+	err := validate.Email(email)
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.PasswordMinLength(password); err != nil {
+	err = validate.PasswordMinLength(password)
+	if err != nil {
 		return nil, err
 	}
 	exists, err := s.repository.EmailExists(email)
@@ -111,7 +113,8 @@ func (s *userService) FindByUsername(username string) (*domain.User, error) {
 
 func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
 	if params.Email != nil {
-		if err := validate.Email(*params.Email); err != nil {
+		err := validate.Email(*params.Email)
+		if err != nil {
 			return nil, err
 		}
 		exists, err := s.repository.EmailExists(*params.Email)
@@ -123,10 +126,12 @@ func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.U
 		}
 	}
 	if params.Username != nil {
-		if err := validate.NonEmpty(*params.Username, "username"); err != nil {
+		err := validate.NonEmpty(*params.Username, "username")
+		if err != nil {
 			return nil, err
 		}
-		if err := validate.MaxLength(*params.Username, 50, "username"); err != nil {
+		err = validate.MaxLength(*params.Username, 50, "username")
+		if err != nil {
 			return nil, err
 		}
 		exists, err := s.repository.UsernameExists(*params.Username)
@@ -138,17 +143,20 @@ func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.U
 		}
 	}
 	if params.HeightCm != nil {
-		if err := validate.InRange(float64(*params.HeightCm), 50, 300, "height_cm"); err != nil {
+		err := validate.InRange(float64(*params.HeightCm), 50, 300, "height_cm")
+		if err != nil {
 			return nil, err
 		}
 	}
 	if params.BirthDate != nil {
-		if err := validate.NotFuture(*params.BirthDate, "birth_date"); err != nil {
+		err := validate.NotFuture(*params.BirthDate, "birth_date")
+		if err != nil {
 			return nil, err
 		}
 	}
 	if params.Sex != nil {
-		if err := validate.OneOf(*params.Sex, []string{"male", "female", "other"}, "sex"); err != nil {
+		err := validate.OneOf(*params.Sex, []string{"male", "female", "other"}, "sex")
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -180,7 +188,8 @@ func (s *userService) Deactivate(id uuid.UUID) error {
 }
 
 func (s *userService) AddProfilePhoto(userId uuid.UUID, url string) (*domain.ProfilePhoto, error) {
-	if _, err := s.repository.FindById(userId); err != nil {
+	_, err := s.repository.FindById(userId)
+	if err != nil {
 		return nil, err
 	}
 	photo := &domain.ProfilePhoto{
@@ -188,17 +197,20 @@ func (s *userService) AddProfilePhoto(userId uuid.UUID, url string) (*domain.Pro
 		UserId: userId,
 		Url:    url,
 	}
-	if err := s.photoRepository.Create(photo); err != nil {
+	err = s.photoRepository.Create(photo)
+	if err != nil {
 		return nil, err
 	}
-	if err := s.repository.UpdatePhotoUrl(userId, url); err != nil {
+	err = s.repository.UpdatePhotoUrl(userId, url)
+	if err != nil {
 		return nil, err
 	}
 	return photo, nil
 }
 
 func (s *userService) ListProfilePhotos(userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error) {
-	if _, err := s.repository.FindById(userId); err != nil {
+	_, err := s.repository.FindById(userId)
+	if err != nil {
 		return types.Page[domain.ProfilePhoto]{}, err
 	}
 	return s.photoRepository.ListByUserId(userId, params)

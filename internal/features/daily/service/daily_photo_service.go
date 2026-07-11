@@ -21,7 +21,8 @@ func NewDailyPhotoService(repository ports.PhotoRepository) *dailyPhotoService {
 
 func (s *dailyPhotoService) Create(userId uuid.UUID, params ports.CreatePhotoParams) (*domain.DailyPhoto, error) {
 	if params.IsPrimary {
-		if err := s.repository.UnsetPrimary(userId, params.Date); err != nil {
+		err := s.repository.UnsetPrimary(userId, params.Date)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -33,7 +34,8 @@ func (s *dailyPhotoService) Create(userId uuid.UUID, params ports.CreatePhotoPar
 		Name:      params.Name,
 		IsPrimary: params.IsPrimary,
 	}
-	if err := s.repository.Create(photo); err != nil {
+	err := s.repository.Create(photo)
+	if err != nil {
 		return nil, err
 	}
 	return photo, nil
@@ -49,7 +51,8 @@ func (s *dailyPhotoService) Update(id, userId uuid.UUID, params ports.UpdatePhot
 		if err != nil {
 			return nil, err
 		}
-		if err := s.repository.UnsetPrimary(userId, photo.Date); err != nil {
+		err = s.repository.UnsetPrimary(userId, photo.Date)
+		if err != nil {
 			return nil, err
 		}
 	}

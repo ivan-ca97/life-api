@@ -62,28 +62,34 @@ func (uc *healthConnectImportUseCase) Import(ctx context.Context, userId uuid.UU
 	result := &ports.ImportResult{}
 
 	if len(payload.Weight) > 0 {
-		if err := uc.authorizer.Authorize(ctx, userId, permissions.WeightCreate); err != nil {
+		err := uc.authorizer.Authorize(ctx, userId, permissions.WeightCreate)
+		if err != nil {
 			return nil, err
 		}
-		if err := uc.importWeight(userId, payload.Weight, &result.Weight); err != nil {
+		err = uc.importWeight(userId, payload.Weight, &result.Weight)
+		if err != nil {
 			return nil, err
 		}
 	}
 
 	hasActivity := len(payload.ExerciseSessions)+len(payload.StepsDaily)+len(payload.Sleep)+len(payload.HeartRate) > 0
 	if hasActivity {
-		if err := uc.authorizer.Authorize(ctx, userId, permissions.ExercisesCreate); err != nil {
+		err := uc.authorizer.Authorize(ctx, userId, permissions.ExercisesCreate)
+		if err != nil {
 			return nil, err
 		}
 	}
 
-	if err := uc.importActivity(userId, payload.ExerciseSessions, payload.StepsDaily, payload.HeartRate, &result.Exercise); err != nil {
+	err := uc.importActivity(userId, payload.ExerciseSessions, payload.StepsDaily, payload.HeartRate, &result.Exercise)
+	if err != nil {
 		return nil, err
 	}
-	if err := uc.importSleep(userId, payload.Sleep, &result.Sleep); err != nil {
+	err = uc.importSleep(userId, payload.Sleep, &result.Sleep)
+	if err != nil {
 		return nil, err
 	}
-	if err := uc.importHeartRate(userId, payload.HeartRate, &result.HeartRate); err != nil {
+	err = uc.importHeartRate(userId, payload.HeartRate, &result.HeartRate)
+	if err != nil {
 		return nil, err
 	}
 
@@ -220,7 +226,8 @@ func (uc *healthConnectImportUseCase) importActivity(
 			ImportSource:     &importSource,
 		}
 		if params.DurationSeconds == nil {
-			if d := int(end.Sub(start).Seconds()); d > 0 {
+			d := int(end.Sub(start).Seconds())
+			if d > 0 {
 				params.DurationSeconds = &d
 			}
 		}
@@ -309,7 +316,8 @@ func (uc *healthConnectImportUseCase) importSleep(userId uuid.UUID, records []po
 			out.Skipped++
 			continue
 		}
-		if err := uc.storeRaw(userId, "sleep", externalIdFor("sleep", rec.Id), t, rec, out); err != nil {
+		err = uc.storeRaw(userId, "sleep", externalIdFor("sleep", rec.Id), t, rec, out)
+		if err != nil {
 			return err
 		}
 	}
@@ -327,7 +335,8 @@ func (uc *healthConnectImportUseCase) importHeartRate(userId uuid.UUID, records 
 			out.Skipped++
 			continue
 		}
-		if err := uc.storeRaw(userId, "heart_rate", externalIdFor("heart_rate", rec.Id), t, rec, out); err != nil {
+		err = uc.storeRaw(userId, "heart_rate", externalIdFor("heart_rate", rec.Id), t, rec, out)
+		if err != nil {
 			return err
 		}
 	}
@@ -426,10 +435,11 @@ func parseInstant(s string) (time.Time, error) {
 	if s == "" {
 		return time.Time{}, errors.New("empty time")
 	}
-	if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
+	t, err := time.Parse(time.RFC3339Nano, s)
+	if err == nil {
 		return t.UTC(), nil
 	}
-	t, err := time.Parse(time.RFC3339, s)
+	t, err = time.Parse(time.RFC3339, s)
 	if err != nil {
 		return time.Time{}, err
 	}

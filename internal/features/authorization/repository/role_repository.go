@@ -48,13 +48,16 @@ func (r *roleRepository) UserHasRole(userId uuid.UUID, roleName string) (bool, e
 }
 
 func (r *roleRepository) AssignRoleByName(userId uuid.UUID, roleName string) error {
-	var rl role
-	err := r.db.Where("name = ?", roleName).First(&rl).Error
+	var foundRole role
+	err := r.db.Where("name = ?", roleName).First(&foundRole).Error
 	if err != nil {
 		return cerr.NewInternalError("finding role by name", err)
 	}
-	ur := userRole{UserId: userId, RoleId: rl.Id}
-	err = r.db.Create(&ur).Error
+	assignment := userRole{
+		UserId: userId,
+		RoleId: foundRole.Id,
+	}
+	err = r.db.Create(&assignment).Error
 	if err != nil {
 		return cerr.NewInternalError("assigning role to user", err)
 	}

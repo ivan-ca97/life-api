@@ -34,37 +34,47 @@ func (s *exerciseService) Create(userId uuid.UUID, params ports.CreateParams) (*
 		return nil, dayclosure.ErrDayClosed
 	}
 
-	if err := validate.NonEmpty(params.Name, "name"); err != nil {
+	err = validate.NonEmpty(params.Name, "name")
+	if err != nil {
 		return nil, err
 	}
 	if !domain.IsValidExerciseType(params.Type) {
 		return nil, domain.ErrInvalidExerciseType
 	}
-	if err := validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds"); err != nil {
+	err = validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.Steps, "steps"); err != nil {
+	err = validate.NonNegativeIntPtr(params.Steps, "steps")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DistanceMeters, "distance_meters"); err != nil {
+	err = validate.NonNegativePtr(params.DistanceMeters, "distance_meters")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned"); err != nil {
+	err = validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters"); err != nil {
+	err = validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate"); err != nil {
+	err = validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate"); err != nil {
+	err = validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg"); err != nil {
+	err = validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.TotalSets, "total_sets"); err != nil {
+	err = validate.NonNegativeIntPtr(params.TotalSets, "total_sets")
+	if err != nil {
 		return nil, err
 	}
 	avgSpeed, avgPace := computeSpeedAndPace(params.DistanceMeters, params.DurationSeconds)
@@ -131,31 +141,40 @@ func (s *exerciseService) Update(id, userId uuid.UUID, params ports.UpdateParams
 	if params.Type != nil && !domain.IsValidExerciseType(*params.Type) {
 		return nil, domain.ErrInvalidExerciseType
 	}
-	if err := validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds"); err != nil {
+	err = validate.NonNegativeIntPtr(params.DurationSeconds, "duration_seconds")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.Steps, "steps"); err != nil {
+	err = validate.NonNegativeIntPtr(params.Steps, "steps")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DistanceMeters, "distance_meters"); err != nil {
+	err = validate.NonNegativePtr(params.DistanceMeters, "distance_meters")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned"); err != nil {
+	err = validate.NonNegativePtr(params.EstimatedCaloriesBurned, "estimated_calories_burned")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters"); err != nil {
+	err = validate.NonNegativePtr(params.ElevationGainMeters, "elevation_gain_meters")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate"); err != nil {
+	err = validate.NonNegativeIntPtr(params.AverageHeartRate, "average_heart_rate")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate"); err != nil {
+	err = validate.NonNegativeIntPtr(params.MaxHeartRate, "max_heart_rate")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg"); err != nil {
+	err = validate.NonNegativePtr(params.TotalVolumeKg, "total_volume_kg")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.TotalSets, "total_sets"); err != nil {
+	err = validate.NonNegativeIntPtr(params.TotalSets, "total_sets")
+	if err != nil {
 		return nil, err
 	}
 	if params.DistanceMeters != nil || params.DurationSeconds != nil {

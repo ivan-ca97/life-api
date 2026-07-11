@@ -101,7 +101,8 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 			if err != nil {
 				return nil, err
 			}
-			if _, err := uc.exerciseRepository.Update(existing.Id, userId, buildEnrichParams(ex)); err != nil {
+			_, err = uc.exerciseRepository.Update(existing.Id, userId, buildEnrichParams(ex))
+			if err != nil {
 				return nil, err
 			}
 			result.Enriched++
@@ -156,7 +157,8 @@ func parseCSV(reader io.Reader) ([]hevyRow, error) {
 
 	requiredColumns := []string{"title", "start_time", "end_time", "exercise_title", "set_index", "set_type"}
 	for _, col := range requiredColumns {
-		if _, ok := colIndex[col]; !ok {
+		_, ok := colIndex[col]
+		if !ok {
 			return nil, fmt.Errorf("missing required column: %s", col)
 		}
 	}
@@ -208,7 +210,8 @@ func parseRow(record []string, colIndex map[string]int, line int) (hevyRow, erro
 	}
 
 	var weightKg *float64
-	if raw := getField("weight_kg"); raw != "" {
+	raw := getField("weight_kg")
+	if raw != "" {
 		w, err := strconv.ParseFloat(raw, 64)
 		if err != nil {
 			return hevyRow{}, fmt.Errorf("line %d: parsing weight_kg: %w", line, err)
@@ -217,7 +220,8 @@ func parseRow(record []string, colIndex map[string]int, line int) (hevyRow, erro
 	}
 
 	var reps *int
-	if raw := getField("reps"); raw != "" {
+	raw = getField("reps")
+	if raw != "" {
 		r, err := strconv.Atoi(raw)
 		if err != nil {
 			return hevyRow{}, fmt.Errorf("line %d: parsing reps: %w", line, err)

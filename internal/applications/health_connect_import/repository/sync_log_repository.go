@@ -25,7 +25,8 @@ func (r *syncLogRepository) Create(log *ports.SyncLog) error {
 		SyncedAt:   log.SyncedAt,
 		Result:     log.Result,
 	}
-	if err := r.db.Create(model).Error; err != nil {
+	err := r.db.Create(model).Error
+	if err != nil {
 		return cerr.NewInternalError("inserting sync log", err)
 	}
 	return nil

@@ -70,10 +70,13 @@ func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {
 		}
 	}
 
-	result := &R2OrphanResult{BrokenRefs: broken}
+	result := &R2OrphanResult{
+		BrokenRefs: broken,
+	}
 
 	if c.deleter != nil && len(orphans) > 0 {
-		if err := c.deleter.DeleteKeys(orphans); err != nil {
+		err := c.deleter.DeleteKeys(orphans)
+		if err != nil {
 			slog.Error("r2 orphan cleanup: delete failed", "error", err, "count", len(orphans))
 			result.OrphanKeys = orphans
 		} else {

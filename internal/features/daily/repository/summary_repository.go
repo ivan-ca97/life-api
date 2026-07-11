@@ -130,15 +130,18 @@ func (r *summaryRepository) GetDailySummaryRange(userId uuid.UUID, from, to time
 			Closed: closedDates[key],
 			Goals:  goals,
 		}
-		if m, ok := mealsMap[key]; ok {
+		m, ok := mealsMap[key]
+		if ok {
 			summary.MealsSummary = m
 		}
-		if e, ok := exerciseMap[key]; ok {
+		e, ok := exerciseMap[key]
+		if ok {
 			summary.ExerciseSummary = e
 		}
 		var weightEntry *domain.WeightEntrySummary
 		var weightKg *float64
-		if w, ok := weightMap[key]; ok {
+		w, ok := weightMap[key]
+		if ok {
 			summary.WeightEntry = &w
 			weightEntry = &w
 			weightKg = &w.WeightKg

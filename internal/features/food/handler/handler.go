@@ -107,15 +107,18 @@ func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
 		return nil, 0, err
 	}
 	var query *string
-	if q := r.URL.Query().Get("q"); q != "" {
+	q := r.URL.Query().Get("q")
+	if q != "" {
 		query = &q
 	}
 	var tag *string
-	if t := r.URL.Query().Get("tag"); t != "" {
+	t := r.URL.Query().Get("tag")
+	if t != "" {
 		tag = &t
 	}
 	var sort *string
-	if s := r.URL.Query().Get("sort"); s != "" {
+	s := r.URL.Query().Get("sort")
+	if s != "" {
 		sort = &s
 	}
 	params := ports.ListParams{
@@ -206,7 +209,8 @@ func (h *foodHandler) Frequency(r *http.Request) (*frequencyResponse, int, error
 		return nil, 0, err
 	}
 	var tag *string
-	if t := r.URL.Query().Get("tag"); t != "" {
+	t := r.URL.Query().Get("tag")
+	if t != "" {
 		tag = &t
 	}
 	params := ports.FrequencyParams{
@@ -227,7 +231,8 @@ func (h *foodHandler) ListIngredients(r *http.Request) (*ingredientsListResponse
 		return nil, 0, err
 	}
 	var query *string
-	if q := r.URL.Query().Get("q"); q != "" {
+	q := r.URL.Query().Get("q")
+	if q != "" {
 		query = &q
 	}
 	ingredients, err := h.service.ListIngredients(r.Context(), userId, query)

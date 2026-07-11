@@ -97,7 +97,8 @@ func (r *watchdogRepository) InvalidFoodBaseUnits() ([]ports.InvalidFoodUnit, er
 		BaseUnit string    `gorm:"column:base_unit"`
 	}
 	var rows []row
-	if err := r.db.Raw(`SELECT id, base_unit FROM foods`).Scan(&rows).Error; err != nil {
+	err := r.db.Raw(`SELECT id, base_unit FROM foods`).Scan(&rows).Error
+	if err != nil {
 		return nil, err
 	}
 	var result []ports.InvalidFoodUnit

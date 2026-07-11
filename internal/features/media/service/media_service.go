@@ -45,7 +45,8 @@ func (s *mediaService) GenerateUploadURL(ctx context.Context, request ports.Uplo
 	}
 
 	// Prefer the extension from the original filename if it matches; otherwise use the one derived from content type
-	if originalExt := strings.ToLower(filepath.Ext(request.Filename)); originalExt != "" {
+	originalExt := strings.ToLower(filepath.Ext(request.Filename))
+	if originalExt != "" {
 		for _, allowed := range allowedContentTypes {
 			if originalExt == allowed {
 				ext = originalExt

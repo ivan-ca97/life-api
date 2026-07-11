@@ -72,7 +72,8 @@ func (r *measurementRepository) List(userId uuid.UUID, params ports.ListParams) 
 		query = query.Where("type = ?", *params.Type)
 	}
 	var models []bodyMeasurement
-	if err := query.Order("date DESC, type ASC").Find(&models).Error; err != nil {
+	err := query.Order("date DESC, type ASC").Find(&models).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("listing body measurements", err)
 	}
 	results := make([]domain.BodyMeasurement, len(models))

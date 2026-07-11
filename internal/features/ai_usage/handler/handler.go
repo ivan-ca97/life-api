@@ -43,7 +43,8 @@ func (h *aiUsageHandler) SetMySelfLimit(r *http.Request) (*usageResponse, int, e
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.SetMySelfLimit(r.Context(), request.SelfLimitUsd); err != nil {
+	err = h.service.SetMySelfLimit(r.Context(), request.SelfLimitUsd)
+	if err != nil {
 		return nil, 0, err
 	}
 	summary, err := h.service.GetMyUsage(r.Context())
@@ -118,7 +119,8 @@ func (h *aiUsageHandler) DeleteTier(r *http.Request) (*api.NoResponse, int, erro
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.DeleteTier(r.Context(), tierId); err != nil {
+	err = h.service.DeleteTier(r.Context(), tierId)
+	if err != nil {
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil
@@ -133,7 +135,8 @@ func (h *aiUsageHandler) AssignUserTier(r *http.Request) (*api.NoResponse, int, 
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.AssignUserTier(r.Context(), userId, request.TierId); err != nil {
+	err = h.service.AssignUserTier(r.Context(), userId, request.TierId)
+	if err != nil {
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil

@@ -81,7 +81,8 @@ func (h *measurementHandler) List(r *http.Request) (*measurementListResponse, in
 		return nil, 0, err
 	}
 	var measureType *string
-	if t := r.URL.Query().Get("type"); t != "" {
+	t := r.URL.Query().Get("type")
+	if t != "" {
 		measureType = &t
 	}
 	entries, err := h.service.List(r.Context(), userId, ports.ListParams{
@@ -108,7 +109,8 @@ func (h *measurementHandler) Delete(r *http.Request) (*api.NoResponse, int, erro
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.Delete(r.Context(), userId, date, measureType); err != nil {
+	err = h.service.Delete(r.Context(), userId, date, measureType)
+	if err != nil {
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil

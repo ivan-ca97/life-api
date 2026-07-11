@@ -25,28 +25,32 @@ func NewAuthorizedMeasurementService(base ports.MeasurementService, authorizer a
 }
 
 func (s *authorizedMeasurementService) Upsert(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string, params ports.UpsertParams) (*domain.BodyMeasurement, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsWrite); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsWrite)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.Upsert(ownerId, date, measureType, params)
 }
 
 func (s *authorizedMeasurementService) GetByDate(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string) (*domain.BodyMeasurement, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsRead); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsRead)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.GetByDate(ownerId, date, measureType)
 }
 
 func (s *authorizedMeasurementService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListParams) ([]domain.BodyMeasurement, error) {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsRead); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsRead)
+	if err != nil {
 		return nil, err
 	}
 	return s.base.List(ownerId, params)
 }
 
 func (s *authorizedMeasurementService) Delete(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string) error {
-	if err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsWrite); err != nil {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.MeasurementsWrite)
+	if err != nil {
 		return err
 	}
 	return s.base.Delete(ownerId, date, measureType)

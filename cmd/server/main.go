@@ -55,8 +55,10 @@ func main() {
 	openaiModel := os.Getenv("OPENAI_MODEL")
 
 	watchdogInterval := 24 * time.Hour
-	if s := os.Getenv("WATCHDOG_INTERVAL_SECONDS"); s != "" {
-		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+	watchdogSecondsStr := os.Getenv("WATCHDOG_INTERVAL_SECONDS")
+	if watchdogSecondsStr != "" {
+		n, err := strconv.Atoi(watchdogSecondsStr)
+		if err == nil && n > 0 {
 			watchdogInterval = time.Duration(n) * time.Second
 		}
 	}

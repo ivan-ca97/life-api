@@ -93,7 +93,9 @@ func (r *correctionRepository) GetCorrection(userId uuid.UUID, date time.Time) (
 		return nil, nil
 	}
 
-	correction := &domain.Correction{Date: date}
+	correction := &domain.Correction{
+		Date: date,
+	}
 	if hasMeal {
 		correction.Calories = meal.Calories
 		correction.ProteinGrams = meal.ProteinGrams
@@ -116,10 +118,12 @@ func (r *correctionRepository) GetCorrection(userId uuid.UUID, date time.Time) (
 
 func (r *correctionRepository) UpsertCorrection(userId uuid.UUID, correction *domain.Correction) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := r.upsertMealCorrection(tx, userId, correction); err != nil {
+		err := r.upsertMealCorrection(tx, userId, correction)
+		if err != nil {
 			return err
 		}
-		if err := r.upsertExerciseCorrection(tx, userId, correction); err != nil {
+		err = r.upsertExerciseCorrection(tx, userId, correction)
+		if err != nil {
 			return err
 		}
 		return nil
@@ -170,7 +174,8 @@ func (r *correctionRepository) upsertMealCorrection(tx *gorm.DB, userId uuid.UUI
 			FiberGrams:   correction.FiberGrams,
 			Notes:        correction.Notes,
 		}
-		if err := tx.Create(&m).Error; err != nil {
+		err := tx.Create(&m).Error
+		if err != nil {
 			return cerr.NewInternalError("creating correction meal", err)
 		}
 		return nil
@@ -185,7 +190,8 @@ func (r *correctionRepository) upsertMealCorrection(tx *gorm.DB, userId uuid.UUI
 	existing.FatGrams = correction.FatGrams
 	existing.FiberGrams = correction.FiberGrams
 	existing.Notes = correction.Notes
-	if err := tx.Save(&existing).Error; err != nil {
+	err = tx.Save(&existing).Error
+	if err != nil {
 		return cerr.NewInternalError("updating correction meal", err)
 	}
 	return nil
@@ -216,7 +222,8 @@ func (r *correctionRepository) upsertExerciseCorrection(tx *gorm.DB, userId uuid
 			DistanceMeters:          correction.DistanceMeters,
 			Notes:                   correction.Notes,
 		}
-		if err := tx.Create(&e).Error; err != nil {
+		err := tx.Create(&e).Error
+		if err != nil {
 			return cerr.NewInternalError("creating correction exercise", err)
 		}
 		return nil
@@ -230,7 +237,8 @@ func (r *correctionRepository) upsertExerciseCorrection(tx *gorm.DB, userId uuid
 	existing.DurationSeconds = correction.DurationSeconds
 	existing.DistanceMeters = correction.DistanceMeters
 	existing.Notes = correction.Notes
-	if err := tx.Save(&existing).Error; err != nil {
+	err = tx.Save(&existing).Error
+	if err != nil {
 		return cerr.NewInternalError("updating correction exercise", err)
 	}
 	return nil

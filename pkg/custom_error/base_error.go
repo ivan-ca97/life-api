@@ -8,58 +8,58 @@ import (
 // BaseHttpError is the concrete base type for all domain errors.
 // Domain packages create singletons via the constructors below.
 type BaseHttpError struct {
-	msg        string
+	message    string
 	statusCode int
 	severity   slog.Level
 }
 
-func (e *BaseHttpError) Error() string        { return e.msg }
+func (e *BaseHttpError) Error() string        { return e.message }
 func (e *BaseHttpError) StatusCode() int      { return e.statusCode }
 func (e *BaseHttpError) Severity() slog.Level { return e.severity }
 
 func NewNotFoundError(entity string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        entity + " not found",
+		message:    entity + " not found",
 		statusCode: http.StatusNotFound,
 		severity:   slog.LevelWarn,
 	}
 }
 
-func NewConflictError(msg string) *BaseHttpError {
+func NewConflictError(message string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        msg,
+		message:    message,
 		statusCode: http.StatusConflict,
 		severity:   slog.LevelWarn,
 	}
 }
 
-func NewUnauthorizedError(msg string) *BaseHttpError {
+func NewUnauthorizedError(message string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        msg,
+		message:    message,
 		statusCode: http.StatusUnauthorized,
 		severity:   slog.LevelWarn,
 	}
 }
 
-func NewForbiddenError(msg string) *BaseHttpError {
+func NewForbiddenError(message string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        msg,
+		message:    message,
 		statusCode: http.StatusForbidden,
 		severity:   slog.LevelWarn,
 	}
 }
 
-func NewBadRequestError(msg string) *BaseHttpError {
+func NewBadRequestError(message string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        msg,
+		message:    message,
 		statusCode: http.StatusBadRequest,
 		severity:   slog.LevelWarn,
 	}
 }
 
-func NewTooManyRequestsError(msg string) *BaseHttpError {
+func NewTooManyRequestsError(message string) *BaseHttpError {
 	return &BaseHttpError{
-		msg:        msg,
+		message:    message,
 		statusCode: http.StatusTooManyRequests,
 		severity:   slog.LevelWarn,
 	}
@@ -88,7 +88,7 @@ func (e *internalError) Unwrap() error { return e.cause }
 func NewInternalError(logContext string, cause error) *internalError {
 	return &internalError{
 		BaseHttpError: &BaseHttpError{
-			msg:        "internal server error",
+			message:    "internal server error",
 			statusCode: http.StatusInternalServerError,
 			severity:   slog.LevelError,
 		},

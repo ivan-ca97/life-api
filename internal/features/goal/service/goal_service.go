@@ -33,28 +33,36 @@ func (s *goalService) GetByUserId(userId uuid.UUID) (*domain.Goal, error) {
 }
 
 func (s *goalService) Upsert(userId uuid.UUID, params ports.UpsertParams) (*domain.Goal, error) {
-	if err := validate.NonNegativePtr(params.DailyCalories, "daily_calories"); err != nil {
+	err := validate.NonNegativePtr(params.DailyCalories, "daily_calories")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DailyProteinGrams, "daily_protein_grams"); err != nil {
+	err = validate.NonNegativePtr(params.DailyProteinGrams, "daily_protein_grams")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DailyCarbsGrams, "daily_carbs_grams"); err != nil {
+	err = validate.NonNegativePtr(params.DailyCarbsGrams, "daily_carbs_grams")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DailyFatGrams, "daily_fat_grams"); err != nil {
+	err = validate.NonNegativePtr(params.DailyFatGrams, "daily_fat_grams")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativePtr(params.DailyFiberGrams, "daily_fiber_grams"); err != nil {
+	err = validate.NonNegativePtr(params.DailyFiberGrams, "daily_fiber_grams")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.DailySteps, "daily_steps"); err != nil {
+	err = validate.NonNegativeIntPtr(params.DailySteps, "daily_steps")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.NonNegativeIntPtr(params.DailyExerciseMinutes, "daily_exercise_minutes"); err != nil {
+	err = validate.NonNegativeIntPtr(params.DailyExerciseMinutes, "daily_exercise_minutes")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.PositivePtr(params.TargetWeightKg, "target_weight_kg"); err != nil {
+	err = validate.PositivePtr(params.TargetWeightKg, "target_weight_kg")
+	if err != nil {
 		return nil, err
 	}
 	existing, err := s.repository.FindByUserId(userId)

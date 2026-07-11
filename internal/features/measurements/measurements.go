@@ -17,13 +17,13 @@ type measurementsFeature struct {
 }
 
 func NewMeasurementsFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHandler http_errors.HttpErrorHandler) *measurementsFeature {
-	repo := repository.NewMeasurementRepository(db)
-	svc := service.NewMeasurementService(repo)
-	authorizedSvc := service.NewAuthorizedMeasurementService(svc, authorizer)
-	h := handler.NewMeasurementHandler(authorizedSvc)
+	measurementRepository := repository.NewMeasurementRepository(db)
+	measurementService := service.NewMeasurementService(measurementRepository)
+	authorizedService := service.NewAuthorizedMeasurementService(measurementService, authorizer)
+	measurementHandler := handler.NewMeasurementHandler(authorizedService)
 
 	return &measurementsFeature{
-		handler:      h,
+		handler:      measurementHandler,
 		errorHandler: errorHandler,
 	}
 }

@@ -61,7 +61,8 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		return nil, dayclosure.ErrDayClosed
 	}
 
-	if err := validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, params.Items); err != nil {
+	err = validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, params.Items)
+	if err != nil {
 		return nil, err
 	}
 
@@ -138,11 +139,13 @@ func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 	if params.Items != nil {
 		itemsForValidation = *params.Items
 	}
-	if err := validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, itemsForValidation); err != nil {
+	err = validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, itemsForValidation)
+	if err != nil {
 		return nil, err
 	}
 	if params.Photos != nil {
-		if err := enforcePhotoParamPrimary(*params.Photos); err != nil {
+		err := enforcePhotoParamPrimary(*params.Photos)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -302,7 +305,8 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, 
 	}
 
 	// Metric unit of the same dimension: automatic conversion
-	if unitDim, ok := units.GetDimension(item.Unit); ok && unitDim == dim {
+	unitDim, ok := units.GetDimension(item.Unit)
+	if ok && unitDim == dim {
 		qty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
 		ru := resolvedUnit{NormalizedQty: qty, NormalizedUnit: standardUnit}
 		return ru, nil
@@ -310,7 +314,8 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, 
 
 	// Cross-dimension via density (mass food + volume unit, or volume food + mass unit)
 	if food.VolumeConversion != nil {
-		if unitDim, ok := units.GetDimension(item.Unit); ok {
+		unitDim, ok := units.GetDimension(item.Unit)
+		if ok {
 			if dim == units.DimensionMass && unitDim == units.DimensionVolume {
 				mlQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
 				ru := resolvedUnit{NormalizedQty: mlQty * food.VolumeConversion.GramsPerMl, NormalizedUnit: standardUnit}
@@ -361,23 +366,23 @@ func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []p
 	return nil
 }
 
-func scale(val *float64, ratio float64) *float64 {
-	if val == nil {
+func scale(value *float64, ratio float64) *float64 {
+	if value == nil {
 		return nil
 	}
-	result := *val * ratio
+	result := *value * ratio
 	return &result
 }
 
-func addPtr(acc *float64, val *float64) *float64 {
-	if val == nil {
-		return acc
+func addPtr(accumulator *float64, value *float64) *float64 {
+	if value == nil {
+		return accumulator
 	}
-	if acc == nil {
-		v := *val
+	if accumulator == nil {
+		v := *value
 		return &v
 	}
-	sum := *acc + *val
+	sum := *accumulator + *value
 	return &sum
 }
 
@@ -392,7 +397,8 @@ func photosFromParams(params []ports.PhotoParam) ([]domain.MealPhoto, error) {
 			IsPrimary:  p.IsPrimary,
 		}
 	}
-	if err := enforcePrimary(photos); err != nil {
+	err := enforcePrimary(photos)
+	if err != nil {
 		return nil, err
 	}
 	return photos, nil
@@ -408,11 +414,13 @@ func enforcePrimary(photos []domain.MealPhoto) error {
 
 	for i, p := range photos {
 		key := photoGroupKey(p)
-		if _, seen := firstInGroup[key]; !seen {
+		_, seen := firstInGroup[key]
+		if !seen {
 			firstInGroup[key] = i
 		}
 		if p.IsPrimary {
-			if _, has := firstPrimary[key]; !has {
+			_, has := firstPrimary[key]
+			if !has {
 				firstPrimary[key] = i
 			} else {
 				return cerr.NewBadRequestError("only one photo per group can be primary")
@@ -421,7 +429,8 @@ func enforcePrimary(photos []domain.MealPhoto) error {
 	}
 
 	for key, idx := range firstInGroup {
-		if _, ok := firstPrimary[key]; !ok {
+		_, ok := firstPrimary[key]
+		if !ok {
 			photos[idx].IsPrimary = true
 		}
 	}
@@ -436,11 +445,13 @@ func enforcePhotoParamPrimary(photos []ports.PhotoParam) error {
 
 	for i, p := range photos {
 		key := photoParamGroupKey(p)
-		if _, seen := firstInGroup[key]; !seen {
+		_, seen := firstInGroup[key]
+		if !seen {
 			firstInGroup[key] = i
 		}
 		if p.IsPrimary {
-			if _, has := firstPrimary[key]; !has {
+			_, has := firstPrimary[key]
+			if !has {
 				firstPrimary[key] = i
 			} else {
 				return cerr.NewBadRequestError("only one photo per group can be primary")
@@ -449,7 +460,8 @@ func enforcePhotoParamPrimary(photos []ports.PhotoParam) error {
 	}
 
 	for key, idx := range firstInGroup {
-		if _, ok := firstPrimary[key]; !ok {
+		_, ok := firstPrimary[key]
+		if !ok {
 			photos[idx].IsPrimary = true
 		}
 	}

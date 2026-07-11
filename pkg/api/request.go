@@ -16,7 +16,8 @@ import (
 
 func DecodeBody[T any](r *http.Request) (*T, error) {
 	var v T
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if err != nil {
 		return nil, cerr.NewBadRequestError("invalid request body")
 	}
 	return &v, nil
@@ -96,13 +97,17 @@ func PaginationFromRequest(r *http.Request) types.PaginationParams {
 		Limit:  20,
 		Offset: 0,
 	}
-	if l := r.URL.Query().Get("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= 100 {
+	l := r.URL.Query().Get("limit")
+	if l != "" {
+		v, err := strconv.Atoi(l)
+		if err == nil && v > 0 && v <= 100 {
 			params.Limit = v
 		}
 	}
-	if o := r.URL.Query().Get("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+	o := r.URL.Query().Get("offset")
+	if o != "" {
+		v, err := strconv.Atoi(o)
+		if err == nil && v >= 0 {
 			params.Offset = v
 		}
 	}

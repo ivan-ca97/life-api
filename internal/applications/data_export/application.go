@@ -37,13 +37,13 @@ func (a *DataExportApplication) ProtectedRoutes(r chi.Router) {
 // --- response types ---
 
 type userExport struct {
-	Id        string     `json:"id"`
-	Email     string     `json:"email"`
-	Username  *string    `json:"username,omitempty"`
-	HeightCm  *int       `json:"height_cm,omitempty"`
-	BirthDate *string    `json:"birth_date,omitempty"`
-	Sex       *string    `json:"sex,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
+	Id        string    `json:"id"`
+	Email     string    `json:"email"`
+	Username  *string   `json:"username,omitempty"`
+	HeightCm  *int      `json:"height_cm,omitempty"`
+	BirthDate *string   `json:"birth_date,omitempty"`
+	Sex       *string   `json:"sex,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type weightEntryExport struct {
@@ -88,17 +88,17 @@ type mealExport struct {
 }
 
 type foodExport struct {
-	Id                  string   `json:"id"`
-	Name                string   `json:"name"`
-	MeasurementType     string   `json:"measurement_type"`
-	BaseUnit            string   `json:"base_unit"`
-	BaseQuantity        *float64 `json:"base_quantity,omitempty"`
-	DefaultCalories     *float64 `json:"default_calories,omitempty"`
-	DefaultProteinGrams *float64 `json:"default_protein_grams,omitempty"`
-	DefaultCarbsGrams   *float64 `json:"default_carbs_grams,omitempty"`
-	DefaultFatGrams     *float64 `json:"default_fat_grams,omitempty"`
-	DefaultFiberGrams   *float64 `json:"default_fiber_grams,omitempty"`
-	Public              bool     `json:"public"`
+	Id                  string    `json:"id"`
+	Name                string    `json:"name"`
+	MeasurementType     string    `json:"measurement_type"`
+	BaseUnit            string    `json:"base_unit"`
+	BaseQuantity        *float64  `json:"base_quantity,omitempty"`
+	DefaultCalories     *float64  `json:"default_calories,omitempty"`
+	DefaultProteinGrams *float64  `json:"default_protein_grams,omitempty"`
+	DefaultCarbsGrams   *float64  `json:"default_carbs_grams,omitempty"`
+	DefaultFatGrams     *float64  `json:"default_fat_grams,omitempty"`
+	DefaultFiberGrams   *float64  `json:"default_fiber_grams,omitempty"`
+	Public              bool      `json:"public"`
 	CreatedAt           time.Time `json:"created_at"`
 }
 
@@ -140,7 +140,8 @@ func (a *DataExportApplication) Export(r *http.Request) (*exportResponse, int, e
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := a.authorizer.Authorize(r.Context(), userId, permissions.UsersRead); err != nil {
+	err = a.authorizer.Authorize(r.Context(), userId, permissions.UsersRead)
+	if err != nil {
 		return nil, 0, err
 	}
 	data, err := a.buildExport(userId)
@@ -191,12 +192,12 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 
 	// weight entries
 	var weightRows []struct {
-		Id                uuid.UUID  `gorm:"column:id"`
-		Date              time.Time  `gorm:"column:date"`
-		WeightKg          float64    `gorm:"column:weight_kg"`
-		BodyFatPercentage *float64   `gorm:"column:body_fat_percentage"`
-		Notes             string     `gorm:"column:notes"`
-		CreatedAt         time.Time  `gorm:"column:created_at"`
+		Id                uuid.UUID `gorm:"column:id"`
+		Date              time.Time `gorm:"column:date"`
+		WeightKg          float64   `gorm:"column:weight_kg"`
+		BodyFatPercentage *float64  `gorm:"column:body_fat_percentage"`
+		Notes             string    `gorm:"column:notes"`
+		CreatedAt         time.Time `gorm:"column:created_at"`
 	}
 	if err := a.db.Raw(
 		`SELECT id, date, weight_kg, body_fat_percentage, notes, created_at FROM weight_entries WHERE user_id = ? ORDER BY date`,
@@ -217,21 +218,21 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 
 	// exercises
 	var exerciseRows []struct {
-		Id                      uuid.UUID  `gorm:"column:id"`
-		Date                    time.Time  `gorm:"column:date"`
-		Type                    string     `gorm:"column:type"`
-		Name                    string     `gorm:"column:name"`
-		DurationSeconds         *int       `gorm:"column:duration_seconds"`
-		EstimatedCaloriesBurned *float64   `gorm:"column:estimated_calories_burned"`
-		Steps                   *int       `gorm:"column:steps"`
-		DistanceMeters          *float64   `gorm:"column:distance_meters"`
-		ElevationGainMeters     *float64   `gorm:"column:elevation_gain_meters"`
-		AverageHeartRate        *int       `gorm:"column:average_heart_rate"`
-		MaxHeartRate            *int       `gorm:"column:max_heart_rate"`
-		TotalVolumeKg           *float64   `gorm:"column:total_volume_kg"`
-		TotalSets               *int       `gorm:"column:total_sets"`
-		Notes                   string     `gorm:"column:notes"`
-		CreatedAt               time.Time  `gorm:"column:created_at"`
+		Id                      uuid.UUID `gorm:"column:id"`
+		Date                    time.Time `gorm:"column:date"`
+		Type                    string    `gorm:"column:type"`
+		Name                    string    `gorm:"column:name"`
+		DurationSeconds         *int      `gorm:"column:duration_seconds"`
+		EstimatedCaloriesBurned *float64  `gorm:"column:estimated_calories_burned"`
+		Steps                   *int      `gorm:"column:steps"`
+		DistanceMeters          *float64  `gorm:"column:distance_meters"`
+		ElevationGainMeters     *float64  `gorm:"column:elevation_gain_meters"`
+		AverageHeartRate        *int      `gorm:"column:average_heart_rate"`
+		MaxHeartRate            *int      `gorm:"column:max_heart_rate"`
+		TotalVolumeKg           *float64  `gorm:"column:total_volume_kg"`
+		TotalSets               *int      `gorm:"column:total_sets"`
+		Notes                   string    `gorm:"column:notes"`
+		CreatedAt               time.Time `gorm:"column:created_at"`
 	}
 	if err := a.db.Raw(`
 		SELECT id, date, type, name, duration_seconds, estimated_calories_burned, steps,
@@ -263,17 +264,17 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 
 	// meals
 	var mealRows []struct {
-		Id           uuid.UUID  `gorm:"column:id"`
-		Date         time.Time  `gorm:"column:date"`
-		Type         string     `gorm:"column:type"`
-		Name         string     `gorm:"column:name"`
-		Calories     *float64   `gorm:"column:calories"`
-		ProteinGrams *float64   `gorm:"column:protein_grams"`
-		CarbsGrams   *float64   `gorm:"column:carbs_grams"`
-		FatGrams     *float64   `gorm:"column:fat_grams"`
-		FiberGrams   *float64   `gorm:"column:fiber_grams"`
-		Notes        string     `gorm:"column:notes"`
-		CreatedAt    time.Time  `gorm:"column:created_at"`
+		Id           uuid.UUID `gorm:"column:id"`
+		Date         time.Time `gorm:"column:date"`
+		Type         string    `gorm:"column:type"`
+		Name         string    `gorm:"column:name"`
+		Calories     *float64  `gorm:"column:calories"`
+		ProteinGrams *float64  `gorm:"column:protein_grams"`
+		CarbsGrams   *float64  `gorm:"column:carbs_grams"`
+		FatGrams     *float64  `gorm:"column:fat_grams"`
+		FiberGrams   *float64  `gorm:"column:fiber_grams"`
+		Notes        string    `gorm:"column:notes"`
+		CreatedAt    time.Time `gorm:"column:created_at"`
 	}
 	if err := a.db.Raw(`
 		SELECT id, date, type, name, calories, protein_grams, carbs_grams, fat_grams, fiber_grams, notes, created_at

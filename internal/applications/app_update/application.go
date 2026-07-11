@@ -154,7 +154,8 @@ func (a *AppUpdateApplication) webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var p githubReleasePayload
-	if err := json.Unmarshal(body, &p); err != nil {
+	err = json.Unmarshal(body, &p)
+	if err != nil {
 		http.Error(w, "bad json", http.StatusBadRequest)
 		return
 	}
@@ -196,7 +197,8 @@ func (a *AppUpdateApplication) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.upsert("android", version, versionCode, apkURL, firstLine(p.Release.Body)); err != nil {
+	err = a.upsert("android", version, versionCode, apkURL, firstLine(p.Release.Body))
+	if err != nil {
 		slog.Error("app_update: upsert failed", "version", version, "error", err)
 		http.Error(w, "failed to save release", http.StatusInternalServerError)
 		return
@@ -240,7 +242,8 @@ func (a *AppUpdateApplication) downloadAndUpload(ctx context.Context, downloadUR
 		input.ContentLength = aws.Int64(response.ContentLength)
 	}
 
-	if _, err := a.s3Client.PutObject(ctx, input); err != nil {
+	_, err = a.s3Client.PutObject(ctx, input)
+	if err != nil {
 		return "", fmt.Errorf("uploading to R2: %w", err)
 	}
 
@@ -300,7 +303,8 @@ func parseVersionCode(version string) (int64, error) {
 
 func firstLine(s string) string {
 	s = strings.TrimSpace(s)
-	if i := strings.IndexByte(s, '\n'); i >= 0 {
+	i := strings.IndexByte(s, '\n')
+	if i >= 0 {
 		return strings.TrimSpace(s[:i])
 	}
 	return s

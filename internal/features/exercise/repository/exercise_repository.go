@@ -34,7 +34,8 @@ func (r *exerciseRepository) Create(e *domain.Exercise) error {
 		return cerr.NewInternalError("inserting exercise", err)
 	}
 	if len(e.Tags) > 0 {
-		if err := r.upsertTags(e.Id, e.UserId, e.Tags); err != nil {
+		err := r.upsertTags(e.Id, e.UserId, e.Tags)
+		if err != nil {
 			return err
 		}
 	}
@@ -197,7 +198,8 @@ func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []st
 		return cerr.NewInternalError("upserting exercise tags", err)
 	}
 	var tags []exerciseTag
-	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+	err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
+	if err != nil {
 		return cerr.NewInternalError("fetching exercise tag ids", err)
 	}
 	maps := make([]exerciseTagMap, len(tags))

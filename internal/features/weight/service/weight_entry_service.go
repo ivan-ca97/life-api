@@ -26,10 +26,12 @@ func NewWeightEntryService(repository ports.WeightEntryRepository, closureChecke
 }
 
 func (s *weightEntryService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.WeightEntry, error) {
-	if err := validate.InRange(params.WeightKg, 30, 500, "weight_kg"); err != nil {
+	err := validate.InRange(params.WeightKg, 30, 500, "weight_kg")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage"); err != nil {
+	err = validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage")
+	if err != nil {
 		return nil, err
 	}
 	closed, err := s.closureChecker.IsClosed(userId, params.Date)
@@ -73,10 +75,12 @@ func (s *weightEntryService) List(userId uuid.UUID, params ports.ListParams) (ty
 }
 
 func (s *weightEntryService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.WeightEntry, error) {
-	if err := validate.InRangePtr(params.WeightKg, 30, 500, "weight_kg"); err != nil {
+	err := validate.InRangePtr(params.WeightKg, 30, 500, "weight_kg")
+	if err != nil {
 		return nil, err
 	}
-	if err := validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage"); err != nil {
+	err = validate.InRangePtr(params.BodyFatPercentage, 0, 100, "body_fat_percentage")
+	if err != nil {
 		return nil, err
 	}
 	entry, err := s.repository.FindById(id, userId)

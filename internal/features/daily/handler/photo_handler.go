@@ -149,7 +149,8 @@ func (h *photoHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	if err := h.service.Delete(r.Context(), userId, id); err != nil {
+	err = h.service.Delete(r.Context(), userId, id)
+	if err != nil {
 		return nil, 0, err
 	}
 	return nil, http.StatusNoContent, nil

@@ -61,7 +61,8 @@ func NewMealEstimationUseCase(
 }
 
 func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.EstimateInput) (*domain.MealEstimate, error) {
-	if err := uc.authorizer.Authorize(ctx, input.UserId, permissions.MealsCreate); err != nil {
+	err := uc.authorizer.Authorize(ctx, input.UserId, permissions.MealsCreate)
+	if err != nil {
 		return nil, err
 	}
 	if len(input.PhotoUrls) == 0 && strings.TrimSpace(input.Instructions) == "" {
@@ -70,7 +71,8 @@ func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estim
 	if len(input.PhotoUrls) > maxPhotos {
 		return nil, domain.ErrTooManyPhotos
 	}
-	if err := uc.quota.CheckQuota(input.UserId); err != nil {
+	err = uc.quota.CheckQuota(input.UserId)
+	if err != nil {
 		return nil, err
 	}
 
@@ -99,7 +101,8 @@ func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estim
 	}
 
 	var output modelOutput
-	if err := json.Unmarshal([]byte(result.Content), &output); err != nil {
+	err = json.Unmarshal([]byte(result.Content), &output)
+	if err != nil {
 		uc.logInteraction(input, errorOutcome("decode"), result.Usage, 0, latencyMs, nil)
 		return nil, cerr.NewInternalError("decoding meal ai estimate", err)
 	}

@@ -60,15 +60,16 @@ func buildStatusResponse(s *scheduler.Scheduler) *statusResponse {
 		Running:         s.IsRunning(),
 		IntervalSeconds: int64(s.Period().Seconds()),
 	}
-	if last := s.LastResult(); last != nil {
+	last := s.LastResult()
+	if last != nil {
 		run := &lastRunResponse{
 			StartedAt:  last.StartedAt,
 			FinishedAt: last.FinishedAt,
 			DurationMs: last.FinishedAt.Sub(last.StartedAt).Milliseconds(),
 		}
 		if last.Err != nil {
-			msg := last.Err.Error()
-			run.Error = &msg
+			message := last.Err.Error()
+			run.Error = &message
 		}
 		if last.DB != nil {
 			run.DB = buildDBResponse(last.DB.CrossContextPhotos, last.DB.MealGroupsMissingPrimary, last.DB.ItemGroupsMissingPrimary, last.DB.InvalidFoodBaseUnits)

@@ -25,20 +25,25 @@ func NewFoodService(repository ports.FoodRepository) *foodService {
 }
 
 func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Food, error) {
-	if err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams); err != nil {
+	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams)
+	if err != nil {
 		return nil, err
 	}
-	if err := validateMeasurementType(params.MeasurementType); err != nil {
+	err = validateMeasurementType(params.MeasurementType)
+	if err != nil {
 		return nil, err
 	}
 	dim := domain.UnitDimension(params.MeasurementType)
-	if err := validateMetricUnitForDimension(params.BaseUnit, dim); err != nil {
+	err = validateMetricUnitForDimension(params.BaseUnit, dim)
+	if err != nil {
 		return nil, err
 	}
-	if err := validateConversions(params.Conversions, dim); err != nil {
+	err = validateConversions(params.Conversions, dim)
+	if err != nil {
 		return nil, err
 	}
-	if err := validatePortions(params.Portions); err != nil {
+	err = validatePortions(params.Portions)
+	if err != nil {
 		return nil, err
 	}
 
@@ -74,7 +79,7 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		UnitConversion:      buildUnitConversion(params.Conversions),
 		Portions:            portions,
 	}
-	err := s.repository.Create(food)
+	err = s.repository.Create(food)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +103,13 @@ func (s *foodService) List(userId uuid.UUID, params ports.ListParams) (types.Pag
 }
 
 func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Food, error) {
-	if err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams, params.BaseQuantity); err != nil {
+	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams, params.BaseQuantity)
+	if err != nil {
 		return nil, err
 	}
 	if params.MeasurementType != nil {
-		if err := validateMeasurementType(*params.MeasurementType); err != nil {
+		err := validateMeasurementType(*params.MeasurementType)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -117,7 +124,8 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 			}
 			dim = domain.UnitDimension(current.MeasurementType)
 		}
-		if err := validateMetricUnitForDimension(*params.BaseUnit, dim); err != nil {
+		err := validateMetricUnitForDimension(*params.BaseUnit, dim)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -132,12 +140,14 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 			}
 			dim = domain.UnitDimension(current.MeasurementType)
 		}
-		if err := validateConversions(params.Conversions, dim); err != nil {
+		err := validateConversions(params.Conversions, dim)
+		if err != nil {
 			return nil, err
 		}
 	}
 	if params.Portions != nil {
-		if err := validatePortions(*params.Portions); err != nil {
+		err := validatePortions(*params.Portions)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -256,7 +266,8 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 }
 
 func (s *foodService) Impact(foodId, userId uuid.UUID) (*ports.ImpactResult, error) {
-	if _, err := s.repository.FindById(foodId, userId); err != nil {
+	_, err := s.repository.FindById(foodId, userId)
+	if err != nil {
 		return nil, err
 	}
 	return s.repository.Impact(foodId)
@@ -277,7 +288,8 @@ func validateMetricUnit(unit string) error {
 }
 
 func validateMetricUnitForDimension(unit string, dim domain.UnitDimension) error {
-	if err := validateMetricUnit(unit); err != nil {
+	err := validateMetricUnit(unit)
+	if err != nil {
 		return err
 	}
 	unitDim, _ := domain.GetUnitDimension(unit)

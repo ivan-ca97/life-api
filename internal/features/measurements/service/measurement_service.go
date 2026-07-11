@@ -36,7 +36,8 @@ func (s *measurementService) Upsert(userId uuid.UUID, date time.Time, measureTyp
 		Value:  params.Value,
 		Notes:  params.Notes,
 	}
-	if err := s.repository.Upsert(m); err != nil {
+	err := s.repository.Upsert(m)
+	if err != nil {
 		return nil, err
 	}
 	return m, nil

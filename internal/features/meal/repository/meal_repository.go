@@ -67,7 +67,8 @@ func (r *mealRepository) Create(m *domain.Meal) error {
 	}
 
 	if len(m.Tags) > 0 {
-		if err := r.upsertTags(m.Id, m.UserId, m.Tags); err != nil {
+		err := r.upsertTags(m.Id, m.UserId, m.Tags)
+		if err != nil {
 			return err
 		}
 	}
@@ -231,7 +232,8 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 // Returns a food_id → item.Id map for resolving photo ItemFoodId references.
 func (r *mealRepository) upsertItems(mealId uuid.UUID, incoming []domain.MealItem) (map[uuid.UUID]uuid.UUID, error) {
 	var existingItems []mealItem
-	if err := r.db.Where("meal_id = ?", mealId).Find(&existingItems).Error; err != nil {
+	err := r.db.Where("meal_id = ?", mealId).Find(&existingItems).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("fetching meal items for upsert", err)
 	}
 
@@ -247,7 +249,8 @@ func (r *mealRepository) upsertItems(mealId uuid.UUID, incoming []domain.MealIte
 	for _, item := range incoming {
 		incomingFoodIds[item.FoodId] = true
 		mi := buildMealItem(mealId, item)
-		if existingId, ok := existingByFoodId[item.FoodId]; ok {
+		existingId, ok := existingByFoodId[item.FoodId]
+		if ok {
 			mi.Id = existingId
 		} else {
 			mi.Id = uuid.New()
@@ -258,14 +261,16 @@ func (r *mealRepository) upsertItems(mealId uuid.UUID, incoming []domain.MealIte
 
 	for _, item := range existingItems {
 		if !incomingFoodIds[item.FoodId] {
-			if err := r.db.Delete(&mealItem{}, "id = ?", item.Id).Error; err != nil {
+			err := r.db.Delete(&mealItem{}, "id = ?", item.Id).Error
+			if err != nil {
 				return nil, cerr.NewInternalError("deleting removed meal item", err)
 			}
 		}
 	}
 
 	if len(newItems) > 0 {
-		if err := r.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&newItems).Error; err != nil {
+		err := r.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&newItems).Error
+		if err != nil {
 			return nil, cerr.NewInternalError("upserting meal items", err)
 		}
 	}
@@ -281,7 +286,8 @@ func resolveItemId(mealItemId, itemFoodId *uuid.UUID, foodIdToItemId map[uuid.UU
 		return mealItemId
 	}
 	if itemFoodId != nil {
-		if resolved, ok := foodIdToItemId[*itemFoodId]; ok {
+		resolved, ok := foodIdToItemId[*itemFoodId]
+		if ok {
 			return &resolved
 		}
 	}
@@ -445,7 +451,8 @@ func (r *mealRepository) upsertTags(mealId, userId uuid.UUID, names []string) er
 		return cerr.NewInternalError("upserting meal tags", err)
 	}
 	var tags []mealTag
-	if err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error; err != nil {
+	err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
+	if err != nil {
 		return cerr.NewInternalError("fetching meal tag ids", err)
 	}
 	maps := make([]mealTagMap, len(tags))

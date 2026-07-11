@@ -97,7 +97,8 @@ func (s *service) CreateTier(params ports.CreateTierParams) (*domain.Tier, error
 		MonthlyLimitUsd: params.MonthlyLimitUsd,
 		Enabled:         params.Enabled,
 	}
-	if err := s.repository.CreateTier(tier); err != nil {
+	err := s.repository.CreateTier(tier)
+	if err != nil {
 		return nil, err
 	}
 	return tier, nil
