@@ -116,12 +116,6 @@ func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estim
 	_ = uc.quota.RecordUsage(input.UserId, delta)
 
 	estimate := output.toDomain()
-	estimate.Usage = domain.Usage{
-		Model:        uc.client.Model(),
-		InputTokens:  int64(result.Usage.InputTokens),
-		OutputTokens: int64(result.Usage.OutputTokens),
-		CostUsd:      cost,
-	}
 
 	uc.logInteraction(input, okOutcome(), result.Usage, cost, latencyMs, estimate)
 	return estimate, nil

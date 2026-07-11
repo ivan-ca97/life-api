@@ -40,13 +40,6 @@ type totalsResponse struct {
 	FiberGrams   float64 `json:"fiber_grams"`
 }
 
-type usageResponse struct {
-	Model        string  `json:"model"`
-	InputTokens  int64   `json:"input_tokens"`
-	OutputTokens int64   `json:"output_tokens"`
-	CostUsd      float64 `json:"cost_usd"`
-}
-
 type estimateResponse struct {
 	MatchedItems          []matchedItemResponse       `json:"matched_items"`
 	NewFoodSuggestions    []newFoodSuggestionResponse `json:"new_food_suggestions"`
@@ -54,7 +47,6 @@ type estimateResponse struct {
 	Assumptions           []string                    `json:"assumptions"`
 	NeedsClarification    bool                        `json:"needs_clarification"`
 	ClarificationQuestion string                      `json:"clarification_question,omitempty"`
-	Usage                 usageResponse               `json:"usage"`
 }
 
 func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
@@ -69,12 +61,6 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 		Assumptions:           e.Assumptions,
 		NeedsClarification:    e.NeedsClarification,
 		ClarificationQuestion: e.ClarificationQuestion,
-		Usage: usageResponse{
-			Model:        e.Usage.Model,
-			InputTokens:  e.Usage.InputTokens,
-			OutputTokens: e.Usage.OutputTokens,
-			CostUsd:      e.Usage.CostUsd,
-		},
 	}
 	for _, m := range e.MatchedItems {
 		response.MatchedItems = append(response.MatchedItems, matchedItemResponse{

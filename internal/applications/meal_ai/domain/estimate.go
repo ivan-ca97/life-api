@@ -10,7 +10,6 @@ type MealEstimate struct {
 	Assumptions           []string
 	NeedsClarification    bool
 	ClarificationQuestion string
-	Usage                 Usage
 }
 
 // MatchedItem is a detected food the model matched to an existing catalog entry.
@@ -55,13 +54,4 @@ type Totals struct {
 	CarbsGrams   float64
 	FatGrams     float64
 	FiberGrams   float64
-}
-
-// Usage is the token/cost accounting for the estimation call, surfaced to the
-// user and recorded against their monthly quota.
-type Usage struct {
-	Model        string
-	InputTokens  int64
-	OutputTokens int64
-	CostUsd      float64
 }

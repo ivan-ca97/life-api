@@ -116,9 +116,6 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if estimate.Totals.Calories != 330 {
 		t.Errorf("expected totals.calories 330, got %v", estimate.Totals.Calories)
 	}
-	if estimate.Usage.CostUsd != mockCost {
-		t.Errorf("expected cost %v, got %v", mockCost, estimate.Usage.CostUsd)
-	}
 	if quota.recorded == nil || quota.recorded.CostUsd != mockCost {
 		t.Errorf("usage not recorded correctly: %+v", quota.recorded)
 	}
