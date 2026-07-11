@@ -105,53 +105,53 @@ func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionRespon
 	if err != nil {
 		return nil, 0, err
 	}
-	req, err := api.DecodeBody[upsertCorrectionRequest](r)
+	request, err := api.DecodeBody[upsertCorrectionRequest](r)
 	if err != nil {
 		return nil, 0, err
 	}
-	date, err := time.Parse("2006-01-02", req.Date)
+	date, err := time.Parse("2006-01-02", request.Date)
 	if err != nil {
 		return nil, 0, cerr.NewBadRequestError("invalid date format, expected YYYY-MM-DD")
 	}
-	if err := validate.NonNegativePtr(req.Calories, "calories"); err != nil {
+	if err := validate.NonNegativePtr(request.Calories, "calories"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.ProteinGrams, "protein_grams"); err != nil {
+	if err := validate.NonNegativePtr(request.ProteinGrams, "protein_grams"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.CarbsGrams, "carbs_grams"); err != nil {
+	if err := validate.NonNegativePtr(request.CarbsGrams, "carbs_grams"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.FatGrams, "fat_grams"); err != nil {
+	if err := validate.NonNegativePtr(request.FatGrams, "fat_grams"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.FiberGrams, "fiber_grams"); err != nil {
+	if err := validate.NonNegativePtr(request.FiberGrams, "fiber_grams"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.CaloriesBurned, "calories_burned"); err != nil {
+	if err := validate.NonNegativePtr(request.CaloriesBurned, "calories_burned"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativeIntPtr(req.Steps, "steps"); err != nil {
+	if err := validate.NonNegativeIntPtr(request.Steps, "steps"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativeIntPtr(req.DurationSeconds, "duration_seconds"); err != nil {
+	if err := validate.NonNegativeIntPtr(request.DurationSeconds, "duration_seconds"); err != nil {
 		return nil, 0, err
 	}
-	if err := validate.NonNegativePtr(req.DistanceMeters, "distance_meters"); err != nil {
+	if err := validate.NonNegativePtr(request.DistanceMeters, "distance_meters"); err != nil {
 		return nil, 0, err
 	}
 	correction := &domain.Correction{
 		Date:            date,
-		Calories:        req.Calories,
-		ProteinGrams:    req.ProteinGrams,
-		CarbsGrams:      req.CarbsGrams,
-		FatGrams:        req.FatGrams,
-		FiberGrams:      req.FiberGrams,
-		CaloriesBurned:  req.CaloriesBurned,
-		Steps:           req.Steps,
-		DurationSeconds: req.DurationSeconds,
-		DistanceMeters:  req.DistanceMeters,
-		Notes:           req.Notes,
+		Calories:        request.Calories,
+		ProteinGrams:    request.ProteinGrams,
+		CarbsGrams:      request.CarbsGrams,
+		FatGrams:        request.FatGrams,
+		FiberGrams:      request.FiberGrams,
+		CaloriesBurned:  request.CaloriesBurned,
+		Steps:           request.Steps,
+		DurationSeconds: request.DurationSeconds,
+		DistanceMeters:  request.DistanceMeters,
+		Notes:           request.Notes,
 	}
 	err = h.service.UpsertCorrection(r.Context(), userId, correction)
 	if err != nil {

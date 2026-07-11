@@ -56,7 +56,7 @@ type statusResponse struct {
 }
 
 func buildStatusResponse(s *scheduler.Scheduler) *statusResponse {
-	resp := &statusResponse{
+	response := &statusResponse{
 		Running:         s.IsRunning(),
 		IntervalSeconds: int64(s.Period().Seconds()),
 	}
@@ -81,9 +81,9 @@ func buildStatusResponse(s *scheduler.Scheduler) *statusResponse {
 				BrokenRefs:  nullSlice(last.R2.BrokenRefs),
 			}
 		}
-		resp.LastRun = run
+		response.LastRun = run
 	}
-	return resp
+	return response
 }
 
 func buildDBResponse(cross []ports.CrossContextPhoto, mealMissing []uuid.UUID, itemMissing []ports.ItemGroup, invalidUnits []ports.InvalidFoodUnit) *dbIntegrityResponse {

@@ -151,7 +151,7 @@ func (a *DataExportApplication) Export(r *http.Request) (*exportResponse, int, e
 }
 
 func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, error) {
-	resp := &exportResponse{
+	response := &exportResponse{
 		ExportedAt:       time.Now().UTC().Format(time.RFC3339),
 		WeightEntries:    []weightEntryExport{},
 		Exercises:        []exerciseExport{},
@@ -176,7 +176,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 	).Scan(&userRow).Error; err != nil {
 		return nil, err
 	}
-	resp.User = &userExport{
+	response.User = &userExport{
 		Id:        userRow.Id.String(),
 		Email:     userRow.Email,
 		Username:  userRow.Username,
@@ -186,7 +186,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 	}
 	if userRow.BirthDate != nil {
 		s := userRow.BirthDate.Format("2006-01-02")
-		resp.User.BirthDate = &s
+		response.User.BirthDate = &s
 	}
 
 	// weight entries
@@ -205,7 +205,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range weightRows {
-		resp.WeightEntries = append(resp.WeightEntries, weightEntryExport{
+		response.WeightEntries = append(response.WeightEntries, weightEntryExport{
 			Id:                row.Id.String(),
 			Date:              row.Date.Format("2006-01-02"),
 			WeightKg:          row.WeightKg,
@@ -242,7 +242,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range exerciseRows {
-		resp.Exercises = append(resp.Exercises, exerciseExport{
+		response.Exercises = append(response.Exercises, exerciseExport{
 			Id:                      row.Id.String(),
 			Date:                    row.Date.Format("2006-01-02"),
 			Type:                    row.Type,
@@ -282,7 +282,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range mealRows {
-		resp.Meals = append(resp.Meals, mealExport{
+		response.Meals = append(response.Meals, mealExport{
 			Id:           row.Id.String(),
 			Date:         row.Date.Format("2006-01-02"),
 			Type:         row.Type,
@@ -321,7 +321,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range foodRows {
-		resp.Foods = append(resp.Foods, foodExport{
+		response.Foods = append(response.Foods, foodExport{
 			Id:                  row.Id.String(),
 			Name:                row.Name,
 			MeasurementType:     row.MeasurementType,
@@ -352,7 +352,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range measureRows {
-		resp.BodyMeasurements = append(resp.BodyMeasurements, bodyMeasurementExport{
+		response.BodyMeasurements = append(response.BodyMeasurements, bodyMeasurementExport{
 			Date:      row.Date.Format("2006-01-02"),
 			Type:      row.Type,
 			Value:     row.Value,
@@ -382,7 +382,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	if goalRow.StartedAt != (time.Time{}) {
-		resp.Goal = &goalExport{
+		response.Goal = &goalExport{
 			DailyCalories:        goalRow.DailyCalories,
 			DailyProteinGrams:    goalRow.DailyProteinGrams,
 			DailyCarbsGrams:      goalRow.DailyCarbsGrams,
@@ -395,5 +395,5 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		}
 	}
 
-	return resp, nil
+	return response, nil
 }

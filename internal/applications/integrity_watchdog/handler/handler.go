@@ -47,13 +47,13 @@ func (h *watchdogHandler) Configure(r *http.Request) (*statusResponse, int, erro
 	if err := h.authorizer.AuthorizeAdmin(r.Context()); err != nil {
 		return nil, 0, err
 	}
-	req, err := api.DecodeBody[configureRequest](r)
+	request, err := api.DecodeBody[configureRequest](r)
 	if err != nil {
 		return nil, 0, err
 	}
-	if req.IntervalSeconds <= 0 {
+	if request.IntervalSeconds <= 0 {
 		return nil, 0, cerr.NewBadRequestError("interval_seconds must be positive")
 	}
-	h.scheduler.SetPeriod(time.Duration(req.IntervalSeconds) * time.Second)
+	h.scheduler.SetPeriod(time.Duration(request.IntervalSeconds) * time.Second)
 	return buildStatusResponse(h.scheduler), http.StatusOK, nil
 }

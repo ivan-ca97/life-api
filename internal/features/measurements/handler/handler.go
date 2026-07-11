@@ -36,14 +36,15 @@ func (h *measurementHandler) Upsert(r *http.Request) (*measurementResponse, int,
 	if err != nil {
 		return nil, 0, err
 	}
-	req, err := api.DecodeBody[upsertMeasurementRequest](r)
+	request, err := api.DecodeBody[upsertMeasurementRequest](r)
 	if err != nil {
 		return nil, 0, err
 	}
-	m, err := h.service.Upsert(r.Context(), userId, date, measureType, ports.UpsertParams{
-		Value: req.Value,
-		Notes: req.Notes,
-	})
+	params := ports.UpsertParams{
+		Value: request.Value,
+		Notes: request.Notes,
+	}
+	m, err := h.service.Upsert(r.Context(), userId, date, measureType, params)
 	if err != nil {
 		return nil, 0, err
 	}
