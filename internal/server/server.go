@@ -15,6 +15,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 
+	appUpdateApp "github.com/ivan-ca97/life/internal/applications/app_update"
 	authenticationApp "github.com/ivan-ca97/life/internal/applications/authentication"
 	authorizationApp "github.com/ivan-ca97/life/internal/applications/authorization"
 	dataExportApp "github.com/ivan-ca97/life/internal/applications/data_export"
@@ -31,9 +32,9 @@ import (
 	"github.com/ivan-ca97/life/internal/features/food"
 	"github.com/ivan-ca97/life/internal/features/goal"
 	"github.com/ivan-ca97/life/internal/features/meal"
+	"github.com/ivan-ca97/life/internal/features/measurements"
 	"github.com/ivan-ca97/life/internal/features/media"
 	"github.com/ivan-ca97/life/internal/features/user"
-	"github.com/ivan-ca97/life/internal/features/measurements"
 	"github.com/ivan-ca97/life/internal/features/weight"
 
 	"github.com/ivan-ca97/life/internal/infrastructure/llm/openai"
@@ -45,7 +46,7 @@ type server struct {
 	watchdog *watchdogApp.WatchdogApplication
 }
 
-func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, openaiApiKey, openaiModel string, watchdogInterval time.Duration) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, githubWebhookSecret, githubToken, openaiApiKey, openaiModel string, watchdogInterval time.Duration) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
 
@@ -87,6 +88,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	)
 	measurementsFeature := measurements.NewMeasurementsFeature(database, authorizer, errorHandler)
 	dataExport := dataExportApp.NewDataExportApplication(database, authorizer, errorHandler)
+	appUpdate := appUpdateApp.NewAppUpdateApplication(database, errorHandler, githubWebhookSecret, githubToken, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
 	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, errorHandler)
 	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
 	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
@@ -130,6 +132,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 		r.Use(http_errors.Middleware)
 
 		authenticationApplication.PublicRoutes(r)
+		appUpdate.PublicRoutes(r)
 
 		r.Group(func(r chi.Router) {
 			r.Use(authenticationFeature.Middleware().Handle)
