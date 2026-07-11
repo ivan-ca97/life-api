@@ -10,6 +10,8 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
+	"github.com/ivan-ca97/life/internal/infrastructure/llm"
+
 	foodPorts "github.com/ivan-ca97/life/internal/features/food/ports"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
@@ -50,7 +52,8 @@ func (a *foodSearchAdapter) Search(userId uuid.UUID, query string, limit int) ([
 }
 
 // httpImageFetcher downloads a stored photo over HTTP and forwards the raw bytes
-// (base64-encoded later by pkg/openai), so the object is never made public.
+// (base64-encoded later by the provider adapter), so the object is never made
+// public.
 //
 // This works when the backend can reach the stored URL. If the R2 bucket is
 // private, swap this for an S3 GetObject-based fetcher using the R2 credentials
@@ -65,28 +68,28 @@ func newHTTPImageFetcher() *httpImageFetcher {
 	return &httpImageFetcher{client: &http.Client{Timeout: 20 * time.Second}}
 }
 
-func (f *httpImageFetcher) Fetch(ctx context.Context, url string) (ports.Image, error) {
+func (f *httpImageFetcher) Fetch(ctx context.Context, url string) (llm.Image, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return ports.Image{}, err
+		return llm.Image{}, err
 	}
 	resp, err := f.client.Do(req)
 	if err != nil {
-		return ports.Image{}, err
+		return llm.Image{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return ports.Image{}, errFetchStatus(resp.StatusCode)
+		return llm.Image{}, errFetchStatus(resp.StatusCode)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ports.Image{}, err
+		return llm.Image{}, err
 	}
-	mime := resp.Header.Get("Content-Type")
-	if mime == "" {
-		mime = "image/jpeg"
+	mediaType := resp.Header.Get("Content-Type")
+	if mediaType == "" {
+		mediaType = "image/jpeg"
 	}
-	return ports.Image{MimeType: mime, Data: data}, nil
+	return llm.Image{MediaType: mediaType, Data: data}, nil
 }
 
 type fetchStatusError int

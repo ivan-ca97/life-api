@@ -2,20 +2,15 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
-	"github.com/ivan-ca97/life/pkg/openai"
+	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/domain"
 	aiUsagePorts "github.com/ivan-ca97/life/internal/features/ai_usage/ports"
 )
-
-// Completer is the OpenAI-backed estimator, satisfied by *openai.Client. Defined
-// as a port so the use case is testable without hitting the API.
-type Completer interface {
-	Complete(ctx context.Context, req openai.CompletionRequest) (*openai.CompletionResult, error)
-}
 
 // FoodCandidate is a catalog entry returned to the model so it can match a
 // detected food and sanity-check the stored macros.
@@ -38,29 +33,28 @@ type FoodSearch interface {
 	Search(userId uuid.UUID, query string, limit int) ([]FoodCandidate, error)
 }
 
-// Image is a fetched photo ready to send to the model as base64.
-type Image struct {
-	MimeType string
-	Data     []byte
-}
-
-// ImageFetcher downloads a stored photo (e.g. from R2) so the backend can
-// forward it to OpenAI without exposing the object publicly.
+// ImageFetcher downloads a stored photo (e.g. from R2) and returns it ready to
+// send to the model, so the object is never made public.
 type ImageFetcher interface {
-	Fetch(ctx context.Context, url string) (Image, error)
+	Fetch(ctx context.Context, url string) (llm.Image, error)
 }
 
-// QuotaGuard and UsageDelta are the ai_usage spend-limit contract the use case
-// consumes. Aliased (not re-declared) so the ai_usage service satisfies it
-// directly without a conversion adapter.
+// QuotaGuard, UsageDelta, InteractionLogger and InteractionEntry are the ai_usage
+// contracts the use case consumes, aliased so the ai_usage service satisfies them
+// directly.
 type QuotaGuard = aiUsagePorts.QuotaGuard
 
 type UsageDelta = aiUsagePorts.UsageDelta
 
-// InteractionLogger records one user-facing AI interaction (best-effort).
 type InteractionLogger = aiUsagePorts.InteractionLogger
 
 type InteractionEntry = aiUsagePorts.InteractionEntry
+
+// Pricer converts token usage to a USD cost. Defined here (the consumer);
+// satisfied by the ai_usage service.
+type Pricer interface {
+	CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
+}
 
 // Correction is a user adjustment to a prior assumption, fed back for
 // re-estimation (still a single stateless call).

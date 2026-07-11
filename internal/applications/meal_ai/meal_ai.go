@@ -4,6 +4,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 	"github.com/ivan-ca97/life/pkg/auth"
 
+	"github.com/ivan-ca97/life/internal/infrastructure/llm"
+
 	foodPorts "github.com/ivan-ca97/life/internal/features/food/ports"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/handler"
@@ -16,21 +18,21 @@ type MealAIApplication struct {
 	errorHandler http_errors.HttpErrorHandler
 }
 
-// NewMealAIApplication wires the meal estimation feature. completer is satisfied
-// by *openai.Client and model is its model id (e.g. "gpt-4o"); quota and logger
-// come from the ai_usage feature.
+// NewMealAIApplication wires the meal estimation feature. client is any LLM
+// provider (e.g. the openai adapter); quota, logger and pricer come from the
+// ai_usage feature.
 func NewMealAIApplication(
 	foodService foodPorts.FoodService,
+	client llm.Client,
 	quota ports.QuotaGuard,
 	logger ports.InteractionLogger,
-	completer ports.Completer,
-	model string,
+	pricer ports.Pricer,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *MealAIApplication {
 	foodSearch := &foodSearchAdapter{foodService: foodService}
 	imageFetcher := newHTTPImageFetcher()
-	estimationUseCase := use_case.NewMealEstimationUseCase(completer, foodSearch, imageFetcher, quota, logger, authorizer, model)
+	estimationUseCase := use_case.NewMealEstimationUseCase(client, foodSearch, imageFetcher, quota, logger, pricer, authorizer)
 	mealAIHandler := handler.NewMealAIHandler(estimationUseCase)
 
 	return &MealAIApplication{

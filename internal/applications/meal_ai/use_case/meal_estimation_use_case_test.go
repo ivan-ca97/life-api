@@ -4,27 +4,31 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
-	"github.com/ivan-ca97/life/pkg/openai"
+	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
 )
 
-type mockCompleter struct {
-	toolResult string
+const mockCost = 0.5
+
+type mockClient struct {
 	toolCalled bool
 }
 
-func (m *mockCompleter) Complete(ctx context.Context, req openai.CompletionRequest) (*openai.CompletionResult, error) {
+func (m *mockClient) Provider() string { return "openai" }
+func (m *mockClient) Model() string    { return "gpt-4o" }
+
+func (m *mockClient) Complete(ctx context.Context, prompt llm.Prompt) (*llm.Result, error) {
 	// Simulate the model calling search_foods once, then returning the final draft.
-	if req.ToolHandler != nil {
-		res, err := req.ToolHandler(ctx, searchFoodsToolName, json.RawMessage(`{"query":"chicken"}`))
+	if len(prompt.Tools) > 0 {
+		_, err := prompt.Tools[0].Call(ctx, json.RawMessage(`{"query":"chicken"}`))
 		if err != nil {
 			return nil, err
 		}
-		m.toolResult = res
 		m.toolCalled = true
 	}
 	final := `{
@@ -35,7 +39,7 @@ func (m *mockCompleter) Complete(ctx context.Context, req openai.CompletionReque
 	  "needs_clarification": false,
 	  "clarification_question": null
 	}`
-	return &openai.CompletionResult{Content: final, Usage: openai.Usage{InputTokens: 100, OutputTokens: 50, Calls: 2}}, nil
+	return &llm.Result{Content: final, Usage: llm.Usage{InputTokens: 100, OutputTokens: 50, Calls: 2}}, nil
 }
 
 type mockFoodSearch struct{ called bool }
@@ -48,8 +52,8 @@ func (m *mockFoodSearch) Search(userId uuid.UUID, query string, limit int) ([]po
 
 type mockImageFetcher struct{}
 
-func (m *mockImageFetcher) Fetch(ctx context.Context, url string) (ports.Image, error) {
-	return ports.Image{MimeType: "image/jpeg", Data: []byte("bytes")}, nil
+func (m *mockImageFetcher) Fetch(ctx context.Context, url string) (llm.Image, error) {
+	return llm.Image{MediaType: "image/jpeg", Data: []byte("bytes")}, nil
 }
 
 type mockQuota struct {
@@ -61,6 +65,12 @@ func (m *mockQuota) CheckQuota(userId uuid.UUID) error { m.checked = true; retur
 func (m *mockQuota) RecordUsage(userId uuid.UUID, delta ports.UsageDelta) error {
 	m.recorded = &delta
 	return nil
+}
+
+type mockPricer struct{}
+
+func (mockPricer) CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
+	return mockCost, nil
 }
 
 type stubAuthorizer struct{}
@@ -78,12 +88,12 @@ func (m *mockLogger) LogInteraction(entry ports.InteractionEntry) error {
 }
 
 func TestEstimate_HappyPath(t *testing.T) {
-	completer := &mockCompleter{}
+	client := &mockClient{}
 	foodSearch := &mockFoodSearch{}
 	quota := &mockQuota{}
 	logger := &mockLogger{}
 
-	uc := NewMealEstimationUseCase(completer, foodSearch, &mockImageFetcher{}, quota, logger, stubAuthorizer{}, "gpt-4o")
+	uc := NewMealEstimationUseCase(client, foodSearch, &mockImageFetcher{}, quota, logger, mockPricer{}, stubAuthorizer{})
 
 	estimate, err := uc.Estimate(context.Background(), ports.EstimateInput{
 		UserId:            uuid.New(),
@@ -97,7 +107,7 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if !quota.checked {
 		t.Error("quota was not checked before spending")
 	}
-	if !completer.toolCalled || !foodSearch.called {
+	if !client.toolCalled || !foodSearch.called {
 		t.Error("search_foods tool was not exercised")
 	}
 	if len(estimate.MatchedItems) != 1 || estimate.MatchedItems[0].FoodId != "abc" {
@@ -106,11 +116,10 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if estimate.Totals.Calories != 330 {
 		t.Errorf("expected totals.calories 330, got %v", estimate.Totals.Calories)
 	}
-	wantCost := openai.CostUSD("gpt-4o", openai.Usage{InputTokens: 100, OutputTokens: 50})
-	if estimate.Usage.CostUsd != wantCost {
-		t.Errorf("expected cost %v, got %v", wantCost, estimate.Usage.CostUsd)
+	if estimate.Usage.CostUsd != mockCost {
+		t.Errorf("expected cost %v, got %v", mockCost, estimate.Usage.CostUsd)
 	}
-	if quota.recorded == nil || quota.recorded.CostUsd != wantCost {
+	if quota.recorded == nil || quota.recorded.CostUsd != mockCost {
 		t.Errorf("usage not recorded correctly: %+v", quota.recorded)
 	}
 
@@ -122,7 +131,7 @@ func TestEstimate_HappyPath(t *testing.T) {
 	if e.Operation != "meal_estimate" || e.Provider != "openai" || e.Model != "gpt-4o" {
 		t.Errorf("unexpected interaction identity: %+v", e)
 	}
-	if e.Status != "ok" || e.CostUsd != wantCost || e.ProviderCalls != 2 {
+	if e.Status != "ok" || e.CostUsd != mockCost || e.ProviderCalls != 2 {
 		t.Errorf("unexpected interaction metrics: status=%s cost=%v calls=%d", e.Status, e.CostUsd, e.ProviderCalls)
 	}
 	if e.Metadata["photo_count"] != 1 || e.Metadata["item_count"] != 1 || e.Metadata["suggestion_count"] != 0 {
@@ -131,7 +140,7 @@ func TestEstimate_HappyPath(t *testing.T) {
 }
 
 func TestEstimate_NoInput(t *testing.T) {
-	uc := NewMealEstimationUseCase(&mockCompleter{}, &mockFoodSearch{}, &mockImageFetcher{}, &mockQuota{}, &mockLogger{}, stubAuthorizer{}, "gpt-4o")
+	uc := NewMealEstimationUseCase(&mockClient{}, &mockFoodSearch{}, &mockImageFetcher{}, &mockQuota{}, &mockLogger{}, mockPricer{}, stubAuthorizer{})
 	_, err := uc.Estimate(context.Background(), ports.EstimateInput{UserId: uuid.New()})
 	if err == nil {
 		t.Fatal("expected an error when no photos and no instructions are given")
