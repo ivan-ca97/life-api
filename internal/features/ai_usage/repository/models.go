@@ -9,6 +9,28 @@ import (
 	"github.com/ivan-ca97/life/internal/features/ai_usage/domain"
 )
 
+type aiModelPrice struct {
+	Id               uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Provider         string    `gorm:"not null"`
+	Model            string    `gorm:"not null"`
+	InputPerMillion  float64   `gorm:"column:input_per_million;not null"`
+	OutputPerMillion float64   `gorm:"column:output_per_million;not null"`
+	EffectiveFrom    time.Time `gorm:"not null"`
+	CreatedAt        time.Time `gorm:"not null;autoCreateTime"`
+}
+
+func (aiModelPrice) TableName() string { return "ai_model_price" }
+
+func (m *aiModelPrice) toDomain() *domain.ModelPrice {
+	return &domain.ModelPrice{
+		Provider:         m.Provider,
+		Model:            m.Model,
+		InputPerMillion:  m.InputPerMillion,
+		OutputPerMillion: m.OutputPerMillion,
+		EffectiveFrom:    m.EffectiveFrom,
+	}
+}
+
 type aiTier struct {
 	Id              uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Name            string    `gorm:"not null;unique"`

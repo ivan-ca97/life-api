@@ -32,6 +32,9 @@ func (s *service) CheckQuota(userId uuid.UUID) error {
 	if err != nil {
 		return err
 	}
+	if !allocation.Tier.Enabled {
+		return domain.ErrTierDisabled
+	}
 	limit := allocation.EffectiveLimitUSD()
 	if limit == nil {
 		return nil // unlimited
@@ -112,6 +115,26 @@ func (s *service) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*doma
 
 func (s *service) AssignTier(userId, tierId uuid.UUID) error {
 	return s.repository.AssignTier(userId, tierId)
+}
+
+func (s *service) DeleteTier(id uuid.UUID) error {
+	return s.repository.DeleteTier(id)
+}
+
+// CostUSD prices the tokens with the rate effective at `at`. Returns 0 when no
+// price is on record for the provider/model (treat as "unpriced", not free).
+func (s *service) CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
+	price, err := s.repository.FindPrice(provider, model, at)
+	if err != nil {
+		return 0, err
+	}
+	if price == nil {
+		return 0, nil
+	}
+	const perMillion = 1_000_000.0
+	input := float64(inputTokens) / perMillion * price.InputPerMillion
+	output := float64(outputTokens) / perMillion * price.OutputPerMillion
+	return input + output, nil
 }
 
 func (s *service) LogInteraction(entry ports.InteractionEntry) error {

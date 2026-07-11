@@ -27,6 +27,23 @@ func NewRepository(db *gorm.DB) *repository {
 	return &repository{db: db}
 }
 
+// FindPrice returns the price effective for the provider/model at `at`, or nil
+// when none is on record.
+func (r *repository) FindPrice(provider, model string, at time.Time) (*domain.ModelPrice, error) {
+	var price aiModelPrice
+	err := r.db.
+		Where("provider = ? AND model = ? AND effective_from <= ?", provider, model, at).
+		Order("effective_from DESC").
+		First(&price).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, cerr.NewInternalError("finding model price", err)
+	}
+	return price.toDomain(), nil
+}
+
 func (r *repository) ListTiers() ([]domain.Tier, error) {
 	var models []aiTier
 	if err := r.db.Order("name ASC").Find(&models).Error; err != nil {
@@ -138,15 +155,19 @@ func (r *repository) GetAllocation(userId uuid.UUID) (*domain.Allocation, error)
 }
 
 func (r *repository) AssignTier(userId, tierId uuid.UUID) error {
-	var count int64
-	if err := r.db.Model(&aiTier{}).Where("id = ?", tierId).Count(&count).Error; err != nil {
-		return cerr.NewInternalError("checking ai tier", err)
-	}
-	if count == 0 {
+	var tier aiTier
+	err := r.db.Where("id = ?", tierId).First(&tier).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return domain.ErrTierNotFound
 	}
+	if err != nil {
+		return cerr.NewInternalError("loading ai tier", err)
+	}
+	if !tier.Enabled {
+		return domain.ErrTierDisabled
+	}
 	model := &aiUserTier{UserId: userId, TierId: tierId}
-	err := r.db.
+	err = r.db.
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"tier_id", "updated_at"}),
@@ -154,6 +175,33 @@ func (r *repository) AssignTier(userId, tierId uuid.UUID) error {
 		Create(model).Error
 	if err != nil {
 		return cerr.NewInternalError("assigning ai tier", err)
+	}
+	return nil
+}
+
+func (r *repository) DeleteTier(id uuid.UUID) error {
+	var tier aiTier
+	err := r.db.Where("id = ?", id).First(&tier).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return domain.ErrTierNotFound
+	}
+	if err != nil {
+		return cerr.NewInternalError("loading ai tier", err)
+	}
+	if tier.IsDefault {
+		return cerr.NewConflictError("cannot delete the default tier")
+	}
+
+	var assigned int64
+	if err := r.db.Model(&aiUserTier{}).Where("tier_id = ?", id).Count(&assigned).Error; err != nil {
+		return cerr.NewInternalError("checking ai tier usage", err)
+	}
+	if assigned > 0 {
+		return domain.ErrTierInUse
+	}
+
+	if err := r.db.Where("id = ?", id).Delete(&aiTier{}).Error; err != nil {
+		return cerr.NewInternalError("deleting ai tier", err)
 	}
 	return nil
 }

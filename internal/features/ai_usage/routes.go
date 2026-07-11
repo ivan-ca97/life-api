@@ -16,6 +16,7 @@ func (f *aiUsageFeature) Routes(r chi.Router) {
 	r.Get("/ai/admin/tiers", endpoint.JSON(f.errorHandler, f.handler.ListTiers))
 	r.Post("/ai/admin/tiers", endpoint.JSON(f.errorHandler, f.handler.CreateTier))
 	r.Patch("/ai/admin/tiers/{tierId}", endpoint.JSON(f.errorHandler, f.handler.UpdateTier))
+	r.Delete("/ai/admin/tiers/{tierId}", endpoint.JSON(f.errorHandler, f.handler.DeleteTier))
 	r.Put("/ai/admin/users/{userId}/tier", endpoint.JSON(f.errorHandler, f.handler.AssignUserTier))
 	r.Get("/ai/admin/users/{userId}/usage", endpoint.JSON(f.errorHandler, f.handler.GetUserUsage))
 	r.Get("/ai/admin/interactions", endpoint.JSON(f.errorHandler, f.handler.ListInteractions))

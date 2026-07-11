@@ -14,6 +14,7 @@ type AiUsageHandler interface {
 	ListTiers(r *http.Request) (*tierListResponse, int, error)
 	CreateTier(r *http.Request) (*tierResponse, int, error)
 	UpdateTier(r *http.Request) (*tierResponse, int, error)
+	DeleteTier(r *http.Request) (*api.NoResponse, int, error)
 	AssignUserTier(r *http.Request) (*api.NoResponse, int, error)
 	GetUserUsage(r *http.Request) (*usageResponse, int, error)
 	ListInteractions(r *http.Request) (*interactionListResponse, int, error)
@@ -109,6 +110,17 @@ func (h *aiUsageHandler) UpdateTier(r *http.Request) (*tierResponse, int, error)
 	}
 	resp := tierFromDomain(*tier)
 	return &resp, http.StatusOK, nil
+}
+
+func (h *aiUsageHandler) DeleteTier(r *http.Request) (*api.NoResponse, int, error) {
+	tierId, err := api.PathParamUUID(r, "tierId")
+	if err != nil {
+		return nil, 0, err
+	}
+	if err := h.service.DeleteTier(r.Context(), tierId); err != nil {
+		return nil, 0, err
+	}
+	return nil, http.StatusNoContent, nil
 }
 
 func (h *aiUsageHandler) AssignUserTier(r *http.Request) (*api.NoResponse, int, error) {

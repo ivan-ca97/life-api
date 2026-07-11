@@ -36,3 +36,7 @@ func (f *aiUsageFeature) QuotaGuard() ports.QuotaGuard { return f.service }
 
 // InteractionLogger exposes the interaction log the meal AI feature writes to.
 func (f *aiUsageFeature) InteractionLogger() ports.InteractionLogger { return f.service }
+
+// Service exposes the base service so consumers (e.g. meal_ai) can depend on it
+// through their own narrow interfaces — e.g. a pricer with just CostUSD.
+func (f *aiUsageFeature) Service() ports.Service { return f.service }

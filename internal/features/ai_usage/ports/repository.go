@@ -50,10 +50,14 @@ type InteractionFilter struct {
 }
 
 type Repository interface {
+	// FindPrice resolves the price effective for a provider/model at a moment.
+	FindPrice(provider, model string, at time.Time) (*domain.ModelPrice, error)
+
 	// Tiers
 	ListTiers() ([]domain.Tier, error)
 	CreateTier(tier *domain.Tier) error
 	UpdateTier(id uuid.UUID, params UpdateTierParams) (*domain.Tier, error)
+	DeleteTier(id uuid.UUID) error
 	GetDefaultTier() (*domain.Tier, error)
 
 	// Allocation (tier + self limit) per user. Falls back to the default tier

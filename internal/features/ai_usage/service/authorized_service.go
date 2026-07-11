@@ -64,6 +64,13 @@ func (s *authorizedService) UpdateTier(ctx context.Context, id uuid.UUID, params
 	return s.base.UpdateTier(id, params)
 }
 
+func (s *authorizedService) DeleteTier(ctx context.Context, id uuid.UUID) error {
+	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
+		return err
+	}
+	return s.base.DeleteTier(id)
+}
+
 func (s *authorizedService) AssignUserTier(ctx context.Context, userId, tierId uuid.UUID) error {
 	if err := s.authorizer.AuthorizeAdmin(ctx); err != nil {
 		return err

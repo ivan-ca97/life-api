@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -29,9 +30,13 @@ type Service interface {
 	ListTiers() ([]domain.Tier, error)
 	CreateTier(params CreateTierParams) (*domain.Tier, error)
 	UpdateTier(id uuid.UUID, params UpdateTierParams) (*domain.Tier, error)
+	DeleteTier(id uuid.UUID) error
 	AssignTier(userId, tierId uuid.UUID) error
 
 	ListInteractions(filter InteractionFilter) (types.Page[domain.Interaction], error)
+
+	// CostUSD prices token usage with the rate effective at the given time.
+	CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
 }
 
 // QuotaGuard is the narrow contract the meal AI feature consumes to enforce
@@ -59,6 +64,7 @@ type AuthorizedService interface {
 	ListTiers(ctx context.Context) ([]domain.Tier, error)
 	CreateTier(ctx context.Context, params CreateTierParams) (*domain.Tier, error)
 	UpdateTier(ctx context.Context, id uuid.UUID, params UpdateTierParams) (*domain.Tier, error)
+	DeleteTier(ctx context.Context, id uuid.UUID) error
 	AssignUserTier(ctx context.Context, userId, tierId uuid.UUID) error
 	GetUserUsage(ctx context.Context, userId uuid.UUID) (*domain.UsageSummary, error)
 	ListInteractions(ctx context.Context, filter InteractionFilter) (types.Page[domain.Interaction], error)
