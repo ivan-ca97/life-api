@@ -171,10 +171,11 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Sex       *string    `gorm:"column:sex"`
 		CreatedAt time.Time  `gorm:"column:created_at"`
 	}
-	if err := a.db.Raw(
+	err := a.db.Raw(
 		`SELECT id, email, username, height_cm, birth_date, sex, created_at FROM users WHERE id = ?`,
 		userId,
-	).Scan(&userRow).Error; err != nil {
+	).Scan(&userRow).Error
+	if err != nil {
 		return nil, err
 	}
 	response.User = &userExport{
@@ -199,10 +200,11 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Notes             string    `gorm:"column:notes"`
 		CreatedAt         time.Time `gorm:"column:created_at"`
 	}
-	if err := a.db.Raw(
+	err = a.db.Raw(
 		`SELECT id, date, weight_kg, body_fat_percentage, notes, created_at FROM weight_entries WHERE user_id = ? ORDER BY date`,
 		userId,
-	).Scan(&weightRows).Error; err != nil {
+	).Scan(&weightRows).Error
+	if err != nil {
 		return nil, err
 	}
 	for _, row := range weightRows {
@@ -234,12 +236,13 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Notes                   string    `gorm:"column:notes"`
 		CreatedAt               time.Time `gorm:"column:created_at"`
 	}
-	if err := a.db.Raw(`
+	err = a.db.Raw(`
 		SELECT id, date, type, name, duration_seconds, estimated_calories_burned, steps,
 		       distance_meters, elevation_gain_meters, average_heart_rate, max_heart_rate,
 		       total_volume_kg, total_sets, notes, created_at
 		FROM exercises WHERE user_id = ? ORDER BY date
-	`, userId).Scan(&exerciseRows).Error; err != nil {
+	`, userId).Scan(&exerciseRows).Error
+	if err != nil {
 		return nil, err
 	}
 	for _, row := range exerciseRows {
@@ -276,10 +279,11 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Notes        string    `gorm:"column:notes"`
 		CreatedAt    time.Time `gorm:"column:created_at"`
 	}
-	if err := a.db.Raw(`
+	err = a.db.Raw(`
 		SELECT id, date, type, name, calories, protein_grams, carbs_grams, fat_grams, fiber_grams, notes, created_at
 		FROM meals WHERE user_id = ? ORDER BY date
-	`, userId).Scan(&mealRows).Error; err != nil {
+	`, userId).Scan(&mealRows).Error
+	if err != nil {
 		return nil, err
 	}
 	for _, row := range mealRows {
@@ -313,12 +317,13 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Public              bool      `gorm:"column:public"`
 		CreatedAt           time.Time `gorm:"column:created_at"`
 	}
-	if err := a.db.Raw(`
+	err = a.db.Raw(`
 		SELECT id, name, measurement_type, base_unit, base_quantity,
 		       default_calories, default_protein_grams, default_carbs_grams,
 		       default_fat_grams, default_fiber_grams, public, created_at
 		FROM foods WHERE user_id = ? ORDER BY name
-	`, userId).Scan(&foodRows).Error; err != nil {
+	`, userId).Scan(&foodRows).Error
+	if err != nil {
 		return nil, err
 	}
 	for _, row := range foodRows {
@@ -346,10 +351,11 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		Notes     string    `gorm:"column:notes"`
 		UpdatedAt time.Time `gorm:"column:updated_at"`
 	}
-	if err := a.db.Raw(
+	err = a.db.Raw(
 		`SELECT date, type, value, notes, updated_at FROM body_measurements WHERE user_id = ? ORDER BY date, type`,
 		userId,
-	).Scan(&measureRows).Error; err != nil {
+	).Scan(&measureRows).Error
+	if err != nil {
 		return nil, err
 	}
 	for _, row := range measureRows {
@@ -374,12 +380,13 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		TargetWeightKg       *float64  `gorm:"column:target_weight_kg"`
 		StartedAt            time.Time `gorm:"column:started_at"`
 	}
-	if err := a.db.Raw(
+	err = a.db.Raw(
 		`SELECT daily_calories, daily_protein_grams, daily_carbs_grams, daily_fat_grams,
 		        daily_fiber_grams, daily_steps, daily_exercise_minutes, target_weight_kg, started_at
 		 FROM goals WHERE user_id = ?`,
 		userId,
-	).Scan(&goalRow).Error; err != nil {
+	).Scan(&goalRow).Error
+	if err != nil {
 		return nil, err
 	}
 	if goalRow.StartedAt != (time.Time{}) {

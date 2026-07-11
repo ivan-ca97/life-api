@@ -22,11 +22,13 @@ var _ ports.ObjectStorage = (*r2Storage)(nil)
 func NewR2Storage(accountId, accessKeyId, secretAccessKey, bucket string) *r2Storage {
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountId)
 
-	client := s3.New(s3.Options{
+	options := s3.Options{
 		Region:       "auto",
 		Credentials:  aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyId, secretAccessKey, "")),
 		BaseEndpoint: aws.String(endpoint),
-	})
+	}
+
+	client := s3.New(options)
 
 	return &r2Storage{
 		presignClient: s3.NewPresignClient(client),

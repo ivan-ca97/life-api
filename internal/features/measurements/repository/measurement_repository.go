@@ -33,10 +33,11 @@ func (r *measurementRepository) Upsert(m *domain.BodyMeasurement) error {
 		Value:  m.Value,
 		Notes:  m.Notes,
 	}
-	err := r.db.Clauses(clause.OnConflict{
+	onConflict := clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "date"}, {Name: "type"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value", "notes", "updated_at"}),
-	}).Create(model).Error
+	}
+	err := r.db.Clauses(onConflict).Create(model).Error
 	if err != nil {
 		return cerr.NewInternalError("upserting body measurement", err)
 	}

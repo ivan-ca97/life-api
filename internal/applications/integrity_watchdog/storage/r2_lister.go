@@ -22,12 +22,16 @@ var _ ports.ObjectDeleter = (*r2Lister)(nil)
 
 func NewR2Lister(accountId, accessKeyId, secretAccessKey, bucket string) *r2Lister {
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountId)
-	client := s3.New(s3.Options{
+	options := s3.Options{
 		Region:       "auto",
 		Credentials:  aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyId, secretAccessKey, "")),
 		BaseEndpoint: aws.String(endpoint),
-	})
-	return &r2Lister{client: client, bucket: bucket}
+	}
+	client := s3.New(options)
+	return &r2Lister{
+		client: client,
+		bucket: bucket,
+	}
 }
 
 // DeleteKeys removes up to 1000 keys per S3 batch-delete request.

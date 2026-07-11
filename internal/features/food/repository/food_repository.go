@@ -509,12 +509,13 @@ func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
 	}
 
 	var totalUsers int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(DISTINCT m.user_id)
 		FROM meal_items mi
 		JOIN meals m ON m.id = mi.meal_id
 		WHERE mi.food_id = ?
-	`, foodId).Scan(&totalUsers).Error; err != nil {
+	`, foodId).Scan(&totalUsers).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("counting food impact users", err)
 	}
 
@@ -524,14 +525,15 @@ func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
 		ItemCount   int64     `gorm:"column:item_count"`
 	}
 	var rows []portionRow
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT fp.id AS portion_id, fp.name AS portion_name, COUNT(mi.id) AS item_count
 		FROM food_portions fp
 		LEFT JOIN meal_items mi ON mi.input_portion_id = fp.id
 		WHERE fp.food_id = ?
 		GROUP BY fp.id, fp.name
 		ORDER BY item_count DESC
-	`, foodId).Scan(&rows).Error; err != nil {
+	`, foodId).Scan(&rows).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("querying portion impact", err)
 	}
 
@@ -589,14 +591,16 @@ func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) er
 	for i, name := range names {
 		entries[i] = foodTag{Id: uuid.New(), UserId: userId, Name: name}
 	}
-	if err := r.db.Clauses(clause.OnConflict{
+	onConflict := clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
 		DoNothing: true,
-	}).Create(&entries).Error; err != nil {
+	}
+	err := r.db.Clauses(onConflict).Create(&entries).Error
+	if err != nil {
 		return cerr.NewInternalError("upserting food tags", err)
 	}
 	var tags []foodTag
-	err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
+	err = r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
 	if err != nil {
 		return cerr.NewInternalError("fetching food tag ids", err)
 	}

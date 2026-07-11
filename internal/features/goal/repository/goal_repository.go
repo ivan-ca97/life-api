@@ -67,7 +67,7 @@ func (r *goalRepository) GetProgress(userId uuid.UUID, from, to time.Time) (*dom
 		FiberGrams   float64   `gorm:"column:fiber_grams"`
 	}
 	var mealRows []mealRow
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT date::date AS date,
 			SUM(COALESCE(calories, 0))      AS calories,
 			SUM(COALESCE(protein_grams, 0)) AS protein_grams,
@@ -77,7 +77,8 @@ func (r *goalRepository) GetProgress(userId uuid.UUID, from, to time.Time) (*dom
 		FROM meals
 		WHERE user_id = ? AND date::date >= ? AND date::date <= ?
 		GROUP BY date::date
-	`, userId, fromStr, toStr).Scan(&mealRows).Error; err != nil {
+	`, userId, fromStr, toStr).Scan(&mealRows).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("querying meal progress", err)
 	}
 
@@ -86,12 +87,13 @@ func (r *goalRepository) GetProgress(userId uuid.UUID, from, to time.Time) (*dom
 		Steps int    `gorm:"column:steps"`
 	}
 	var stepsRows []stepsRow
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT date::text AS date, COALESCE(SUM(steps), 0) AS steps
 		FROM exercises
 		WHERE user_id = ? AND date >= ? AND date <= ?
 		GROUP BY date
-	`, userId, fromStr, toStr).Scan(&stepsRows).Error; err != nil {
+	`, userId, fromStr, toStr).Scan(&stepsRows).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("querying steps progress", err)
 	}
 
@@ -99,21 +101,23 @@ func (r *goalRepository) GetProgress(userId uuid.UUID, from, to time.Time) (*dom
 		ExerciseMinutes float64 `gorm:"column:exercise_minutes"`
 	}
 	var exerciseRows []exerciseRow
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT SUM(COALESCE(duration_seconds, 0)) / 60.0 AS exercise_minutes
 		FROM exercises
 		WHERE user_id = ? AND date::date >= ? AND date::date <= ?
 		GROUP BY date::date
-	`, userId, fromStr, toStr).Scan(&exerciseRows).Error; err != nil {
+	`, userId, fromStr, toStr).Scan(&exerciseRows).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("querying exercise progress", err)
 	}
 
 	var wRow struct {
 		WeightKg float64 `gorm:"column:weight_kg"`
 	}
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT weight_kg FROM weight_entries WHERE user_id = ? ORDER BY date DESC LIMIT 1
-	`, userId).Scan(&wRow).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	`, userId).Scan(&wRow).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, cerr.NewInternalError("querying current weight", err)
 	}
 	var currentWeight *float64

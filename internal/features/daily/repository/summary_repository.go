@@ -447,53 +447,59 @@ func calculateStepCalories(steps int, weightKg *float64) *float64 {
 
 func (r *summaryRepository) GetDailyCheck(userId uuid.UUID, date time.Time) (*domain.DailyCheck, error) {
 	var missingMeasurements int64
-	if err := r.db.Raw(`
+	err := r.db.Raw(`
 		SELECT COUNT(mi.id)
 		FROM meal_items mi
 		JOIN meals m ON m.id = mi.meal_id
 		WHERE m.user_id = ? AND m.date = ?
 		  AND (mi.measurement_method IS NULL OR mi.measurement_method = '')
-	`, userId, date).Scan(&missingMeasurements).Error; err != nil {
+	`, userId, date).Scan(&missingMeasurements).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking missing measurements", err)
 	}
 
 	var mealsWithoutPhoto int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(m.id)
 		FROM meals m
 		WHERE m.user_id = ? AND m.date = ?
 		  AND NOT EXISTS (SELECT 1 FROM meal_photos mp WHERE mp.meal_id = m.id)
-	`, userId, date).Scan(&mealsWithoutPhoto).Error; err != nil {
+	`, userId, date).Scan(&mealsWithoutPhoto).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking meals without photo", err)
 	}
 
 	var dailyPhotoCount int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(*) FROM daily_photos WHERE user_id = ? AND date = ?
-	`, userId, date).Scan(&dailyPhotoCount).Error; err != nil {
+	`, userId, date).Scan(&dailyPhotoCount).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking daily photo", err)
 	}
 
 	var stepsCount int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(*) FROM exercises WHERE user_id = ? AND date = ? AND steps IS NOT NULL AND steps > 0
-	`, userId, date).Scan(&stepsCount).Error; err != nil {
+	`, userId, date).Scan(&stepsCount).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking daily steps", err)
 	}
 
 	var exerciseCount int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(*) FROM exercises WHERE user_id = ? AND date = ?
-	`, userId, date).Scan(&exerciseCount).Error; err != nil {
+	`, userId, date).Scan(&exerciseCount).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking exercises", err)
 	}
 
 	weekAgo := date.AddDate(0, 0, -6)
 	var recentWeightCount int64
-	if err := r.db.Raw(`
+	err = r.db.Raw(`
 		SELECT COUNT(*) FROM weight_entries
 		WHERE user_id = ? AND date >= ? AND date <= ?
-	`, userId, weekAgo, date).Scan(&recentWeightCount).Error; err != nil {
+	`, userId, weekAgo, date).Scan(&recentWeightCount).Error
+	if err != nil {
 		return nil, cerr.NewInternalError("checking recent weight", err)
 	}
 

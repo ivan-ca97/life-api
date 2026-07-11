@@ -113,13 +113,14 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	if corsOrigins != "" {
 		origins = strings.Split(corsOrigins, ",")
 	}
-	router.Use(cors.Handler(cors.Options{
+	corsOptions := cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           300,
-	}))
+	}
+	router.Use(cors.Handler(corsOptions))
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{

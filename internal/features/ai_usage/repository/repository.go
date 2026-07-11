@@ -169,12 +169,16 @@ func (r *repository) AssignTier(userId, tierId uuid.UUID) error {
 	if !tier.Enabled {
 		return domain.ErrTierDisabled
 	}
-	model := &aiUserTier{UserId: userId, TierId: tierId}
+	model := &aiUserTier{
+		UserId: userId,
+		TierId: tierId,
+	}
+	onConflict := clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"tier_id", "updated_at"}),
+	}
 	err = r.db.
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"tier_id", "updated_at"}),
-		}).
+		Clauses(onConflict).
 		Create(model).Error
 	if err != nil {
 		return cerr.NewInternalError("assigning ai tier", err)
@@ -263,17 +267,18 @@ func (r *repository) AddUsage(userId uuid.UUID, periodStart time.Time, delta por
 		OutputTokens:  delta.OutputTokens,
 		CostUsdMicros: micros,
 	}
+	onConflict := clause.OnConflict{
+		Columns: []clause.Column{{Name: "user_id"}, {Name: "period_start"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"requests":        gorm.Expr("ai_usage.requests + ?", delta.Requests),
+			"input_tokens":    gorm.Expr("ai_usage.input_tokens + ?", delta.InputTokens),
+			"output_tokens":   gorm.Expr("ai_usage.output_tokens + ?", delta.OutputTokens),
+			"cost_usd_micros": gorm.Expr("ai_usage.cost_usd_micros + ?", micros),
+			"updated_at":      gorm.Expr("NOW()"),
+		}),
+	}
 	err := r.db.
-		Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "user_id"}, {Name: "period_start"}},
-			DoUpdates: clause.Assignments(map[string]any{
-				"requests":        gorm.Expr("ai_usage.requests + ?", delta.Requests),
-				"input_tokens":    gorm.Expr("ai_usage.input_tokens + ?", delta.InputTokens),
-				"output_tokens":   gorm.Expr("ai_usage.output_tokens + ?", delta.OutputTokens),
-				"cost_usd_micros": gorm.Expr("ai_usage.cost_usd_micros + ?", micros),
-				"updated_at":      gorm.Expr("NOW()"),
-			}),
-		}).
+		Clauses(onConflict).
 		Create(model).Error
 	if err != nil {
 		return cerr.NewInternalError("recording ai usage", err)
