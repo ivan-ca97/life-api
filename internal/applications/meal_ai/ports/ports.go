@@ -53,7 +53,7 @@ type InteractionEntry = aiUsagePorts.InteractionEntry
 // Pricer converts token usage to a USD cost. Defined here (the consumer);
 // satisfied by the ai_usage service.
 type Pricer interface {
-	CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
+	CostUsd(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error)
 }
 
 // Correction is a user adjustment to a prior assumption, fed back for

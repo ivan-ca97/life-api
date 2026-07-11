@@ -22,6 +22,8 @@ import (
 	healthConnectImportApp "github.com/ivan-ca97/life/internal/applications/health_connect_import"
 	hevyImportApp "github.com/ivan-ca97/life/internal/applications/hevy_import"
 	watchdogApp "github.com/ivan-ca97/life/internal/applications/integrity_watchdog"
+	mealAIApp "github.com/ivan-ca97/life/internal/applications/meal_ai"
+	aiUsage "github.com/ivan-ca97/life/internal/features/ai_usage"
 	"github.com/ivan-ca97/life/internal/features/authentication"
 	"github.com/ivan-ca97/life/internal/features/authorization"
 	"github.com/ivan-ca97/life/internal/features/daily"
@@ -33,6 +35,8 @@ import (
 	"github.com/ivan-ca97/life/internal/features/user"
 	"github.com/ivan-ca97/life/internal/features/measurements"
 	"github.com/ivan-ca97/life/internal/features/weight"
+
+	"github.com/ivan-ca97/life/internal/infrastructure/llm/openai"
 )
 
 type server struct {
@@ -41,7 +45,7 @@ type server struct {
 	watchdog *watchdogApp.WatchdogApplication
 }
 
-func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL string, watchdogInterval time.Duration) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, openaiApiKey, openaiModel string, watchdogInterval time.Duration) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
 
@@ -87,6 +91,21 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
 	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
 
+	// AI: usage/quota management is always available; the meal estimation
+	// application is only wired when an OpenAI key is configured (graceful
+	// degradation — the rest of the app boots normally without it).
+	aiUsageFeature := aiUsage.NewAiUsageFeature(database, authorizer, errorHandler)
+	if openaiModel == "" {
+		openaiModel = "gpt-4o"
+	}
+	var mealAI *mealAIApp.MealAIApplication
+	if openaiApiKey != "" {
+		openaiClient := openai.NewClient(openaiApiKey, openaiModel)
+		mealAI = mealAIApp.NewMealAIApplication(foodFeature.FoodService(), openaiClient, aiUsageFeature.QuotaGuard(), aiUsageFeature.InteractionLogger(), aiUsageFeature.Service(), authorizer, errorHandler)
+	} else {
+		slog.Warn("OPENAI_API_KEY not set; meal AI estimation endpoint disabled")
+	}
+
 	router := chi.NewRouter()
 	origins := []string{"http://localhost:3000"}
 	if corsOrigins != "" {
@@ -119,6 +138,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 			foodFeature.GlobalRoutes(r)
 			userFeature.AdminRoutes(r)
 			watchdog.ProtectedRoutes(r)
+			aiUsageFeature.Routes(r)
 
 			r.Route("/users/{userId}", func(r chi.Router) {
 				userFeature.ProtectedRoutes(r)
@@ -135,6 +155,9 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 				measurementsFeature.ProtectedRoutes(r)
 				fitnessAdvisor.ProtectedRoutes(r)
 				dataExport.ProtectedRoutes(r)
+				if mealAI != nil {
+					mealAI.ProtectedRoutes(r)
+				}
 			})
 		})
 	})

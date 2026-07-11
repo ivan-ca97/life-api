@@ -48,6 +48,9 @@ func main() {
 	r2Bucket := os.Getenv("R2_BUCKET")
 	r2PublicURL := os.Getenv("R2_PUBLIC_URL")
 
+	openaiApiKey := os.Getenv("OPENAI_API_KEY")
+	openaiModel := os.Getenv("OPENAI_MODEL")
+
 	watchdogInterval := 24 * time.Hour
 	if s := os.Getenv("WATCHDOG_INTERVAL_SECONDS"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil && n > 0 {
@@ -55,7 +58,7 @@ func main() {
 		}
 	}
 
-	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, watchdogInterval)
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, openaiApiKey, openaiModel, watchdogInterval)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}

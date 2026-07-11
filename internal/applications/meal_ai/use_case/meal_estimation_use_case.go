@@ -129,7 +129,7 @@ func (uc *mealEstimationUseCase) Estimate(ctx context.Context, input ports.Estim
 
 // cost prices the usage best-effort; a pricing failure yields 0.
 func (uc *mealEstimationUseCase) cost(usage llm.Usage) float64 {
-	cost, err := uc.pricer.CostUSD(uc.client.Provider(), uc.client.Model(), int64(usage.InputTokens), int64(usage.OutputTokens), time.Now())
+	cost, err := uc.pricer.CostUsd(uc.client.Provider(), uc.client.Model(), int64(usage.InputTokens), int64(usage.OutputTokens), time.Now())
 	if err != nil {
 		return 0
 	}

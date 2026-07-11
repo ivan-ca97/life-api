@@ -69,7 +69,7 @@ func (m *mockQuota) RecordUsage(userId uuid.UUID, delta ports.UsageDelta) error 
 
 type mockPricer struct{}
 
-func (mockPricer) CostUSD(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
+func (mockPricer) CostUsd(provider, model string, inputTokens, outputTokens int64, at time.Time) (float64, error) {
 	return mockCost, nil
 }
 
