@@ -53,7 +53,10 @@ func (b *errorBag) write(err error, logger *slog.Logger) {
 
 	b.writer.Header().Set("Content-Type", "application/json")
 	b.writer.WriteHeader(statusCode)
-	_ = json.NewEncoder(b.writer).Encode(map[string]string{"error": message})
+	body := map[string]string{
+		"error": message,
+	}
+	_ = json.NewEncoder(b.writer).Encode(body)
 }
 
 // errorContextBagHandler implements HttpErrorHandler using a per-request error bag stored in context.

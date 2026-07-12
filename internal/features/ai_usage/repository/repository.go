@@ -243,9 +243,12 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 	if err != nil {
 		return cerr.NewInternalError("loading user ai tier", err)
 	}
+	updates := map[string]any{
+		"self_limit_usd": selfLimitUsd,
+	}
 	result := r.db.Model(&aiUserTier{}).
 		Where("user_id = ?", userId).
-		Updates(map[string]any{"self_limit_usd": selfLimitUsd})
+		Updates(updates)
 	if result.Error != nil {
 		return cerr.NewInternalError("setting ai self limit", result.Error)
 	}
@@ -279,15 +282,16 @@ func (r *repository) AddUsage(userId uuid.UUID, periodStart time.Time, delta por
 		OutputTokens:  delta.OutputTokens,
 		CostUsdMicros: micros,
 	}
+	assignments := map[string]any{
+		"requests":        gorm.Expr("ai_usage.requests + ?", delta.Requests),
+		"input_tokens":    gorm.Expr("ai_usage.input_tokens + ?", delta.InputTokens),
+		"output_tokens":   gorm.Expr("ai_usage.output_tokens + ?", delta.OutputTokens),
+		"cost_usd_micros": gorm.Expr("ai_usage.cost_usd_micros + ?", micros),
+		"updated_at":      gorm.Expr("NOW()"),
+	}
 	onConflict := clause.OnConflict{
-		Columns: []clause.Column{{Name: "user_id"}, {Name: "period_start"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"requests":        gorm.Expr("ai_usage.requests + ?", delta.Requests),
-			"input_tokens":    gorm.Expr("ai_usage.input_tokens + ?", delta.InputTokens),
-			"output_tokens":   gorm.Expr("ai_usage.output_tokens + ?", delta.OutputTokens),
-			"cost_usd_micros": gorm.Expr("ai_usage.cost_usd_micros + ?", micros),
-			"updated_at":      gorm.Expr("NOW()"),
-		}),
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "period_start"}},
+		DoUpdates: clause.Assignments(assignments),
 	}
 	err := r.db.
 		Clauses(onConflict).

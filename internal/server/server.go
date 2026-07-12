@@ -123,10 +123,11 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	router.Use(cors.Handler(corsOptions))
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		payload := map[string]string{
 			"status":  "ok",
 			"version": version,
-		})
+		}
+		json.NewEncoder(w).Encode(payload)
 	})
 
 	router.Route("/api/v1", func(r chi.Router) {
