@@ -23,7 +23,11 @@ import (
 
 const (
 	source            = "hc"
-	dailyWalkMinSteps = 200 // minimum residual steps to create a "Caminata cotidiana"
+	dailyWalkMinSteps = 200 // minimum residual steps to create a daily-walk exercise
+	// dailyWalkName is the exercise name for HC-imported daily walks. It doubles
+	// as the lookup key for re-sync dedup, so it must match existing rows exactly
+	// (see migration 000035, which renamed legacy "Caminata cotidiana" rows).
+	dailyWalkName = "Daily walk"
 )
 
 type healthConnectImportUseCase struct {
@@ -245,33 +249,35 @@ func (uc *healthConnectImportUseCase) importActivity(
 		}
 	}
 
-	// 2. Create/update "Caminata cotidiana" from HC-aggregated daily step totals.
-	err := uc.importCotidiana(userId, stepsDaily, exOut)
+	// 2. Create/update the daily-walk exercise from HC-aggregated daily step totals.
+	err := uc.importDailyWalk(userId, stepsDaily, exOut)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// importCotidiana creates or updates one "Caminata cotidiana" exercise per day
-// using the pre-aggregated daily step total sent by the mobile app. On re-sync
-// the step count is overwritten so it always reflects the latest HC aggregate.
-func (uc *healthConnectImportUseCase) importCotidiana(userId uuid.UUID, stepsDaily []ports.DailyStepsRecord, out *ports.TypeResult) error {
+// importDailyWalk creates or updates one daily-walk exercise per day using the
+// pre-aggregated daily step total sent by the mobile app. On re-sync the step
+// count is overwritten so it always reflects the latest HC aggregate.
+func (uc *healthConnectImportUseCase) importDailyWalk(userId uuid.UUID, stepsDaily []ports.DailyStepsRecord, out *ports.TypeResult) error {
 	for _, sd := range stepsDaily {
 		if sd.Count < dailyWalkMinSteps {
 			continue
 		}
 
+		// sd.Date is already the correct local calendar date — parse it as UTC
+		// midnight so it stores literally. dateOf() must NOT be applied here:
+		// it would shift midnight UTC to the previous day in AR time.
 		date, err := time.Parse("2006-01-02", sd.Date)
 		if err != nil {
 			out.Skipped++
 			continue
 		}
-		date = dateOf(date)
 
-		// If a "Caminata cotidiana" already exists for this day, update its step
+		// If a daily-walk exercise already exists for this day, update its step
 		// count. Re-syncs overwrite rather than accumulate.
-		existing, err := uc.exerciseRepository.FindByDateAndName(userId, date, "Caminata cotidiana")
+		existing, err := uc.exerciseRepository.FindByDateAndName(userId, date, dailyWalkName)
 		if err != nil && !errors.Is(err, exerciseDomain.ErrExerciseNotFound) {
 			return err
 		}
@@ -294,10 +300,12 @@ func (uc *healthConnectImportUseCase) importCotidiana(userId uuid.UUID, stepsDai
 
 		externalId := externalIdFor("daily_walk", sd.Date)
 		importSource := exerciseDomain.ImportSourceHealthConnect
+		startedAt := date.Add(12 * time.Hour) // noon UTC = 09:00 ARG, unambiguously the same local date
 		params := exercisePorts.CreateParams{
 			Date:         date,
+			StartedAt:    &startedAt,
 			Type:         exerciseDomain.ExerciseTypeWalking,
-			Name:         "Caminata cotidiana",
+			Name:         dailyWalkName,
 			Steps:        &sd.Count,
 			ExternalId:   externalId,
 			ImportSource: &importSource,
@@ -441,6 +449,9 @@ func externalIdFor(recordType, id string) *string {
 
 // ─── Time helpers ─────────────────────────────────────────────────────────────
 
+// Argentina has no DST — UTC-3 year-round, no OS timezone data required.
+var arTz = time.FixedZone("America/Argentina/Buenos_Aires", -3*60*60)
+
 func parseInstant(s string) (time.Time, error) {
 	if s == "" {
 		return time.Time{}, errors.New("empty time")
@@ -456,7 +467,10 @@ func parseInstant(s string) (time.Time, error) {
 	return t.UTC(), nil
 }
 
+// dateOf returns the calendar date of t in Argentina local time, stored as a
+// UTC midnight value. Using UTC date would give the wrong day for sessions that
+// happen after 21:00 ARG (= 00:00+ UTC next day).
 func dateOf(t time.Time) time.Time {
-	u := t.UTC()
-	return time.Date(u.Year(), u.Month(), u.Day(), 0, 0, 0, 0, time.UTC)
+	local := t.In(arTz)
+	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
 }
