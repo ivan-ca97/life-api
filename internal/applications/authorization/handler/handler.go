@@ -12,6 +12,7 @@ type ShareHandler interface {
 	Create(r *http.Request) (*shareResponse, int, error)
 	ListOwned(r *http.Request) (*shareListResponse, int, error)
 	ListReceived(r *http.Request) (*shareListResponse, int, error)
+	Update(r *http.Request) (*shareResponse, int, error)
 	Delete(r *http.Request) (*api.NoResponse, int, error)
 }
 
@@ -65,6 +66,26 @@ func (h *shareHandler) ListReceived(r *http.Request) (*shareListResponse, int, e
 		return nil, 0, err
 	}
 	return shareListFromDomain(shares), http.StatusOK, nil
+}
+
+func (h *shareHandler) Update(r *http.Request) (*shareResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	id, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	request, err := api.DecodeBody[updateShareRequest](r)
+	if err != nil {
+		return nil, 0, err
+	}
+	share, err := h.service.Update(r.Context(), userId, id, request.CanWrite)
+	if err != nil {
+		return nil, 0, err
+	}
+	return shareFromDomain(share), http.StatusOK, nil
 }
 
 func (h *shareHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {

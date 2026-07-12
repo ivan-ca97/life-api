@@ -74,6 +74,23 @@ func (r *shareRepository) ListByGrantee(granteeId uuid.UUID) ([]domain.Share, er
 	return shares, nil
 }
 
+func (r *shareRepository) Update(id, ownerId uuid.UUID, canWrite bool) (*domain.Share, error) {
+	result := r.db.Model(&share{}).
+		Where("id = ? AND owner_id = ?", id, ownerId).
+		Update("can_write", canWrite)
+	if result.Error != nil {
+		return nil, cerr.NewInternalError("updating share", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return nil, cerr.NewNotFoundError("share")
+	}
+	var model share
+	if err := r.db.Where("id = ?", id).First(&model).Error; err != nil {
+		return nil, cerr.NewInternalError("fetching updated share", err)
+	}
+	return model.toDomain(), nil
+}
+
 func (r *shareRepository) Delete(id, ownerId uuid.UUID) error {
 	result := r.db.Where("id = ? AND owner_id = ?", id, ownerId).Delete(&share{})
 	if result.Error != nil {

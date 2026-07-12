@@ -5,3 +5,7 @@ type createShareRequest struct {
 	ResourceType string `json:"resource_type"`
 	CanWrite     bool   `json:"can_write"`
 }
+
+type updateShareRequest struct {
+	CanWrite bool `json:"can_write"`
+}

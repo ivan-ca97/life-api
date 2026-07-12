@@ -62,6 +62,13 @@ func (uc *authorizedShareUseCase) ListReceived(ctx context.Context, ownerId uuid
 	return shares, nil
 }
 
+func (uc *authorizedShareUseCase) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, canWrite bool) (*domain.Share, error) {
+	if err := uc.authorizer.Authorize(ctx, ownerId, permissions.SharesUpdate); err != nil {
+		return nil, err
+	}
+	return uc.base.Update(id, ownerId, canWrite)
+}
+
 func (uc *authorizedShareUseCase) Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error {
 	err := uc.authorizer.Authorize(ctx, ownerId, permissions.SharesDelete)
 	if err != nil {

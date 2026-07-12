@@ -17,5 +17,6 @@ type ShareRepository interface {
 	Create(share *domain.Share) error
 	ListByOwner(ownerId uuid.UUID) ([]domain.Share, error)
 	ListByGrantee(granteeId uuid.UUID) ([]domain.Share, error)
+	Update(id, ownerId uuid.UUID, canWrite bool) (*domain.Share, error)
 	Delete(id, ownerId uuid.UUID) error
 }

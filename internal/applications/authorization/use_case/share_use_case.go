@@ -71,6 +71,10 @@ func (uc *shareUseCase) ListByGrantee(granteeId uuid.UUID) ([]domain.Share, erro
 	return shares, nil
 }
 
+func (uc *shareUseCase) Update(id, ownerId uuid.UUID, canWrite bool) (*domain.Share, error) {
+	return uc.shareRepository.Update(id, ownerId, canWrite)
+}
+
 func (uc *shareUseCase) Delete(id, ownerId uuid.UUID) error {
 	err := uc.shareRepository.Delete(id, ownerId)
 	if err != nil {
