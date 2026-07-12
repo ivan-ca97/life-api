@@ -11,4 +11,5 @@ func (f *goalFeature) PublicRoutes(_ chi.Router) {}
 func (f *goalFeature) ProtectedRoutes(r chi.Router) {
 	r.Get("/goals", endpoint.JSON(f.errorHandler, f.goalHandler.GetCurrent))
 	r.Put("/goals", endpoint.JSON(f.errorHandler, f.goalHandler.Upsert))
+	r.Get("/goals/progress", endpoint.JSON(f.errorHandler, f.goalHandler.GetProgress))
 }

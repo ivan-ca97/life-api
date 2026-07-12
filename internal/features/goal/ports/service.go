@@ -23,4 +23,5 @@ type UpsertParams struct {
 type GoalService interface {
 	GetByUserId(userId uuid.UUID) (*domain.Goal, error)
 	Upsert(userId uuid.UUID, params UpsertParams) (*domain.Goal, error)
+	GetProgress(userId uuid.UUID, from, to time.Time) (*domain.GoalProgress, error)
 }

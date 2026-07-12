@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -48,4 +49,11 @@ func (s *authorizedGoalService) Upsert(ctx context.Context, ownerId uuid.UUID, p
 		return nil, err
 	}
 	return goal, nil
+}
+
+func (s *authorizedGoalService) GetProgress(ctx context.Context, ownerId uuid.UUID, from, to time.Time) (*domain.GoalProgress, error) {
+	if err := s.authorizer.Authorize(ctx, ownerId, permissions.GoalsRead); err != nil {
+		return nil, err
+	}
+	return s.base.GetProgress(ownerId, from, to)
 }

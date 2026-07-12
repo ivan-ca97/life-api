@@ -128,3 +128,7 @@ func (s *goalService) Upsert(userId uuid.UUID, params ports.UpsertParams) (*doma
 	}
 	return goal, nil
 }
+
+func (s *goalService) GetProgress(userId uuid.UUID, from, to time.Time) (*domain.GoalProgress, error) {
+	return s.repository.GetProgress(userId, from, to)
+}

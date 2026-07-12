@@ -13,6 +13,7 @@ import (
 type GoalHandler interface {
 	GetCurrent(r *http.Request) (*goalResponse, int, error)
 	Upsert(r *http.Request) (*goalResponse, int, error)
+	GetProgress(r *http.Request) (*goalProgressResponse, int, error)
 }
 
 type goalHandler struct {
@@ -70,4 +71,33 @@ func (h *goalHandler) Upsert(r *http.Request) (*goalResponse, int, error) {
 		return nil, 0, err
 	}
 	return goalFromDomain(goal), http.StatusOK, nil
+}
+
+func (h *goalHandler) GetProgress(r *http.Request) (*goalProgressResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	from, err := api.QueryParamDate(r, "from")
+	if err != nil {
+		return nil, 0, err
+	}
+	if from == nil {
+		return nil, 0, cerr.NewBadRequestError("from query parameter is required (format: YYYY-MM-DD)")
+	}
+	to, err := api.QueryParamDate(r, "to")
+	if err != nil {
+		return nil, 0, err
+	}
+	if to == nil {
+		return nil, 0, cerr.NewBadRequestError("to query parameter is required (format: YYYY-MM-DD)")
+	}
+	if to.Before(*from) {
+		return nil, 0, cerr.NewBadRequestError("to must not be before from")
+	}
+	progress, err := h.service.GetProgress(r.Context(), userId, *from, *to)
+	if err != nil {
+		return nil, 0, err
+	}
+	return goalProgressFromDomain(progress), http.StatusOK, nil
 }
