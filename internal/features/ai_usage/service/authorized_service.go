@@ -33,7 +33,11 @@ func (s *authorizedService) GetMyUsage(ctx context.Context) (*domain.UsageSummar
 	if err != nil {
 		return nil, err
 	}
-	return s.base.GetUsage(actorId)
+	usage, err := s.base.GetUsage(actorId)
+	if err != nil {
+		return nil, err
+	}
+	return usage, nil
 }
 
 func (s *authorizedService) SetMySelfLimit(ctx context.Context, selfLimitUsd *float64) error {
@@ -41,7 +45,11 @@ func (s *authorizedService) SetMySelfLimit(ctx context.Context, selfLimitUsd *fl
 	if err != nil {
 		return err
 	}
-	return s.base.SetSelfLimit(actorId, selfLimitUsd)
+	err = s.base.SetSelfLimit(actorId, selfLimitUsd)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // --- admin operations: require the admin role ---
@@ -51,7 +59,11 @@ func (s *authorizedService) ListTiers(ctx context.Context) ([]domain.Tier, error
 	if err != nil {
 		return nil, err
 	}
-	return s.base.ListTiers()
+	tiers, err := s.base.ListTiers()
+	if err != nil {
+		return nil, err
+	}
+	return tiers, nil
 }
 
 func (s *authorizedService) CreateTier(ctx context.Context, params ports.CreateTierParams) (*domain.Tier, error) {
@@ -59,7 +71,11 @@ func (s *authorizedService) CreateTier(ctx context.Context, params ports.CreateT
 	if err != nil {
 		return nil, err
 	}
-	return s.base.CreateTier(params)
+	tier, err := s.base.CreateTier(params)
+	if err != nil {
+		return nil, err
+	}
+	return tier, nil
 }
 
 func (s *authorizedService) UpdateTier(ctx context.Context, id uuid.UUID, params ports.UpdateTierParams) (*domain.Tier, error) {
@@ -67,7 +83,11 @@ func (s *authorizedService) UpdateTier(ctx context.Context, id uuid.UUID, params
 	if err != nil {
 		return nil, err
 	}
-	return s.base.UpdateTier(id, params)
+	tier, err := s.base.UpdateTier(id, params)
+	if err != nil {
+		return nil, err
+	}
+	return tier, nil
 }
 
 func (s *authorizedService) DeleteTier(ctx context.Context, id uuid.UUID) error {
@@ -75,7 +95,11 @@ func (s *authorizedService) DeleteTier(ctx context.Context, id uuid.UUID) error 
 	if err != nil {
 		return err
 	}
-	return s.base.DeleteTier(id)
+	err = s.base.DeleteTier(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *authorizedService) AssignUserTier(ctx context.Context, userId, tierId uuid.UUID) error {
@@ -83,7 +107,11 @@ func (s *authorizedService) AssignUserTier(ctx context.Context, userId, tierId u
 	if err != nil {
 		return err
 	}
-	return s.base.AssignTier(userId, tierId)
+	err = s.base.AssignTier(userId, tierId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *authorizedService) GetUserUsage(ctx context.Context, userId uuid.UUID) (*domain.UsageSummary, error) {
@@ -91,7 +119,11 @@ func (s *authorizedService) GetUserUsage(ctx context.Context, userId uuid.UUID) 
 	if err != nil {
 		return nil, err
 	}
-	return s.base.GetUsage(userId)
+	usage, err := s.base.GetUsage(userId)
+	if err != nil {
+		return nil, err
+	}
+	return usage, nil
 }
 
 func (s *authorizedService) ListInteractions(ctx context.Context, filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
@@ -99,5 +131,9 @@ func (s *authorizedService) ListInteractions(ctx context.Context, filter ports.I
 	if err != nil {
 		return types.Page[domain.Interaction]{}, err
 	}
-	return s.base.ListInteractions(filter)
+	interactions, err := s.base.ListInteractions(filter)
+	if err != nil {
+		return types.Page[domain.Interaction]{}, err
+	}
+	return interactions, nil
 }

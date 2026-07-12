@@ -32,7 +32,11 @@ func (s *authorizedDailyPhotoService) Create(ctx context.Context, ownerId uuid.U
 	if err != nil {
 		return nil, err
 	}
-	return s.base.Create(ownerId, params)
+	photo, err := s.base.Create(ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return photo, nil
 }
 
 func (s *authorizedDailyPhotoService) List(ctx context.Context, ownerId uuid.UUID, date time.Time) ([]domain.DailyPhoto, error) {
@@ -40,7 +44,11 @@ func (s *authorizedDailyPhotoService) List(ctx context.Context, ownerId uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	return s.base.List(ownerId, date)
+	photos, err := s.base.List(ownerId, date)
+	if err != nil {
+		return nil, err
+	}
+	return photos, nil
 }
 
 func (s *authorizedDailyPhotoService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdatePhotoParams) (*domain.DailyPhoto, error) {
@@ -48,7 +56,11 @@ func (s *authorizedDailyPhotoService) Update(ctx context.Context, ownerId uuid.U
 	if err != nil {
 		return nil, err
 	}
-	return s.base.Update(id, ownerId, params)
+	photo, err := s.base.Update(id, ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return photo, nil
 }
 
 func (s *authorizedDailyPhotoService) Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error {
@@ -56,5 +68,9 @@ func (s *authorizedDailyPhotoService) Delete(ctx context.Context, ownerId uuid.U
 	if err != nil {
 		return err
 	}
-	return s.base.Delete(id, ownerId)
+	err = s.base.Delete(id, ownerId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

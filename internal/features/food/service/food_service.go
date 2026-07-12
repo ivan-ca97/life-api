@@ -85,7 +85,11 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 	if err != nil {
 		return nil, err
 	}
-	return s.repository.FindById(food.Id, userId)
+	created, err := s.repository.FindById(food.Id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return created, nil
 }
 
 func (s *foodService) GetById(id, userId uuid.UUID) (*domain.Food, error) {
@@ -185,7 +189,11 @@ func (s *foodService) IngredientFrequency(userId uuid.UUID, params ports.Ingredi
 }
 
 func (s *foodService) ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error) {
-	return s.repository.ListIngredients(userId, query)
+	ingredients, err := s.repository.ListIngredients(userId, query)
+	if err != nil {
+		return nil, err
+	}
+	return ingredients, nil
 }
 
 func (s *foodService) ListCommunity(params ports.CommunityListParams) (types.Page[domain.Food], error) {
@@ -274,7 +282,11 @@ func (s *foodService) Impact(foodId, userId uuid.UUID) (*ports.ImpactResult, err
 	if err != nil {
 		return nil, err
 	}
-	return s.repository.Impact(foodId)
+	impact, err := s.repository.Impact(foodId)
+	if err != nil {
+		return nil, err
+	}
+	return impact, nil
 }
 
 func validateMeasurementType(mt string) error {

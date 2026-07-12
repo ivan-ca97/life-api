@@ -246,7 +246,11 @@ func (uc *healthConnectImportUseCase) importActivity(
 	}
 
 	// 2. Create/update "Caminata cotidiana" from HC-aggregated daily step totals.
-	return uc.importCotidiana(userId, stepsDaily, exOut)
+	err := uc.importCotidiana(userId, stepsDaily, exOut)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // importCotidiana creates or updates one "Caminata cotidiana" exercise per day

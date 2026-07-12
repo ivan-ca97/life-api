@@ -26,7 +26,11 @@ func NewCorrectionService(repository ports.CorrectionRepository, closureChecker 
 }
 
 func (s *correctionService) GetCorrection(userId uuid.UUID, date time.Time) (*domain.Correction, error) {
-	return s.repository.GetCorrection(userId, date)
+	correction, err := s.repository.GetCorrection(userId, date)
+	if err != nil {
+		return nil, err
+	}
+	return correction, nil
 }
 
 func (s *correctionService) UpsertCorrection(userId uuid.UUID, correction *domain.Correction) error {
@@ -38,7 +42,11 @@ func (s *correctionService) UpsertCorrection(userId uuid.UUID, correction *domai
 		return dayclosure.ErrDayClosed
 	}
 
-	return s.repository.UpsertCorrection(userId, correction)
+	err = s.repository.UpsertCorrection(userId, correction)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *correctionService) DeleteCorrection(userId uuid.UUID, date time.Time) error {
@@ -50,5 +58,9 @@ func (s *correctionService) DeleteCorrection(userId uuid.UUID, date time.Time) e
 		return dayclosure.ErrDayClosed
 	}
 
-	return s.repository.DeleteCorrection(userId, date)
+	err = s.repository.DeleteCorrection(userId, date)
+	if err != nil {
+		return err
+	}
+	return nil
 }

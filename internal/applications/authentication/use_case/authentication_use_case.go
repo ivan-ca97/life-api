@@ -132,5 +132,9 @@ func (uc *authenticationUseCase) LoginWithGoogle(idToken string) (*ports.Authent
 }
 
 func (uc *authenticationUseCase) Logout(sessionId uuid.UUID) error {
-	return uc.authenticationService.Logout(sessionId)
+	err := uc.authenticationService.Logout(sessionId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

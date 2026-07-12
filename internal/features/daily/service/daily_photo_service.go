@@ -44,7 +44,11 @@ func (s *dailyPhotoService) Create(userId uuid.UUID, params ports.CreatePhotoPar
 }
 
 func (s *dailyPhotoService) List(userId uuid.UUID, date time.Time) ([]domain.DailyPhoto, error) {
-	return s.repository.ListByDate(userId, date)
+	photos, err := s.repository.ListByDate(userId, date)
+	if err != nil {
+		return nil, err
+	}
+	return photos, nil
 }
 
 func (s *dailyPhotoService) Update(id, userId uuid.UUID, params ports.UpdatePhotoParams) (*domain.DailyPhoto, error) {
@@ -58,9 +62,17 @@ func (s *dailyPhotoService) Update(id, userId uuid.UUID, params ports.UpdatePhot
 			return nil, err
 		}
 	}
-	return s.repository.Update(id, userId, params.Name, params.IsPrimary)
+	photo, err := s.repository.Update(id, userId, params.Name, params.IsPrimary)
+	if err != nil {
+		return nil, err
+	}
+	return photo, nil
 }
 
 func (s *dailyPhotoService) Delete(id, userId uuid.UUID) error {
-	return s.repository.Delete(id, userId)
+	err := s.repository.Delete(id, userId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

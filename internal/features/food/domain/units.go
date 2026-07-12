@@ -14,10 +14,14 @@ const (
 
 var StandardUnit = units.StandardUnit
 
-func IsMetricUnit(unit string) bool               { return units.IsMetricUnit(unit) }
+func IsMetricUnit(unit string) bool                      { return units.IsMetricUnit(unit) }
 func GetUnitDimension(unit string) (UnitDimension, bool) { return units.GetDimension(unit) }
 func ConvertToStandard(qty float64, unit string) (float64, string, error) {
-	return units.ConvertToStandard(qty, unit)
+	qtyStd, unitStd, err := units.ConvertToStandard(qty, unit)
+	if err != nil {
+		return 0, "", err
+	}
+	return qtyStd, unitStd, nil
 }
-func IsValidMeasurementType(mt string) bool        { return units.IsValidDimension(mt) }
+func IsValidMeasurementType(mt string) bool              { return units.IsValidDimension(mt) }
 func MetricUnitsForDimension(dim UnitDimension) []string { return units.ForDimension(dim) }

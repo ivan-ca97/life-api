@@ -46,13 +46,25 @@ func (s *measurementService) Upsert(userId uuid.UUID, date time.Time, measureTyp
 }
 
 func (s *measurementService) GetByDate(userId uuid.UUID, date time.Time, measureType string) (*domain.BodyMeasurement, error) {
-	return s.repository.FindByDate(userId, date, measureType)
+	measurement, err := s.repository.FindByDate(userId, date, measureType)
+	if err != nil {
+		return nil, err
+	}
+	return measurement, nil
 }
 
 func (s *measurementService) List(userId uuid.UUID, params ports.ListParams) ([]domain.BodyMeasurement, error) {
-	return s.repository.List(userId, params)
+	measurements, err := s.repository.List(userId, params)
+	if err != nil {
+		return nil, err
+	}
+	return measurements, nil
 }
 
 func (s *measurementService) Delete(userId uuid.UUID, date time.Time, measureType string) error {
-	return s.repository.Delete(userId, date, measureType)
+	err := s.repository.Delete(userId, date, measureType)
+	if err != nil {
+		return err
+	}
+	return nil
 }

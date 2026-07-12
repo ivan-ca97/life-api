@@ -32,7 +32,11 @@ func (s *authorizedMeasurementService) Upsert(ctx context.Context, ownerId uuid.
 	if err != nil {
 		return nil, err
 	}
-	return s.base.Upsert(ownerId, date, measureType, params)
+	measurement, err := s.base.Upsert(ownerId, date, measureType, params)
+	if err != nil {
+		return nil, err
+	}
+	return measurement, nil
 }
 
 func (s *authorizedMeasurementService) GetByDate(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string) (*domain.BodyMeasurement, error) {
@@ -40,7 +44,11 @@ func (s *authorizedMeasurementService) GetByDate(ctx context.Context, ownerId uu
 	if err != nil {
 		return nil, err
 	}
-	return s.base.GetByDate(ownerId, date, measureType)
+	measurement, err := s.base.GetByDate(ownerId, date, measureType)
+	if err != nil {
+		return nil, err
+	}
+	return measurement, nil
 }
 
 func (s *authorizedMeasurementService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListParams) ([]domain.BodyMeasurement, error) {
@@ -48,7 +56,11 @@ func (s *authorizedMeasurementService) List(ctx context.Context, ownerId uuid.UU
 	if err != nil {
 		return nil, err
 	}
-	return s.base.List(ownerId, params)
+	measurements, err := s.base.List(ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return measurements, nil
 }
 
 func (s *authorizedMeasurementService) Delete(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string) error {
@@ -56,5 +68,9 @@ func (s *authorizedMeasurementService) Delete(ctx context.Context, ownerId uuid.
 	if err != nil {
 		return err
 	}
-	return s.base.Delete(ownerId, date, measureType)
+	err = s.base.Delete(ownerId, date, measureType)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -53,7 +53,11 @@ func (s *service) CheckQuota(userId uuid.UUID) error {
 }
 
 func (s *service) RecordUsage(userId uuid.UUID, delta ports.UsageDelta) error {
-	return s.repository.AddUsage(userId, s.currentPeriod(), delta)
+	err := s.repository.AddUsage(userId, s.currentPeriod(), delta)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) GetUsage(userId uuid.UUID) (*domain.UsageSummary, error) {
@@ -81,11 +85,19 @@ func (s *service) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error {
 	if selfLimitUsd != nil && *selfLimitUsd < 0 {
 		return cerr.NewBadRequestError("self limit cannot be negative")
 	}
-	return s.repository.SetSelfLimit(userId, selfLimitUsd)
+	err := s.repository.SetSelfLimit(userId, selfLimitUsd)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) ListTiers() ([]domain.Tier, error) {
-	return s.repository.ListTiers()
+	tiers, err := s.repository.ListTiers()
+	if err != nil {
+		return nil, err
+	}
+	return tiers, nil
 }
 
 func (s *service) CreateTier(params ports.CreateTierParams) (*domain.Tier, error) {
@@ -115,15 +127,27 @@ func (s *service) UpdateTier(id uuid.UUID, params ports.UpdateTierParams) (*doma
 	if params.MonthlyLimitUsd != nil && *params.MonthlyLimitUsd != nil && **params.MonthlyLimitUsd < 0 {
 		return nil, cerr.NewBadRequestError("monthly limit cannot be negative")
 	}
-	return s.repository.UpdateTier(id, params)
+	tier, err := s.repository.UpdateTier(id, params)
+	if err != nil {
+		return nil, err
+	}
+	return tier, nil
 }
 
 func (s *service) AssignTier(userId, tierId uuid.UUID) error {
-	return s.repository.AssignTier(userId, tierId)
+	err := s.repository.AssignTier(userId, tierId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) DeleteTier(id uuid.UUID) error {
-	return s.repository.DeleteTier(id)
+	err := s.repository.DeleteTier(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CostUsd prices the tokens with the rate effective at `at`. Returns 0 when no
@@ -144,14 +168,22 @@ func (s *service) CostUsd(provider, model string, inputTokens, outputTokens int6
 
 func (s *service) LogInteraction(entry ports.InteractionEntry) error {
 	entry.InputSummary = truncateRunes(entry.InputSummary, domain.MaxInputSummaryLen)
-	return s.repository.InsertInteraction(entry)
+	err := s.repository.InsertInteraction(entry)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) ListInteractions(filter ports.InteractionFilter) (types.Page[domain.Interaction], error) {
 	if filter.Limit <= 0 {
 		filter.Limit = 50
 	}
-	return s.repository.ListInteractions(filter)
+	interactions, err := s.repository.ListInteractions(filter)
+	if err != nil {
+		return types.Page[domain.Interaction]{}, err
+	}
+	return interactions, nil
 }
 
 // truncateRunes caps a string to n runes, keeping it valid UTF-8 (Postgres TEXT

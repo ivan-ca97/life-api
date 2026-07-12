@@ -152,5 +152,9 @@ func (s *authorizedFoodService) Impact(ctx context.Context, ownerId uuid.UUID, f
 	if err != nil {
 		return nil, err
 	}
-	return s.base.Impact(foodId, ownerId)
+	impact, err := s.base.Impact(foodId, ownerId)
+	if err != nil {
+		return nil, err
+	}
+	return impact, nil
 }

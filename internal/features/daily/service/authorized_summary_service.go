@@ -56,5 +56,9 @@ func (s *authorizedSummaryService) GetDailyCheck(ctx context.Context, ownerId uu
 	if err != nil {
 		return nil, err
 	}
-	return s.base.GetDailyCheck(ownerId, date)
+	check, err := s.base.GetDailyCheck(ownerId, date)
+	if err != nil {
+		return nil, err
+	}
+	return check, nil
 }

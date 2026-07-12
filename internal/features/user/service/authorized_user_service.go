@@ -64,7 +64,11 @@ func (s *authorizedUserService) FindByUsername(ctx context.Context, username str
 	if err != nil {
 		return nil, err
 	}
-	return s.base.FindByUsername(username)
+	user, err := s.base.FindByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (s *authorizedUserService) List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error) {
@@ -112,7 +116,11 @@ func (s *authorizedUserService) AddProfilePhoto(ctx context.Context, userId uuid
 	if err != nil {
 		return nil, err
 	}
-	return s.base.AddProfilePhoto(userId, url)
+	photo, err := s.base.AddProfilePhoto(userId, url)
+	if err != nil {
+		return nil, err
+	}
+	return photo, nil
 }
 
 func (s *authorizedUserService) ListProfilePhotos(ctx context.Context, userId uuid.UUID, params types.PaginationParams) (types.Page[domain.ProfilePhoto], error) {
@@ -120,5 +128,9 @@ func (s *authorizedUserService) ListProfilePhotos(ctx context.Context, userId uu
 	if err != nil {
 		return types.Page[domain.ProfilePhoto]{}, err
 	}
-	return s.base.ListProfilePhotos(userId, params)
+	photos, err := s.base.ListProfilePhotos(userId, params)
+	if err != nil {
+		return types.Page[domain.ProfilePhoto]{}, err
+	}
+	return photos, nil
 }

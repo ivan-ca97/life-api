@@ -108,7 +108,11 @@ func (s *userService) List(params types.PaginationParams) (types.Page[domain.Use
 }
 
 func (s *userService) FindByUsername(username string) (*domain.User, error) {
-	return s.repository.FindByUsername(username)
+	user, err := s.repository.FindByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (s *userService) Update(id uuid.UUID, params ports.UpdateParams) (*domain.User, error) {
@@ -213,5 +217,9 @@ func (s *userService) ListProfilePhotos(userId uuid.UUID, params types.Paginatio
 	if err != nil {
 		return types.Page[domain.ProfilePhoto]{}, err
 	}
-	return s.photoRepository.ListByUserId(userId, params)
+	photos, err := s.photoRepository.ListByUserId(userId, params)
+	if err != nil {
+		return types.Page[domain.ProfilePhoto]{}, err
+	}
+	return photos, nil
 }
