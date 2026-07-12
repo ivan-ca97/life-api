@@ -150,7 +150,7 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 		estimate.ClarificationQuestion = *o.ClarificationQuestion
 	}
 	for _, m := range o.MatchedItems {
-		estimate.MatchedItems = append(estimate.MatchedItems, domain.MatchedItem{
+		item := domain.MatchedItem{
 			FoodId:            m.FoodId,
 			FoodName:          m.FoodName,
 			EstimatedQuantity: m.EstimatedQuantity,
@@ -158,10 +158,11 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
-		})
+		}
+		estimate.MatchedItems = append(estimate.MatchedItems, item)
 	}
 	for _, s := range o.NewFoodSuggestions {
-		estimate.NewFoodSuggestions = append(estimate.NewFoodSuggestions, domain.NewFoodSuggestion{
+		item := domain.NewFoodSuggestion{
 			Name:              s.Name,
 			EstimatedQuantity: s.EstimatedQuantity,
 			Unit:              s.Unit,
@@ -177,7 +178,8 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 				DefaultFatGrams:     s.CreateParams.DefaultFatGrams,
 				DefaultFiberGrams:   s.CreateParams.DefaultFiberGrams,
 			},
-		})
+		}
+		estimate.NewFoodSuggestions = append(estimate.NewFoodSuggestions, item)
 	}
 	return estimate
 }

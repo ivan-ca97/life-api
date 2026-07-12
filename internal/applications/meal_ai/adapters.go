@@ -26,13 +26,14 @@ var _ ports.FoodSearch = (*foodSearchAdapter)(nil)
 
 func (a *foodSearchAdapter) Search(userId uuid.UUID, query string, limit int) ([]ports.FoodCandidate, error) {
 	q := query
-	page, err := a.foodService.List(userId, foodPorts.ListParams{
+	params := foodPorts.ListParams{
 		PaginationParams: types.PaginationParams{
 			Limit:  limit,
 			Offset: 0,
 		},
 		Query: &q,
-	})
+	}
+	page, err := a.foodService.List(userId, params)
 	if err != nil {
 		return nil, err
 	}

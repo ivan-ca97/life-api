@@ -195,14 +195,16 @@ func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []st
 			Name:   name,
 		}
 	}
-	if err := r.db.Clauses(clause.OnConflict{
+	onConflict := clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
 		DoNothing: true,
-	}).Create(&entries).Error; err != nil {
+	}
+	err := r.db.Clauses(onConflict).Create(&entries).Error
+	if err != nil {
 		return cerr.NewInternalError("upserting exercise tags", err)
 	}
 	var tags []exerciseTag
-	err := r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
+	err = r.db.Where("user_id = ? AND name IN ?", userId, names).Find(&tags).Error
 	if err != nil {
 		return cerr.NewInternalError("fetching exercise tag ids", err)
 	}
@@ -213,9 +215,10 @@ func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []st
 			TagId:      t.Id,
 		}
 	}
-	return r.db.Clauses(clause.OnConflict{
+	mapConflict := clause.OnConflict{
 		DoNothing: true,
-	}).Create(&maps).Error
+	}
+	return r.db.Clauses(mapConflict).Create(&maps).Error
 }
 
 func (r *exerciseRepository) Delete(id, userId uuid.UUID) error {

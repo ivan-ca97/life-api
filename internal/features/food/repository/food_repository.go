@@ -619,7 +619,8 @@ func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) er
 			TagId:  t.Id,
 		}
 	}
-	return r.db.Clauses(clause.OnConflict{
+	mapConflict := clause.OnConflict{
 		DoNothing: true,
-	}).Create(&maps).Error
+	}
+	return r.db.Clauses(mapConflict).Create(&maps).Error
 }

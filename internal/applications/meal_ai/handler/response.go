@@ -63,7 +63,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 		ClarificationQuestion: e.ClarificationQuestion,
 	}
 	for _, m := range e.MatchedItems {
-		response.MatchedItems = append(response.MatchedItems, matchedItemResponse{
+		item := matchedItemResponse{
 			FoodId:            m.FoodId,
 			FoodName:          m.FoodName,
 			EstimatedQuantity: m.EstimatedQuantity,
@@ -71,10 +71,11 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
-		})
+		}
+		response.MatchedItems = append(response.MatchedItems, item)
 	}
 	for _, s := range e.NewFoodSuggestions {
-		response.NewFoodSuggestions = append(response.NewFoodSuggestions, newFoodSuggestionResponse{
+		item := newFoodSuggestionResponse{
 			Name:              s.Name,
 			EstimatedQuantity: s.EstimatedQuantity,
 			Unit:              s.Unit,
@@ -90,7 +91,8 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 				DefaultFatGrams:     s.CreateParams.DefaultFatGrams,
 				DefaultFiberGrams:   s.CreateParams.DefaultFiberGrams,
 			},
-		})
+		}
+		response.NewFoodSuggestions = append(response.NewFoodSuggestions, item)
 	}
 	return response
 }

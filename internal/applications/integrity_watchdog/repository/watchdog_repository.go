@@ -111,10 +111,11 @@ func (r *watchdogRepository) InvalidFoodBaseUnits() ([]ports.InvalidFoodUnit, er
 	var result []ports.InvalidFoodUnit
 	for _, row := range rows {
 		if !units.IsMetricUnit(row.BaseUnit) {
-			result = append(result, ports.InvalidFoodUnit{
+			item := ports.InvalidFoodUnit{
 				FoodId:   row.Id,
 				BaseUnit: row.BaseUnit,
-			})
+			}
+			result = append(result, item)
 		}
 	}
 	return result, nil

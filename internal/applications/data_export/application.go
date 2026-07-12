@@ -208,14 +208,15 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range weightRows {
-		response.WeightEntries = append(response.WeightEntries, weightEntryExport{
+		item := weightEntryExport{
 			Id:                row.Id.String(),
 			Date:              row.Date.Format("2006-01-02"),
 			WeightKg:          row.WeightKg,
 			BodyFatPercentage: row.BodyFatPercentage,
 			Notes:             row.Notes,
 			CreatedAt:         row.CreatedAt,
-		})
+		}
+		response.WeightEntries = append(response.WeightEntries, item)
 	}
 
 	// exercises
@@ -246,7 +247,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range exerciseRows {
-		response.Exercises = append(response.Exercises, exerciseExport{
+		item := exerciseExport{
 			Id:                      row.Id.String(),
 			Date:                    row.Date.Format("2006-01-02"),
 			Type:                    row.Type,
@@ -262,7 +263,8 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 			TotalSets:               row.TotalSets,
 			Notes:                   row.Notes,
 			CreatedAt:               row.CreatedAt,
-		})
+		}
+		response.Exercises = append(response.Exercises, item)
 	}
 
 	// meals
@@ -287,7 +289,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range mealRows {
-		response.Meals = append(response.Meals, mealExport{
+		item := mealExport{
 			Id:           row.Id.String(),
 			Date:         row.Date.Format("2006-01-02"),
 			Type:         row.Type,
@@ -299,7 +301,8 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 			FiberGrams:   row.FiberGrams,
 			Notes:        row.Notes,
 			CreatedAt:    row.CreatedAt,
-		})
+		}
+		response.Meals = append(response.Meals, item)
 	}
 
 	// foods (user's own)
@@ -327,7 +330,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range foodRows {
-		response.Foods = append(response.Foods, foodExport{
+		item := foodExport{
 			Id:                  row.Id.String(),
 			Name:                row.Name,
 			MeasurementType:     row.MeasurementType,
@@ -340,7 +343,8 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 			DefaultFiberGrams:   row.DefaultFiberGrams,
 			Public:              row.Public,
 			CreatedAt:           row.CreatedAt,
-		})
+		}
+		response.Foods = append(response.Foods, item)
 	}
 
 	// body measurements
@@ -359,13 +363,14 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range measureRows {
-		response.BodyMeasurements = append(response.BodyMeasurements, bodyMeasurementExport{
+		item := bodyMeasurementExport{
 			Date:      row.Date.Format("2006-01-02"),
 			Type:      row.Type,
 			Value:     row.Value,
 			Notes:     row.Notes,
 			UpdatedAt: row.UpdatedAt,
-		})
+		}
+		response.BodyMeasurements = append(response.BodyMeasurements, item)
 	}
 
 	// goal

@@ -113,12 +113,13 @@ func (uc *healthConnectImportUseCase) writeSyncLog(userId uuid.UUID, payload *po
 	if err != nil {
 		return
 	}
-	_ = uc.syncLogs.Create(&ports.SyncLog{
+	syncLog := &ports.SyncLog{
 		UserId:     userId,
 		AppVersion: payload.AppVersion,
 		SyncedAt:   syncedAt,
 		Result:     resultBytes,
-	})
+	}
+	_ = uc.syncLogs.Create(syncLog)
 }
 
 // ─── Weight ───────────────────────────────────────────────────────────────────
@@ -143,11 +144,12 @@ func (uc *healthConnectImportUseCase) importWeight(userId uuid.UUID, records []p
 			continue
 		}
 
-		_, err = uc.weightService.Create(userId, weightPorts.CreateParams{
+		createParams := weightPorts.CreateParams{
 			Date:       dateOf(t),
 			WeightKg:   rec.Kilograms,
 			ExternalId: externalId,
-		})
+		}
+		_, err = uc.weightService.Create(userId, createParams)
 		switch {
 		case errors.Is(err, dayclosure.ErrDayClosed):
 			out.Blocked++
@@ -271,9 +273,10 @@ func (uc *healthConnectImportUseCase) importCotidiana(userId uuid.UUID, stepsDai
 		}
 		if existing != nil {
 			steps := sd.Count
-			_, err = uc.exerciseService.Update(existing.Id, userId, exercisePorts.UpdateParams{
+			updateParams := exercisePorts.UpdateParams{
 				Steps: &steps,
-			})
+			}
+			_, err = uc.exerciseService.Update(existing.Id, userId, updateParams)
 			switch {
 			case errors.Is(err, dayclosure.ErrDayClosed):
 				out.Blocked++
@@ -362,14 +365,15 @@ func (uc *healthConnectImportUseCase) storeRaw(userId uuid.UUID, recordType stri
 	if err != nil {
 		return cerr.NewInternalError("marshaling raw health record", err)
 	}
-	err = uc.rawStore.Create(&ports.RawRecord{
+	rawRecord := &ports.RawRecord{
 		UserId:     userId,
 		Source:     source,
 		Type:       recordType,
 		ExternalId: *externalId,
 		RecordedAt: recordedAt,
 		Payload:    payloadBytes,
-	})
+	}
+	err = uc.rawStore.Create(rawRecord)
 	if err != nil {
 		return err
 	}

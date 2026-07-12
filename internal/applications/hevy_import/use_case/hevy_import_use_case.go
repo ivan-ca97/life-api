@@ -106,11 +106,12 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 				return nil, err
 			}
 			result.Enriched++
-			result.Results = append(result.Results, ports.ImportResultItem{
+			item := ports.ImportResultItem{
 				Date:   dateString,
 				Name:   ex.exerciseName,
 				Status: "enriched",
-			})
+			}
+			result.Results = append(result.Results, item)
 			continue
 		}
 
@@ -118,12 +119,13 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 		_, err = uc.exerciseService.Create(userId, params)
 		if errors.Is(err, dayclosure.ErrDayClosed) {
 			result.Blocked++
-			result.Results = append(result.Results, ports.ImportResultItem{
+			item := ports.ImportResultItem{
 				Date:   dateString,
 				Name:   ex.exerciseName,
 				Status: "blocked",
 				Reason: "day is closed",
-			})
+			}
+			result.Results = append(result.Results, item)
 			continue
 		}
 		if err != nil {
@@ -131,11 +133,12 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 		}
 
 		result.Created++
-		result.Results = append(result.Results, ports.ImportResultItem{
+		item := ports.ImportResultItem{
 			Date:   dateString,
 			Name:   ex.exerciseName,
 			Status: "created",
-		})
+		}
+		result.Results = append(result.Results, item)
 	}
 
 	return result, nil
