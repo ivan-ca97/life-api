@@ -173,6 +173,9 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 	if params.Notes != nil {
 		updates["notes"] = *params.Notes
 	}
+	if params.Status != nil {
+		updates["status"] = *params.Status
+	}
 
 	if len(updates) > 0 {
 		err = r.db.Model(&meal{}).Where("id = ? AND user_id = ?", id, userId).Updates(updates).Error
@@ -309,14 +312,14 @@ func (r *mealRepository) ListDistinctTypes(userId uuid.UUID, hour *int) ([]strin
 
 	if hour != nil {
 		query := `
-			SELECT type
+			SELECT INITCAP(LOWER(MIN(type))) AS type
 			FROM meals
 			WHERE user_id = ?
-			GROUP BY type
+			GROUP BY LOWER(type)
 			ORDER BY
-				COUNT(*) FILTER (WHERE eaten_at IS NOT NULL AND LEAST(
-					ABS(EXTRACT(HOUR FROM eaten_at) - ?),
-					24 - ABS(EXTRACT(HOUR FROM eaten_at) - ?)
+				COUNT(*) FILTER (WHERE LEAST(
+					ABS(EXTRACT(HOUR FROM COALESCE(eaten_at, created_at)) - ?),
+					24 - ABS(EXTRACT(HOUR FROM COALESCE(eaten_at, created_at)) - ?)
 				) <= 2) DESC,
 				COUNT(*) DESC
 		`
@@ -326,10 +329,10 @@ func (r *mealRepository) ListDistinctTypes(userId uuid.UUID, hour *int) ([]strin
 		}
 	} else {
 		query := `
-			SELECT type
+			SELECT INITCAP(LOWER(MIN(type))) AS type
 			FROM meals
 			WHERE user_id = ?
-			GROUP BY type
+			GROUP BY LOWER(type)
 			ORDER BY COUNT(*) DESC
 		`
 		err := r.db.Raw(query, userId).Scan(&rows).Error
@@ -357,6 +360,9 @@ func applyMealFilters(q *gorm.DB, params ports.ListParams) *gorm.DB {
 	}
 	if params.Type != nil {
 		q = q.Where("type = ?", *params.Type)
+	}
+	if params.Status != nil {
+		q = q.Where("status = ?", *params.Status)
 	}
 	if params.Tag != nil {
 		q = q.Where("id IN (SELECT mtm.meal_id FROM meal_tag_map mtm JOIN meal_tags mt ON mt.id = mtm.tag_id WHERE mt.name = ?)", *params.Tag)

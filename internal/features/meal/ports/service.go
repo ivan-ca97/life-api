@@ -29,6 +29,7 @@ type CreateParams struct {
 	Date         time.Time
 	Type         string
 	Name         string
+	Status       string
 	Photos       []PhotoParam
 	EatenAt      *time.Time
 	Calories     *float64
@@ -45,6 +46,7 @@ type UpdateParams struct {
 	Date          *time.Time
 	Type          *string
 	Name          *string
+	Status        *string
 	Photos        *[]PhotoParam
 	EatenAt       *time.Time
 	Calories      *float64
@@ -64,6 +66,7 @@ type ListParams struct {
 	From        *time.Time
 	To          *time.Time
 	Type        *string
+	Status      *string
 	Tag         *string
 	FoodId      *uuid.UUID
 	MinCalories *float64

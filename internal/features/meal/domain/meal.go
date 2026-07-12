@@ -58,12 +58,24 @@ type MealItem struct {
 	MeasurementMethod      MeasurementMethod
 }
 
+type MealStatus string
+
+const (
+	MealStatusComplete MealStatus = "complete"
+	MealStatusPending  MealStatus = "pending"
+)
+
+func IsValidMealStatus(s MealStatus) bool {
+	return s == MealStatusComplete || s == MealStatusPending
+}
+
 type Meal struct {
 	Id           uuid.UUID
 	UserId       uuid.UUID
 	Date         time.Time
 	Type         string
 	Name         string
+	Status       MealStatus
 	Photos       []MealPhoto
 	EatenAt      *time.Time
 	Calories     *float64

@@ -9,23 +9,24 @@ import (
 )
 
 type meal struct {
-	Id           uuid.UUID   `gorm:"type:uuid;primaryKey"`
-	UserId       uuid.UUID   `gorm:"type:uuid;not null"`
-	Date         time.Time   `gorm:"type:date;not null"`
-	Type         string      `gorm:"not null"`
-	Name         string      `gorm:"default:''"`
+	Id           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserId       uuid.UUID `gorm:"type:uuid;not null"`
+	Date         time.Time `gorm:"type:date;not null"`
+	Type         string    `gorm:"not null"`
+	Name         string    `gorm:"default:''"`
+	Status       string    `gorm:"not null;default:'complete'"`
 	EatenAt      *time.Time
 	Calories     *float64
 	ProteinGrams *float64
 	CarbsGrams   *float64
 	FatGrams     *float64
 	FiberGrams   *float64
-	Notes        string      `gorm:"not null;default:''"`
-	CreatedAt    time.Time   `gorm:"not null;autoCreateTime"`
-	UpdatedAt    time.Time   `gorm:"not null;autoUpdateTime"`
+	Notes        string       `gorm:"not null;default:''"`
+	CreatedAt    time.Time    `gorm:"not null;autoCreateTime"`
+	UpdatedAt    time.Time    `gorm:"not null;autoUpdateTime"`
 	Tags         []mealTagMap `gorm:"foreignKey:MealId"`
-	Items        []mealItem  `gorm:"foreignKey:MealId"`
-	Photos       []mealPhoto `gorm:"foreignKey:MealId"`
+	Items        []mealItem   `gorm:"foreignKey:MealId"`
+	Photos       []mealPhoto  `gorm:"foreignKey:MealId"`
 }
 
 type mealTag struct {
@@ -144,6 +145,7 @@ func (m *meal) toDomain() *domain.Meal {
 		Date:         m.Date,
 		Type:         m.Type,
 		Name:         m.Name,
+		Status:       domain.MealStatus(m.Status),
 		Photos:       photos,
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,
@@ -166,6 +168,7 @@ func mealFromDomain(m *domain.Meal) *meal {
 		Date:         m.Date,
 		Type:         m.Type,
 		Name:         m.Name,
+		Status:       string(m.Status),
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,
 		ProteinGrams: m.ProteinGrams,

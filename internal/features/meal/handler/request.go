@@ -25,6 +25,7 @@ type createMealRequest struct {
 	Date         string             `json:"date"`
 	Type         string             `json:"type"`
 	Name         string             `json:"name"`
+	Status       string             `json:"status,omitempty"`
 	Photos       []mealPhotoRequest `json:"photos,omitempty"`
 	EatenAt      *time.Time         `json:"eaten_at,omitempty"`
 	Calories     *float64           `json:"calories,omitempty"`
@@ -57,6 +58,7 @@ type updateMealRequest struct {
 	Date         *string             `json:"date,omitempty"`
 	Type         *string             `json:"type,omitempty"`
 	Name         *string             `json:"name,omitempty"`
+	Status       *string             `json:"status,omitempty"`
 	Photos       *[]mealPhotoRequest `json:"photos,omitempty"`
 	EatenAt      *time.Time          `json:"eaten_at,omitempty"`
 	Calories     *float64            `json:"calories,omitempty"`

@@ -39,6 +39,7 @@ type mealResponse struct {
 	Date         string              `json:"date"`
 	Type         string              `json:"type"`
 	Name         string              `json:"name"`
+	Status       string              `json:"status"`
 	Photos       []mealPhotoResponse `json:"photos"`
 	EatenAt      *time.Time          `json:"eaten_at,omitempty"`
 	Calories     *float64            `json:"calories,omitempty"`
@@ -91,6 +92,7 @@ func mealFromDomain(m *domain.Meal) *mealResponse {
 		Date:         m.Date.Format("2006-01-02"),
 		Type:         m.Type,
 		Name:         m.Name,
+		Status:       string(m.Status),
 		Photos:       photos,
 		EatenAt:      m.EatenAt,
 		Calories:     m.Calories,

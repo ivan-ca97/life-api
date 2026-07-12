@@ -66,6 +66,13 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		return nil, err
 	}
 
+	status := domain.MealStatus(params.Status)
+	if status == "" {
+		status = domain.MealStatusComplete
+	} else if !domain.IsValidMealStatus(status) {
+		return nil, cerr.NewBadRequestError("status must be 'complete' or 'pending'")
+	}
+
 	resolved, err := s.resolveItems(userId, params.Items)
 	if err != nil {
 		return nil, err
@@ -82,6 +89,7 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 		Date:         params.Date,
 		Type:         params.Type,
 		Name:         params.Name,
+		Status:       status,
 		Photos:       photos,
 		EatenAt:      params.EatenAt,
 		Calories:     coalesce(params.Calories, resolved.Totals.Calories),
@@ -142,6 +150,11 @@ func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*
 	err = validateMealParams(params.Calories, params.ProteinGrams, params.CarbsGrams, params.FatGrams, params.FiberGrams, itemsForValidation)
 	if err != nil {
 		return nil, err
+	}
+	if params.Status != nil {
+		if !domain.IsValidMealStatus(domain.MealStatus(*params.Status)) {
+			return nil, cerr.NewBadRequestError("status must be 'complete' or 'pending'")
+		}
 	}
 	if params.Photos != nil {
 		err := enforcePhotoParamPrimary(*params.Photos)

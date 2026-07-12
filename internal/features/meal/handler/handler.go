@@ -76,6 +76,7 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 		Date:         date,
 		Type:         request.Type,
 		Name:         request.Name,
+		Status:       request.Status,
 		Photos:       photos,
 		EatenAt:      request.EatenAt,
 		Calories:     request.Calories,
@@ -177,6 +178,7 @@ func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
 		From:             from,
 		To:               to,
 		Type:             api.QueryParamString(r, "type"),
+		Status:           api.QueryParamString(r, "status"),
 		Tag:              api.QueryParamString(r, "tag"),
 		FoodId:           foodId,
 		MinCalories:      minCalories,
@@ -213,6 +215,7 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 	params := ports.UpdateParams{
 		Type:         request.Type,
 		Name:         request.Name,
+		Status:       request.Status,
 		EatenAt:      request.EatenAt,
 		Calories:     request.Calories,
 		ProteinGrams: request.ProteinGrams,
