@@ -29,7 +29,12 @@ type R2OrphanCheck struct {
 }
 
 func NewR2OrphanCheck(lister ports.ObjectLister, deleter ports.ObjectDeleter, repository ports.WatchdogRepository, publicURL string) *R2OrphanCheck {
-	return &R2OrphanCheck{lister: lister, deleter: deleter, repository: repository, publicURL: publicURL}
+	return &R2OrphanCheck{
+		lister:     lister,
+		deleter:    deleter,
+		repository: repository,
+		publicURL:  publicURL,
+	}
 }
 
 func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {

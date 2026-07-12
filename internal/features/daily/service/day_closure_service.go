@@ -18,7 +18,9 @@ var _ ports.DayClosureService = (*dayClosureService)(nil)
 var _ dayclosure.DayClosureChecker = (*dayClosureService)(nil)
 
 func NewDayClosureService(repository ports.DayClosureRepository) *dayClosureService {
-	return &dayClosureService{repository: repository}
+	return &dayClosureService{
+		repository: repository,
+	}
 }
 
 func (s *dayClosureService) Close(userId uuid.UUID, date time.Time) error {

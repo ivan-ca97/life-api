@@ -38,7 +38,9 @@ type profilePhotoRepository struct {
 var _ ports.ProfilePhotoRepository = (*profilePhotoRepository)(nil)
 
 func NewProfilePhotoRepository(db *gorm.DB) *profilePhotoRepository {
-	return &profilePhotoRepository{db: db}
+	return &profilePhotoRepository{
+		db: db,
+	}
 }
 
 func (r *profilePhotoRepository) Create(photo *domain.ProfilePhoto) error {

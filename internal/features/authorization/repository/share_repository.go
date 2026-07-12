@@ -17,7 +17,9 @@ type shareRepository struct {
 var _ ports.ShareRepository = (*shareRepository)(nil)
 
 func NewShareRepository(db *gorm.DB) *shareRepository {
-	return &shareRepository{db: db}
+	return &shareRepository{
+		db: db,
+	}
 }
 
 func (r *shareRepository) HasAccess(ownerId, granteeId uuid.UUID, resourceType string, needsWrite bool) (bool, error) {

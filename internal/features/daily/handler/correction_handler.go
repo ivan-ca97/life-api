@@ -75,7 +75,9 @@ type correctionHandler struct {
 var _ CorrectionHandler = (*correctionHandler)(nil)
 
 func NewCorrectionHandler(service ports.AuthorizedCorrectionService) *correctionHandler {
-	return &correctionHandler{service: service}
+	return &correctionHandler{
+		service: service,
+	}
 }
 
 func (h *correctionHandler) GetCorrection(r *http.Request) (*correctionResponse, int, error) {

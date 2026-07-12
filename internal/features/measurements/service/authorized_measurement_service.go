@@ -21,7 +21,10 @@ type authorizedMeasurementService struct {
 var _ ports.AuthorizedMeasurementService = (*authorizedMeasurementService)(nil)
 
 func NewAuthorizedMeasurementService(base ports.MeasurementService, authorizer auth.AuthorizationService) *authorizedMeasurementService {
-	return &authorizedMeasurementService{base: base, authorizer: authorizer}
+	return &authorizedMeasurementService{
+		base:       base,
+		authorizer: authorizer,
+	}
 }
 
 func (s *authorizedMeasurementService) Upsert(ctx context.Context, ownerId uuid.UUID, date time.Time, measureType string, params ports.UpsertParams) (*domain.BodyMeasurement, error) {

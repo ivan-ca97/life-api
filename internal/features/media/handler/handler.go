@@ -16,7 +16,7 @@ type mediaHandler struct {
 	service ports.MediaService
 }
 
-func NewMediaHandler(service ports.MediaService) MediaHandler {
+func NewMediaHandler(service ports.MediaService) *mediaHandler {
 	return &mediaHandler{
 		service: service,
 	}

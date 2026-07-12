@@ -19,7 +19,9 @@ type mealAIHandler struct {
 var _ MealAIHandler = (*mealAIHandler)(nil)
 
 func NewMealAIHandler(useCase ports.MealEstimationUseCase) *mealAIHandler {
-	return &mealAIHandler{useCase: useCase}
+	return &mealAIHandler{
+		useCase: useCase,
+	}
 }
 
 func (h *mealAIHandler) Estimate(r *http.Request) (*estimateResponse, int, error) {

@@ -22,8 +22,11 @@ type watchdogHandler struct {
 	authorizer auth.AuthorizationService
 }
 
-func NewWatchdogHandler(s *scheduler.Scheduler, authorizer auth.AuthorizationService) WatchdogHandler {
-	return &watchdogHandler{scheduler: s, authorizer: authorizer}
+func NewWatchdogHandler(s *scheduler.Scheduler, authorizer auth.AuthorizationService) *watchdogHandler {
+	return &watchdogHandler{
+		scheduler:  s,
+		authorizer: authorizer,
+	}
 }
 
 func (h *watchdogHandler) Trigger(r *http.Request) (*statusResponse, int, error) {

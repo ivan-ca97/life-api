@@ -27,7 +27,9 @@ type photoHandler struct {
 var _ PhotoHandler = (*photoHandler)(nil)
 
 func NewPhotoHandler(service ports.AuthorizedPhotoService) *photoHandler {
-	return &photoHandler{service: service}
+	return &photoHandler{
+		service: service,
+	}
 }
 
 type createDailyPhotoRequest struct {

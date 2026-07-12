@@ -24,7 +24,9 @@ type repository struct {
 var _ ports.Repository = (*repository)(nil)
 
 func NewRepository(db *gorm.DB) *repository {
-	return &repository{db: db}
+	return &repository{
+		db: db,
+	}
 }
 
 // FindPrice returns the price effective for the provider/model at `at`, or nil

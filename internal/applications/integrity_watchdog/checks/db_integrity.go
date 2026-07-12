@@ -27,7 +27,9 @@ type DBIntegrityCheck struct {
 }
 
 func NewDBIntegrityCheck(repository ports.WatchdogRepository) *DBIntegrityCheck {
-	return &DBIntegrityCheck{repository: repository}
+	return &DBIntegrityCheck{
+		repository: repository,
+	}
 }
 
 func (c *DBIntegrityCheck) Run() (*DBIntegrityResult, error) {

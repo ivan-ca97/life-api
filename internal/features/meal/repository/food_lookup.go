@@ -42,7 +42,9 @@ type foodLookup struct {
 var _ ports.FoodLookup = (*foodLookup)(nil)
 
 func NewFoodLookup(db *gorm.DB) *foodLookup {
-	return &foodLookup{db: db}
+	return &foodLookup{
+		db: db,
+	}
 }
 
 func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]ports.FoodNutrition, error) {

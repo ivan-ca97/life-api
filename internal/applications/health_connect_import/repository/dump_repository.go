@@ -24,7 +24,9 @@ type dumpRepository struct {
 }
 
 func NewDumpRepository(db *gorm.DB) ports.DumpStore {
-	return &dumpRepository{db: db}
+	return &dumpRepository{
+		db: db,
+	}
 }
 
 func (r *dumpRepository) Save(userId uuid.UUID, appVersion string, payload []byte) error {

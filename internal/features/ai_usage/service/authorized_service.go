@@ -20,7 +20,10 @@ type authorizedService struct {
 var _ ports.AuthorizedService = (*authorizedService)(nil)
 
 func NewAuthorizedService(base ports.Service, authorizer auth.AuthorizationService) *authorizedService {
-	return &authorizedService{base: base, authorizer: authorizer}
+	return &authorizedService{
+		base:       base,
+		authorizer: authorizer,
+	}
 }
 
 // --- "me" operations: act on the authenticated actor ---

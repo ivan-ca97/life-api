@@ -20,7 +20,10 @@ type service struct {
 var _ ports.Service = (*service)(nil)
 
 func NewService(repository ports.Repository) *service {
-	return &service{repository: repository, now: time.Now}
+	return &service{
+		repository: repository,
+		now:        time.Now,
+	}
 }
 
 func (s *service) currentPeriod() time.Time {

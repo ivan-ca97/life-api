@@ -17,7 +17,7 @@ type hevyImportHandler struct {
 	useCase ports.HevyImportUseCase
 }
 
-func NewHevyImportHandler(useCase ports.HevyImportUseCase) HevyImportHandler {
+func NewHevyImportHandler(useCase ports.HevyImportUseCase) *hevyImportHandler {
 	return &hevyImportHandler{
 		useCase: useCase,
 	}

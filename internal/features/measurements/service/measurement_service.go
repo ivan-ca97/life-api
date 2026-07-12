@@ -18,7 +18,9 @@ type measurementService struct {
 var _ ports.MeasurementService = (*measurementService)(nil)
 
 func NewMeasurementService(repository ports.MeasurementRepository) *measurementService {
-	return &measurementService{repository: repository}
+	return &measurementService{
+		repository: repository,
+	}
 }
 
 func (s *measurementService) Upsert(userId uuid.UUID, date time.Time, measureType string, params ports.UpsertParams) (*domain.BodyMeasurement, error) {

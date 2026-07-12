@@ -21,7 +21,10 @@ type authorizedDailyPhotoService struct {
 var _ ports.AuthorizedPhotoService = (*authorizedDailyPhotoService)(nil)
 
 func NewAuthorizedDailyPhotoService(base ports.PhotoService, authorizer auth.AuthorizationService) *authorizedDailyPhotoService {
-	return &authorizedDailyPhotoService{base: base, authorizer: authorizer}
+	return &authorizedDailyPhotoService{
+		base:       base,
+		authorizer: authorizer,
+	}
 }
 
 func (s *authorizedDailyPhotoService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreatePhotoParams) (*domain.DailyPhoto, error) {

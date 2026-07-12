@@ -46,7 +46,9 @@ type dailyPhotoRepository struct {
 var _ ports.PhotoRepository = (*dailyPhotoRepository)(nil)
 
 func NewDailyPhotoRepository(db *gorm.DB) *dailyPhotoRepository {
-	return &dailyPhotoRepository{db: db}
+	return &dailyPhotoRepository{
+		db: db,
+	}
 }
 
 func (r *dailyPhotoRepository) Create(photo *domain.DailyPhoto) error {

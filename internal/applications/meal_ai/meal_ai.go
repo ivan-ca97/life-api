@@ -30,7 +30,9 @@ func NewMealAIApplication(
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *MealAIApplication {
-	foodSearch := &foodSearchAdapter{foodService: foodService}
+	foodSearch := &foodSearchAdapter{
+		foodService: foodService,
+	}
 	imageFetcher := newHTTPImageFetcher()
 	estimationUseCase := use_case.NewMealEstimationUseCase(client, foodSearch, imageFetcher, quota, logger, pricer, authorizer)
 	mealAIHandler := handler.NewMealAIHandler(estimationUseCase)

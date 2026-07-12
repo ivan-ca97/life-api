@@ -24,7 +24,9 @@ type measurementHandler struct {
 var _ MeasurementHandler = (*measurementHandler)(nil)
 
 func NewMeasurementHandler(service ports.AuthorizedMeasurementService) *measurementHandler {
-	return &measurementHandler{service: service}
+	return &measurementHandler{
+		service: service,
+	}
 }
 
 func (h *measurementHandler) Upsert(r *http.Request) (*measurementResponse, int, error) {

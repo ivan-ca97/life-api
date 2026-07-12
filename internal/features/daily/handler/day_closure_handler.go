@@ -28,7 +28,9 @@ type dayClosureHandler struct {
 var _ DayClosureHandler = (*dayClosureHandler)(nil)
 
 func NewDayClosureHandler(service ports.AuthorizedDayClosureService) *dayClosureHandler {
-	return &dayClosureHandler{service: service}
+	return &dayClosureHandler{
+		service: service,
+	}
 }
 
 type closeDayRequest struct {

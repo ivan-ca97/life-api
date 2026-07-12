@@ -16,7 +16,9 @@ type roleRepository struct {
 var _ ports.RoleRepository = (*roleRepository)(nil)
 
 func NewRoleRepository(db *gorm.DB) *roleRepository {
-	return &roleRepository{db: db}
+	return &roleRepository{
+		db: db,
+	}
 }
 
 func (r *roleRepository) UserHasPermission(userId uuid.UUID, permission string) (bool, error) {

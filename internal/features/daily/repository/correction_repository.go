@@ -63,7 +63,9 @@ type correctionRepository struct {
 var _ ports.CorrectionRepository = (*correctionRepository)(nil)
 
 func NewCorrectionRepository(db *gorm.DB) *correctionRepository {
-	return &correctionRepository{db: db}
+	return &correctionRepository{
+		db: db,
+	}
 }
 
 func (r *correctionRepository) GetCorrection(userId uuid.UUID, date time.Time) (*domain.Correction, error) {

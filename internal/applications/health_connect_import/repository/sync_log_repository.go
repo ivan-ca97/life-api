@@ -15,7 +15,9 @@ type syncLogRepository struct {
 var _ ports.SyncLogStore = (*syncLogRepository)(nil)
 
 func NewSyncLogRepository(db *gorm.DB) *syncLogRepository {
-	return &syncLogRepository{db: db}
+	return &syncLogRepository{
+		db: db,
+	}
 }
 
 func (r *syncLogRepository) Create(log *ports.SyncLog) error {

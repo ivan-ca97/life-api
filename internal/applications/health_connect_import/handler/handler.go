@@ -18,7 +18,7 @@ type healthConnectImportHandler struct {
 	dumpStore ports.DumpStore // non-nil → dump mode: save payload and short-circuit
 }
 
-func NewHealthConnectImportHandler(useCase ports.HealthConnectImportUseCase, dumpStore ports.DumpStore) HealthConnectImportHandler {
+func NewHealthConnectImportHandler(useCase ports.HealthConnectImportUseCase, dumpStore ports.DumpStore) *healthConnectImportHandler {
 	return &healthConnectImportHandler{
 		useCase:   useCase,
 		dumpStore: dumpStore,

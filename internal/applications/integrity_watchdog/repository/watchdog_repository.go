@@ -15,7 +15,9 @@ type watchdogRepository struct {
 var _ ports.WatchdogRepository = (*watchdogRepository)(nil)
 
 func NewWatchdogRepository(db *gorm.DB) *watchdogRepository {
-	return &watchdogRepository{db: db}
+	return &watchdogRepository{
+		db: db,
+	}
 }
 
 func (r *watchdogRepository) AllPhotoURLs() ([]string, error) {

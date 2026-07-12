@@ -21,7 +21,9 @@ type measurementRepository struct {
 var _ ports.MeasurementRepository = (*measurementRepository)(nil)
 
 func NewMeasurementRepository(db *gorm.DB) *measurementRepository {
-	return &measurementRepository{db: db}
+	return &measurementRepository{
+		db: db,
+	}
 }
 
 func (r *measurementRepository) Upsert(m *domain.BodyMeasurement) error {

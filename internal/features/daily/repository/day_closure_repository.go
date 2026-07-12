@@ -26,7 +26,9 @@ type dayClosureRepository struct {
 var _ ports.DayClosureRepository = (*dayClosureRepository)(nil)
 
 func NewDayClosureRepository(db *gorm.DB) *dayClosureRepository {
-	return &dayClosureRepository{db: db}
+	return &dayClosureRepository{
+		db: db,
+	}
 }
 
 func (r *dayClosureRepository) IsClosed(userId uuid.UUID, date time.Time) (bool, error) {

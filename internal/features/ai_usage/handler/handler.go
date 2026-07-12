@@ -27,7 +27,9 @@ type aiUsageHandler struct {
 var _ AiUsageHandler = (*aiUsageHandler)(nil)
 
 func NewAiUsageHandler(service ports.AuthorizedService) *aiUsageHandler {
-	return &aiUsageHandler{service: service}
+	return &aiUsageHandler{
+		service: service,
+	}
 }
 
 func (h *aiUsageHandler) GetMyUsage(r *http.Request) (*usageResponse, int, error) {

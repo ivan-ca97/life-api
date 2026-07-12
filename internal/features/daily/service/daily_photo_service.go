@@ -16,7 +16,9 @@ type dailyPhotoService struct {
 var _ ports.PhotoService = (*dailyPhotoService)(nil)
 
 func NewDailyPhotoService(repository ports.PhotoRepository) *dailyPhotoService {
-	return &dailyPhotoService{repository: repository}
+	return &dailyPhotoService{
+		repository: repository,
+	}
 }
 
 func (s *dailyPhotoService) Create(userId uuid.UUID, params ports.CreatePhotoParams) (*domain.DailyPhoto, error) {
