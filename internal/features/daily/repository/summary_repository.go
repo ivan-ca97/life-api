@@ -320,10 +320,11 @@ func (r *summaryRepository) getWeightEntry(userId uuid.UUID, date time.Time) (*d
 	if err != nil {
 		return nil, cerr.NewInternalError("fetching weight entry for summary", err)
 	}
-	return &domain.WeightEntrySummary{
+	summary := &domain.WeightEntrySummary{
 		WeightKg:          result.WeightKg,
 		BodyFatPercentage: result.BodyFatPercentage,
-	}, nil
+	}
+	return summary, nil
 }
 
 type userProfile struct {
@@ -576,7 +577,7 @@ func (r *summaryRepository) getGoals(userId uuid.UUID) (*domain.GoalsSummary, er
 	if err != nil {
 		return nil, cerr.NewInternalError("fetching goals for summary", err)
 	}
-	return &domain.GoalsSummary{
+	summary := &domain.GoalsSummary{
 		DailyCalories:        result.DailyCalories,
 		DailyProteinGrams:    result.DailyProteinGrams,
 		DailyCarbsGrams:      result.DailyCarbsGrams,
@@ -585,5 +586,6 @@ func (r *summaryRepository) getGoals(userId uuid.UUID) (*domain.GoalsSummary, er
 		DailySteps:           result.DailySteps,
 		DailyExerciseMinutes: result.DailyExerciseMinutes,
 		TargetWeightKg:       result.TargetWeightKg,
-	}, nil
+	}
+	return summary, nil
 }

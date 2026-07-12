@@ -409,7 +409,10 @@ func (r *foodRepository) ListIngredients(userId uuid.UUID, query *string) ([]dom
 
 	ingredients := make([]domain.Ingredient, len(rows))
 	for i, r := range rows {
-		ingredients[i] = domain.Ingredient{Id: r.Id, Name: r.Name}
+		ingredients[i] = domain.Ingredient{
+			Id:   r.Id,
+			Name: r.Name,
+		}
 	}
 	return ingredients, nil
 }
@@ -546,11 +549,12 @@ func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
 		}
 	}
 
-	return &ports.ImpactResult{
+	result := &ports.ImpactResult{
 		TotalItems:    totalItems,
 		TotalUsers:    totalUsers,
 		PortionImpact: portions,
-	}, nil
+	}
+	return result, nil
 }
 
 func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {
@@ -589,7 +593,11 @@ func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParam
 func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) error {
 	entries := make([]foodTag, len(names))
 	for i, name := range names {
-		entries[i] = foodTag{Id: uuid.New(), UserId: userId, Name: name}
+		entries[i] = foodTag{
+			Id:     uuid.New(),
+			UserId: userId,
+			Name:   name,
+		}
 	}
 	onConflict := clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
@@ -606,7 +614,12 @@ func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) er
 	}
 	maps := make([]foodTagMap, len(tags))
 	for i, t := range tags {
-		maps[i] = foodTagMap{FoodId: foodId, TagId: t.Id}
+		maps[i] = foodTagMap{
+			FoodId: foodId,
+			TagId:  t.Id,
+		}
 	}
-	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
+	return r.db.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&maps).Error
 }

@@ -95,7 +95,9 @@ func (h *correctionHandler) GetCorrection(r *http.Request) (*correctionResponse,
 		return nil, 0, err
 	}
 	if correction == nil {
-		correction = &domain.Correction{Date: *date}
+		correction = &domain.Correction{
+			Date: *date,
+		}
 	}
 	return correctionFromDomain(correction), http.StatusOK, nil
 }
@@ -171,7 +173,9 @@ func (h *correctionHandler) UpsertCorrection(r *http.Request) (*correctionRespon
 		return nil, 0, err
 	}
 	if updated == nil {
-		updated = &domain.Correction{Date: date}
+		updated = &domain.Correction{
+			Date: date,
+		}
 	}
 	return correctionFromDomain(updated), http.StatusOK, nil
 }

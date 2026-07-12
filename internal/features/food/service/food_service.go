@@ -49,7 +49,9 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*doma
 
 	ingredients := make([]domain.Ingredient, len(params.Ingredients))
 	for i, name := range params.Ingredients {
-		ingredients[i] = domain.Ingredient{Name: name}
+		ingredients[i] = domain.Ingredient{
+			Name: name,
+		}
 	}
 	portions := make([]domain.Portion, len(params.Portions))
 	for i, p := range params.Portions {
@@ -228,7 +230,9 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 	}
 	ingredients := make([]domain.Ingredient, len(source.Ingredients))
 	for i, ing := range source.Ingredients {
-		ingredients[i] = domain.Ingredient{Name: ing.Name}
+		ingredients[i] = domain.Ingredient{
+			Name: ing.Name,
+		}
 	}
 	tags := make([]string, len(source.Tags))
 	copy(tags, source.Tags)

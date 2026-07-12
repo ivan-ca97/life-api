@@ -271,7 +271,9 @@ func (uc *healthConnectImportUseCase) importCotidiana(userId uuid.UUID, stepsDai
 		}
 		if existing != nil {
 			steps := sd.Count
-			_, err = uc.exerciseService.Update(existing.Id, userId, exercisePorts.UpdateParams{Steps: &steps})
+			_, err = uc.exerciseService.Update(existing.Id, userId, exercisePorts.UpdateParams{
+				Steps: &steps,
+			})
 			switch {
 			case errors.Is(err, dayclosure.ErrDayClosed):
 				out.Blocked++

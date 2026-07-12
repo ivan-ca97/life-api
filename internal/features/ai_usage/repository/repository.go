@@ -137,7 +137,10 @@ func (r *repository) GetAllocation(userId uuid.UUID) (*domain.Allocation, error)
 		if err != nil {
 			return nil, err
 		}
-		return &domain.Allocation{Tier: *tier}, nil
+		result := &domain.Allocation{
+			Tier: *tier,
+		}
+		return result, nil
 	}
 	if err != nil {
 		return nil, cerr.NewInternalError("loading user ai tier", err)
@@ -151,10 +154,11 @@ func (r *repository) GetAllocation(userId uuid.UUID) (*domain.Allocation, error)
 	if err != nil {
 		return nil, cerr.NewInternalError("loading ai tier", err)
 	}
-	return &domain.Allocation{
+	result := &domain.Allocation{
 		Tier:         tierModel.toDomain(),
 		SelfLimitUsd: userTier.SelfLimitUsd,
-	}, nil
+	}
+	return result, nil
 }
 
 func (r *repository) AssignTier(userId, tierId uuid.UUID) error {
@@ -225,7 +229,11 @@ func (r *repository) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error
 		if err != nil {
 			return err
 		}
-		row := &aiUserTier{UserId: userId, TierId: tier.Id, SelfLimitUsd: selfLimitUsd}
+		row := &aiUserTier{
+			UserId:       userId,
+			TierId:       tier.Id,
+			SelfLimitUsd: selfLimitUsd,
+		}
 		err = r.db.Create(row).Error
 		if err != nil {
 			return cerr.NewInternalError("setting ai self limit", err)
@@ -249,7 +257,11 @@ func (r *repository) GetUsage(userId uuid.UUID, periodStart time.Time) (*domain.
 	err := r.db.Where("user_id = ? AND period_start = ?", userId, periodStart).First(&model).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// No usage yet this period is a zero, not an error.
-		return &domain.Usage{UserId: userId, PeriodStart: periodStart}, nil
+		result := &domain.Usage{
+			UserId:      userId,
+			PeriodStart: periodStart,
+		}
+		return result, nil
 	}
 	if err != nil {
 		return nil, cerr.NewInternalError("loading ai usage", err)
@@ -340,10 +352,11 @@ func (r *repository) ListInteractions(filter ports.InteractionFilter) (types.Pag
 	for i, m := range models {
 		items[i] = m.toDomain()
 	}
-	return types.Page[domain.Interaction]{
+	page := types.Page[domain.Interaction]{
 		Items:  items,
 		Total:  total,
 		Limit:  filter.Limit,
 		Offset: filter.Offset,
-	}, nil
+	}
+	return page, nil
 }

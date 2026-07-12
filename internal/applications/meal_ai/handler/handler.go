@@ -34,7 +34,10 @@ func (h *mealAIHandler) Estimate(r *http.Request) (*estimateResponse, int, error
 
 	corrections := make([]ports.Correction, len(request.Corrections))
 	for i, c := range request.Corrections {
-		corrections[i] = ports.Correction{Item: c.Item, Correction: c.Correction}
+		corrections[i] = ports.Correction{
+			Item:       c.Item,
+			Correction: c.Correction,
+		}
 	}
 
 	estimate, err := h.useCase.Estimate(r.Context(), ports.EstimateInput{

@@ -114,7 +114,10 @@ func (h *photoHandler) List(r *http.Request) (*dailyPhotoListResponse, int, erro
 	for i, p := range photos {
 		items[i] = *photoFromDomain(&p)
 	}
-	return &dailyPhotoListResponse{Items: items}, http.StatusOK, nil
+	result := &dailyPhotoListResponse{
+		Items: items,
+	}
+	return result, http.StatusOK, nil
 }
 
 func (h *photoHandler) Update(r *http.Request) (*dailyPhotoResponse, int, error) {

@@ -90,15 +90,25 @@ func buildStatusResponse(s *scheduler.Scheduler) *statusResponse {
 func buildDBResponse(cross []ports.CrossContextPhoto, mealMissing []uuid.UUID, itemMissing []ports.ItemGroup, invalidUnits []ports.InvalidFoodUnit) *dbIntegrityResponse {
 	crossResp := make([]crossContextPhotoResponse, len(cross))
 	for i, c := range cross {
-		crossResp[i] = crossContextPhotoResponse{PhotoId: c.PhotoId, MealId: c.MealId, MealItemId: c.MealItemId}
+		crossResp[i] = crossContextPhotoResponse{
+			PhotoId:    c.PhotoId,
+			MealId:     c.MealId,
+			MealItemId: c.MealItemId,
+		}
 	}
 	itemResp := make([]itemGroupResponse, len(itemMissing))
 	for i, g := range itemMissing {
-		itemResp[i] = itemGroupResponse{MealId: g.MealId, MealItemId: g.MealItemId}
+		itemResp[i] = itemGroupResponse{
+			MealId:     g.MealId,
+			MealItemId: g.MealItemId,
+		}
 	}
 	unitResp := make([]invalidFoodUnitResponse, len(invalidUnits))
 	for i, u := range invalidUnits {
-		unitResp[i] = invalidFoodUnitResponse{FoodId: u.FoodId, BaseUnit: u.BaseUnit}
+		unitResp[i] = invalidFoodUnitResponse{
+			FoodId:   u.FoodId,
+			BaseUnit: u.BaseUnit,
+		}
 	}
 	clean := len(cross) == 0 && len(mealMissing) == 0 && len(itemMissing) == 0 && len(invalidUnits) == 0
 	return &dbIntegrityResponse{

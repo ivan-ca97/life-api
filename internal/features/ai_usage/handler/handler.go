@@ -63,7 +63,10 @@ func (h *aiUsageHandler) ListTiers(r *http.Request) (*tierListResponse, int, err
 	for i, t := range tiers {
 		items[i] = tierFromDomain(t)
 	}
-	return &tierListResponse{Items: items}, http.StatusOK, nil
+	result := &tierListResponse{
+		Items: items,
+	}
+	return result, http.StatusOK, nil
 }
 
 func (h *aiUsageHandler) CreateTier(r *http.Request) (*tierResponse, int, error) {

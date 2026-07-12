@@ -189,14 +189,15 @@ func (s *mealService) PreviewNutrition(userId uuid.UUID, items []ports.ItemParam
 			FiberGrams:   ri.FiberGrams,
 		}
 	}
-	return &ports.NutritionPreview{
+	result := &ports.NutritionPreview{
 		Calories:     resolved.Totals.Calories,
 		ProteinGrams: resolved.Totals.ProteinGrams,
 		CarbsGrams:   resolved.Totals.CarbsGrams,
 		FatGrams:     resolved.Totals.FatGrams,
 		FiberGrams:   resolved.Totals.FiberGrams,
 		Items:        previewItems,
-	}, nil
+	}
+	return result, nil
 }
 
 func (s *mealService) Delete(id, userId uuid.UUID) error {
@@ -300,7 +301,10 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, 
 		if err != nil {
 			return resolvedUnit{}, cerr.NewBadRequestError(fmt.Sprintf("food %s has invalid base unit '%s'", food.Id, food.BaseUnit))
 		}
-		ru := resolvedUnit{NormalizedQty: item.Quantity * baseStd, NormalizedUnit: standardUnit}
+		ru := resolvedUnit{
+			NormalizedQty:  item.Quantity * baseStd,
+			NormalizedUnit: standardUnit,
+		}
 		return ru, nil
 	}
 
@@ -308,7 +312,10 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, 
 	unitDim, ok := units.GetDimension(item.Unit)
 	if ok && unitDim == dim {
 		qty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-		ru := resolvedUnit{NormalizedQty: qty, NormalizedUnit: standardUnit}
+		ru := resolvedUnit{
+			NormalizedQty:  qty,
+			NormalizedUnit: standardUnit,
+		}
 		return ru, nil
 	}
 
@@ -318,12 +325,18 @@ func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, 
 		if ok {
 			if dim == units.DimensionMass && unitDim == units.DimensionVolume {
 				mlQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				ru := resolvedUnit{NormalizedQty: mlQty * food.VolumeConversion.GramsPerMl, NormalizedUnit: standardUnit}
+				ru := resolvedUnit{
+					NormalizedQty:  mlQty * food.VolumeConversion.GramsPerMl,
+					NormalizedUnit: standardUnit,
+				}
 				return ru, nil
 			}
 			if dim == units.DimensionVolume && unitDim == units.DimensionMass {
 				gQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				ru := resolvedUnit{NormalizedQty: gQty / food.VolumeConversion.GramsPerMl, NormalizedUnit: standardUnit}
+				ru := resolvedUnit{
+					NormalizedQty:  gQty / food.VolumeConversion.GramsPerMl,
+					NormalizedUnit: standardUnit,
+				}
 				return ru, nil
 			}
 		}

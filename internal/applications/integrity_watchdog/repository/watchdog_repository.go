@@ -51,7 +51,11 @@ func (r *watchdogRepository) CrossContextPhotos() ([]ports.CrossContextPhoto, er
 	}
 	result := make([]ports.CrossContextPhoto, len(rows))
 	for i, row := range rows {
-		result[i] = ports.CrossContextPhoto{PhotoId: row.Id, MealId: row.MealId, MealItemId: row.MealItemId}
+		result[i] = ports.CrossContextPhoto{
+			PhotoId:    row.Id,
+			MealId:     row.MealId,
+			MealItemId: row.MealItemId,
+		}
 	}
 	return result, nil
 }
@@ -86,7 +90,10 @@ func (r *watchdogRepository) ItemGroupsMissingPrimary() ([]ports.ItemGroup, erro
 	}
 	result := make([]ports.ItemGroup, len(rows))
 	for i, row := range rows {
-		result[i] = ports.ItemGroup{MealId: row.MealId, MealItemId: row.MealItemId}
+		result[i] = ports.ItemGroup{
+			MealId:     row.MealId,
+			MealItemId: row.MealItemId,
+		}
 	}
 	return result, nil
 }
@@ -104,7 +111,10 @@ func (r *watchdogRepository) InvalidFoodBaseUnits() ([]ports.InvalidFoodUnit, er
 	var result []ports.InvalidFoodUnit
 	for _, row := range rows {
 		if !units.IsMetricUnit(row.BaseUnit) {
-			result = append(result, ports.InvalidFoodUnit{FoodId: row.Id, BaseUnit: row.BaseUnit})
+			result = append(result, ports.InvalidFoodUnit{
+				FoodId:   row.Id,
+				BaseUnit: row.BaseUnit,
+			})
 		}
 	}
 	return result, nil

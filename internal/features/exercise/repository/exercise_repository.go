@@ -189,7 +189,11 @@ func (r *exerciseRepository) Update(id, userId uuid.UUID, params ports.UpdatePar
 func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []string) error {
 	entries := make([]exerciseTag, len(names))
 	for i, name := range names {
-		entries[i] = exerciseTag{Id: uuid.New(), UserId: userId, Name: name}
+		entries[i] = exerciseTag{
+			Id:     uuid.New(),
+			UserId: userId,
+			Name:   name,
+		}
 	}
 	if err := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
@@ -204,9 +208,14 @@ func (r *exerciseRepository) upsertTags(exerciseId, userId uuid.UUID, names []st
 	}
 	maps := make([]exerciseTagMap, len(tags))
 	for i, t := range tags {
-		maps[i] = exerciseTagMap{ExerciseId: exerciseId, TagId: t.Id}
+		maps[i] = exerciseTagMap{
+			ExerciseId: exerciseId,
+			TagId:      t.Id,
+		}
 	}
-	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
+	return r.db.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&maps).Error
 }
 
 func (r *exerciseRepository) Delete(id, userId uuid.UUID) error {

@@ -99,5 +99,8 @@ func (h *summaryHandler) GetSummaryRange(r *http.Request) (*summaryRangeResponse
 	for i, s := range summaries {
 		data[i] = *summaryFromDomain(&s)
 	}
-	return &summaryRangeResponse{Data: data}, http.StatusOK, nil
+	result := &summaryRangeResponse{
+		Data: data,
+	}
+	return result, http.StatusOK, nil
 }

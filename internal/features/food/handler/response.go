@@ -77,7 +77,10 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 	}
 	ingredients := make([]ingredientResponse, len(f.Ingredients))
 	for i, ing := range f.Ingredients {
-		ingredients[i] = ingredientResponse{Id: ing.Id, Name: ing.Name}
+		ingredients[i] = ingredientResponse{
+			Id:   ing.Id,
+			Name: ing.Name,
+		}
 	}
 	portions := make([]portionResponse, len(f.Portions))
 	for i, p := range f.Portions {
@@ -187,9 +190,9 @@ type portionImpactResponse struct {
 }
 
 type impactResponse struct {
-	TotalItems    int64                    `json:"total_items"`
-	TotalUsers    int64                    `json:"total_users"`
-	PortionImpact []portionImpactResponse  `json:"portion_impact"`
+	TotalItems    int64                   `json:"total_items"`
+	TotalUsers    int64                   `json:"total_users"`
+	PortionImpact []portionImpactResponse `json:"portion_impact"`
 }
 
 func newImpactResponse(r *ports.ImpactResult) *impactResponse {

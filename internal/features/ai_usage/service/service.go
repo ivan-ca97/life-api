@@ -62,7 +62,7 @@ func (s *service) GetUsage(userId uuid.UUID) (*domain.UsageSummary, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &domain.UsageSummary{
+	result := &domain.UsageSummary{
 		PeriodStart:       usage.PeriodStart,
 		Requests:          usage.Requests,
 		InputTokens:       usage.InputTokens,
@@ -70,7 +70,8 @@ func (s *service) GetUsage(userId uuid.UUID) (*domain.UsageSummary, error) {
 		CostUsd:           usage.CostUsd,
 		EffectiveLimitUsd: allocation.EffectiveLimitUsd(),
 		TierName:          allocation.Tier.Name,
-	}, nil
+	}
+	return result, nil
 }
 
 func (s *service) SetSelfLimit(userId uuid.UUID, selfLimitUsd *float64) error {

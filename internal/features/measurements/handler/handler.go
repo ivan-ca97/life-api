@@ -97,7 +97,10 @@ func (h *measurementHandler) List(r *http.Request) (*measurementListResponse, in
 	for i, e := range entries {
 		items[i] = *measurementFromDomain(&e)
 	}
-	return &measurementListResponse{Items: items}, http.StatusOK, nil
+	result := &measurementListResponse{
+		Items: items,
+	}
+	return result, http.StatusOK, nil
 }
 
 func (h *measurementHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {

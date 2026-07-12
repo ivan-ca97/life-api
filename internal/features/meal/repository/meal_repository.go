@@ -269,7 +269,9 @@ func (r *mealRepository) upsertItems(mealId uuid.UUID, incoming []domain.MealIte
 	}
 
 	if len(newItems) > 0 {
-		err := r.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&newItems).Error
+		err := r.db.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&newItems).Error
 		if err != nil {
 			return nil, cerr.NewInternalError("upserting meal items", err)
 		}
@@ -442,7 +444,11 @@ func buildMealItem(mealId uuid.UUID, item domain.MealItem) mealItem {
 func (r *mealRepository) upsertTags(mealId, userId uuid.UUID, names []string) error {
 	entries := make([]mealTag, len(names))
 	for i, name := range names {
-		entries[i] = mealTag{Id: uuid.New(), UserId: userId, Name: name}
+		entries[i] = mealTag{
+			Id:     uuid.New(),
+			UserId: userId,
+			Name:   name,
+		}
 	}
 	if err := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "name"}},
@@ -457,7 +463,12 @@ func (r *mealRepository) upsertTags(mealId, userId uuid.UUID, names []string) er
 	}
 	maps := make([]mealTagMap, len(tags))
 	for i, t := range tags {
-		maps[i] = mealTagMap{MealId: mealId, TagId: t.Id}
+		maps[i] = mealTagMap{
+			MealId: mealId,
+			TagId:  t.Id,
+		}
 	}
-	return r.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&maps).Error
+	return r.db.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&maps).Error
 }

@@ -51,10 +51,11 @@ func (c *DBIntegrityCheck) Run() (*DBIntegrityResult, error) {
 		return nil, fmt.Errorf("invalid food base units: %w", err)
 	}
 
-	return &DBIntegrityResult{
+	result := &DBIntegrityResult{
 		CrossContextPhotos:       cross,
 		MealGroupsMissingPrimary: mealMissing,
 		ItemGroupsMissingPrimary: itemMissing,
 		InvalidFoodBaseUnits:     invalidUnits,
-	}, nil
+	}
+	return result, nil
 }

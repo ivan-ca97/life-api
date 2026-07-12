@@ -36,7 +36,9 @@ func NewClient(apiKey, model string, options ...Option) *client {
 		model:        model,
 		baseUrl:      defaultBaseUrl,
 		maxToolCalls: defaultMaxToolCalls,
-		httpClient:   &http.Client{Timeout: defaultTimeout},
+		httpClient: &http.Client{
+			Timeout: defaultTimeout,
+		},
 	}
 	for _, option := range options {
 		option(c)

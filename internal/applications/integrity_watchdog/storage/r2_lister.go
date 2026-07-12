@@ -46,11 +46,16 @@ func (l *r2Lister) DeleteKeys(keys []string) error {
 		objects := make([]types.ObjectIdentifier, len(batch))
 		for j, k := range batch {
 			key := k
-			objects[j] = types.ObjectIdentifier{Key: aws.String(key)}
+			objects[j] = types.ObjectIdentifier{
+				Key: aws.String(key),
+			}
 		}
 		out, err := l.client.DeleteObjects(context.Background(), &s3.DeleteObjectsInput{
 			Bucket: aws.String(l.bucket),
-			Delete: &types.Delete{Objects: objects, Quiet: aws.Bool(true)},
+			Delete: &types.Delete{
+				Objects: objects,
+				Quiet:   aws.Bool(true),
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("batch delete R2 objects: %w", err)

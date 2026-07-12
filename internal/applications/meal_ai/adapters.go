@@ -27,8 +27,11 @@ var _ ports.FoodSearch = (*foodSearchAdapter)(nil)
 func (a *foodSearchAdapter) Search(userId uuid.UUID, query string, limit int) ([]ports.FoodCandidate, error) {
 	q := query
 	page, err := a.foodService.List(userId, foodPorts.ListParams{
-		PaginationParams: types.PaginationParams{Limit: limit, Offset: 0},
-		Query:            &q,
+		PaginationParams: types.PaginationParams{
+			Limit:  limit,
+			Offset: 0,
+		},
+		Query: &q,
 	})
 	if err != nil {
 		return nil, err
@@ -65,7 +68,9 @@ type httpImageFetcher struct {
 var _ ports.ImageFetcher = (*httpImageFetcher)(nil)
 
 func newHTTPImageFetcher() *httpImageFetcher {
-	return &httpImageFetcher{client: &http.Client{Timeout: 20 * time.Second}}
+	return &httpImageFetcher{client: &http.Client{
+		Timeout: 20 * time.Second,
+	}}
 }
 
 func (f *httpImageFetcher) Fetch(ctx context.Context, url string) (llm.Image, error) {
@@ -89,7 +94,11 @@ func (f *httpImageFetcher) Fetch(ctx context.Context, url string) (llm.Image, er
 	if mediaType == "" {
 		mediaType = "image/jpeg"
 	}
-	return llm.Image{MediaType: mediaType, Data: data}, nil
+	result := llm.Image{
+		MediaType: mediaType,
+		Data:      data,
+	}
+	return result, nil
 }
 
 type fetchStatusError int

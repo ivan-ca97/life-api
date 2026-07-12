@@ -79,10 +79,11 @@ func (r *profilePhotoRepository) ListByUserId(userId uuid.UUID, params types.Pag
 		photos[i] = *m.toDomain()
 	}
 
-	return types.Page[domain.ProfilePhoto]{
+	page := types.Page[domain.ProfilePhoto]{
 		Items:  photos,
 		Total:  total,
 		Limit:  params.Limit,
 		Offset: params.Offset,
-	}, nil
+	}
+	return page, nil
 }

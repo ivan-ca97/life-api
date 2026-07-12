@@ -151,7 +151,10 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 	if request.Portions != nil {
 		pp := make([]ports.PortionParam, len(*request.Portions))
 		for i, p := range *request.Portions {
-			pp[i] = ports.PortionParam{Name: p.Name, BaseEquivalent: p.BaseEquivalent}
+			pp[i] = ports.PortionParam{
+				Name:           p.Name,
+				BaseEquivalent: p.BaseEquivalent,
+			}
 		}
 		portions = &pp
 	}
@@ -241,17 +244,24 @@ func (h *foodHandler) ListIngredients(r *http.Request) (*ingredientsListResponse
 	}
 	items := make([]ingredientResponse, len(ingredients))
 	for i, ing := range ingredients {
-		items[i] = ingredientResponse{Id: ing.Id, Name: ing.Name}
+		items[i] = ingredientResponse{
+			Id:   ing.Id,
+			Name: ing.Name,
+		}
 	}
-	return &ingredientsListResponse{Items: items}, http.StatusOK, nil
+	result := &ingredientsListResponse{
+		Items: items,
+	}
+	return result, http.StatusOK, nil
 }
 
 func (h *foodHandler) ListUnits(_ *http.Request) (*unitsListResponse, int, error) {
-	return &unitsListResponse{
+	result := &unitsListResponse{
 		Mass:   domain.MetricUnitsForDimension(domain.DimensionMass),
 		Volume: domain.MetricUnitsForDimension(domain.DimensionVolume),
 		Unit:   domain.MetricUnitsForDimension(domain.DimensionUnit),
-	}, http.StatusOK, nil
+	}
+	return result, http.StatusOK, nil
 }
 
 func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, error) {
@@ -282,10 +292,11 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 	for _, p := range food.Portions {
 		extraUnits = append(extraUnits, p.Name)
 	}
-	return &foodUnitsResponse{
+	result := &foodUnitsResponse{
 		Metric:      metric,
 		Conversions: extraUnits,
-	}, http.StatusOK, nil
+	}
+	return result, http.StatusOK, nil
 }
 
 func conversionsParamFromRequest(r *conversionsRequest) *ports.ConversionsParam {
