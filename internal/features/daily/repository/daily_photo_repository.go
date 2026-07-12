@@ -110,7 +110,11 @@ func (r *dailyPhotoRepository) Update(id, userId uuid.UUID, name *string, isPrim
 			return nil, cerr.NewInternalError("updating daily photo", err)
 		}
 	}
-	return r.FindById(id, userId)
+	updated, err := r.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *dailyPhotoRepository) UnsetPrimary(userId uuid.UUID, date time.Time) error {

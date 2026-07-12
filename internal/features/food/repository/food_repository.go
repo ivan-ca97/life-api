@@ -261,7 +261,11 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		}
 	}
 
-	return r.FindById(id, userId)
+	updated, err := r.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *foodRepository) Delete(id, userId uuid.UUID) error {
@@ -622,5 +626,9 @@ func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) er
 	mapConflict := clause.OnConflict{
 		DoNothing: true,
 	}
-	return r.db.Clauses(mapConflict).Create(&maps).Error
+	err = r.db.Clauses(mapConflict).Create(&maps).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

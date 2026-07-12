@@ -152,7 +152,11 @@ func (r *weightEntryRepository) Update(id, userId uuid.UUID, params ports.Update
 		}
 	}
 
-	return r.FindById(id, userId)
+	updated, err := r.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *weightEntryRepository) Delete(id, userId uuid.UUID) error {

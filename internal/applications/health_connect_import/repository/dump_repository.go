@@ -35,5 +35,9 @@ func (r *dumpRepository) Save(userId uuid.UUID, appVersion string, payload []byt
 		AppVersion: appVersion,
 		Payload:    payload,
 	}
-	return r.db.Create(dump).Error
+	err := r.db.Create(dump).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

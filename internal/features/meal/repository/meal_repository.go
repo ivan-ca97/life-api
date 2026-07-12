@@ -224,7 +224,11 @@ func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams)
 		}
 	}
 
-	return r.FindById(id, userId)
+	updated, err := r.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 // upsertItems preserves item UUIDs for food_ids already in the meal (update),
@@ -474,5 +478,9 @@ func (r *mealRepository) upsertTags(mealId, userId uuid.UUID, names []string) er
 	mapConflict := clause.OnConflict{
 		DoNothing: true,
 	}
-	return r.db.Clauses(mapConflict).Create(&maps).Error
+	err = r.db.Clauses(mapConflict).Create(&maps).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
