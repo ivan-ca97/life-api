@@ -4,8 +4,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/ivan-ca97/life/internal/applications/integrity_watchdog/ports"
 	"github.com/ivan-ca97/life/pkg/units"
+
+	"github.com/ivan-ca97/life/internal/applications/integrity_watchdog/ports"
 )
 
 type watchdogRepository struct {
