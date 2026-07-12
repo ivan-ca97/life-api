@@ -7,6 +7,7 @@ import (
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/food/domain"
 	"github.com/ivan-ca97/life/internal/features/food/ports"
@@ -25,7 +26,11 @@ func NewFoodService(repository ports.FoodRepository) *foodService {
 }
 
 func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Food, error) {
-	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams)
+	err := validate.NonEmpty(params.Name, "name")
+	if err != nil {
+		return nil, err
+	}
+	err = validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +114,12 @@ func (s *foodService) List(userId uuid.UUID, params ports.ListParams) (types.Pag
 }
 
 func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Food, error) {
+	if params.Name != nil {
+		err := validate.NonEmpty(*params.Name, "name")
+		if err != nil {
+			return nil, err
+		}
+	}
 	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams, params.BaseQuantity)
 	if err != nil {
 		return nil, err
