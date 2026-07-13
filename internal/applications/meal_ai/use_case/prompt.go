@@ -19,7 +19,8 @@ Rules:
 - Expose your reasoning as assumptions: a short "assumption" per item, plus a global "assumptions" list (e.g. "assumed standard portion sizes", "assumed no added oil").
 - Set "confidence" per item: "high" only for clearly identifiable, well-defined foods; "low" for ambiguous or mixed dishes.
 - Compute "totals" as the sum across all items (matched + suggested) for the estimated quantities.
-- Only set "needs_clarification" to true if the input is genuinely unusable (illegible photo, critical missing info) and put one concise question in "clarification_question"; otherwise set it to false and null respectively.`
+- Set "no_food_detected" to true if the provided photos do not appear to show any food or drink (e.g. a screenshot, a receipt, a person, an unrelated object). You may still estimate from the user's text description if it names foods; only when there is no usable food information at all should you also set "needs_clarification". When the photos clearly show food, set it to false.
+- Only set "needs_clarification" to true if the input is genuinely unusable (illegible photo, no food anywhere, critical missing info) and put one concise question in "clarification_question"; otherwise set it to false and null respectively.`
 
 const assumeOnlyVisibleClause = `
 - Assume the user ate everything visible in the photos and ONLY what is visible. Do not invent foods that are not shown unless the user's text says so.`

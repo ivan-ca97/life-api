@@ -27,7 +27,7 @@ var searchFoodsParams = json.RawMessage(`{
 var estimateSchema = json.RawMessage(`{
   "type": "object",
   "additionalProperties": false,
-  "required": ["matched_items", "new_food_suggestions", "totals", "assumptions", "needs_clarification", "clarification_question"],
+  "required": ["matched_items", "new_food_suggestions", "totals", "assumptions", "no_food_detected", "needs_clarification", "clarification_question"],
   "properties": {
     "matched_items": {
       "type": "array",
@@ -89,6 +89,7 @@ var estimateSchema = json.RawMessage(`{
       }
     },
     "assumptions": { "type": "array", "items": { "type": "string" } },
+    "no_food_detected": { "type": "boolean" },
     "needs_clarification": { "type": "boolean" },
     "clarification_question": { "type": ["string", "null"] }
   }
@@ -130,6 +131,7 @@ type modelOutput struct {
 		FiberGrams   float64 `json:"fiber_grams"`
 	} `json:"totals"`
 	Assumptions           []string `json:"assumptions"`
+	NoFoodDetected        bool     `json:"no_food_detected"`
 	NeedsClarification    bool     `json:"needs_clarification"`
 	ClarificationQuestion *string  `json:"clarification_question"`
 }
@@ -137,6 +139,7 @@ type modelOutput struct {
 func (o *modelOutput) toDomain() *domain.MealEstimate {
 	estimate := &domain.MealEstimate{
 		Assumptions:        o.Assumptions,
+		NoFoodDetected:     o.NoFoodDetected,
 		NeedsClarification: o.NeedsClarification,
 		Totals: domain.Totals{
 			Calories:     o.Totals.Calories,

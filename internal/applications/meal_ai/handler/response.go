@@ -45,6 +45,7 @@ type estimateResponse struct {
 	NewFoodSuggestions    []newFoodSuggestionResponse `json:"new_food_suggestions"`
 	Totals                totalsResponse              `json:"totals"`
 	Assumptions           []string                    `json:"assumptions"`
+	NoFoodDetected        bool                        `json:"no_food_detected"`
 	NeedsClarification    bool                        `json:"needs_clarification"`
 	ClarificationQuestion string                      `json:"clarification_question,omitempty"`
 }
@@ -59,6 +60,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			FiberGrams:   e.Totals.FiberGrams,
 		},
 		Assumptions:           e.Assumptions,
+		NoFoodDetected:        e.NoFoodDetected,
 		NeedsClarification:    e.NeedsClarification,
 		ClarificationQuestion: e.ClarificationQuestion,
 	}

@@ -4,10 +4,14 @@ package domain
 // here is persisted by the AI: matched items reference existing foods, new-food
 // suggestions are proposals the user can approve via the normal food endpoint.
 type MealEstimate struct {
-	MatchedItems          []MatchedItem
-	NewFoodSuggestions    []NewFoodSuggestion
-	Totals                Totals
-	Assumptions           []string
+	MatchedItems       []MatchedItem
+	NewFoodSuggestions []NewFoodSuggestion
+	Totals             Totals
+	Assumptions        []string
+	// NoFoodDetected is true when the provided photos do not appear to contain
+	// any food or drink (e.g. a screenshot or an unrelated object). The estimate
+	// may still be valid from a text description; the client decides how to warn.
+	NoFoodDetected        bool
 	NeedsClarification    bool
 	ClarificationQuestion string
 }

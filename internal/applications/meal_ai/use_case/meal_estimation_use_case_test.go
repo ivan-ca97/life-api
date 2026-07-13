@@ -36,6 +36,7 @@ func (m *mockClient) Complete(ctx context.Context, prompt llm.Prompt) (*llm.Resu
 	  "new_food_suggestions": [],
 	  "totals": {"calories":330,"protein_grams":62,"carbs_grams":0,"fat_grams":7,"fiber_grams":0},
 	  "assumptions": ["standard portions"],
+	  "no_food_detected": false,
 	  "needs_clarification": false,
 	  "clarification_question": null
 	}`
