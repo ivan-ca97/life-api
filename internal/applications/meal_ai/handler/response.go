@@ -2,14 +2,24 @@ package handler
 
 import "github.com/ivan-ca97/life/internal/applications/meal_ai/domain"
 
+type suggestedCorrectionResponse struct {
+	Calories     float64 `json:"calories"`
+	ProteinGrams float64 `json:"protein_grams"`
+	CarbsGrams   float64 `json:"carbs_grams"`
+	FatGrams     float64 `json:"fat_grams"`
+	FiberGrams   float64 `json:"fiber_grams"`
+	Reason       string  `json:"reason"`
+}
+
 type matchedItemResponse struct {
-	FoodId            string   `json:"food_id"`
-	FoodName          string   `json:"food_name"`
-	EstimatedQuantity float64  `json:"estimated_quantity"`
-	Unit              string   `json:"unit"`
-	Confidence        string   `json:"confidence"`
-	Assumption        string   `json:"assumption"`
-	SanityWarnings    []string `json:"sanity_warnings"`
+	FoodId              string                       `json:"food_id"`
+	FoodName            string                       `json:"food_name"`
+	EstimatedQuantity   float64                      `json:"estimated_quantity"`
+	Unit                string                       `json:"unit"`
+	Confidence          string                       `json:"confidence"`
+	Assumption          string                       `json:"assumption"`
+	SanityWarnings      []string                     `json:"sanity_warnings"`
+	SuggestedCorrection *suggestedCorrectionResponse `json:"suggested_correction,omitempty"`
 }
 
 type suggestedFoodResponse struct {
@@ -73,6 +83,16 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
+		}
+		if m.SuggestedCorrection != nil {
+			item.SuggestedCorrection = &suggestedCorrectionResponse{
+				Calories:     m.SuggestedCorrection.Calories,
+				ProteinGrams: m.SuggestedCorrection.ProteinGrams,
+				CarbsGrams:   m.SuggestedCorrection.CarbsGrams,
+				FatGrams:     m.SuggestedCorrection.FatGrams,
+				FiberGrams:   m.SuggestedCorrection.FiberGrams,
+				Reason:       m.SuggestedCorrection.Reason,
+			}
 		}
 		response.MatchedItems = append(response.MatchedItems, item)
 	}

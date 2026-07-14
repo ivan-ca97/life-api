@@ -27,6 +27,21 @@ type MatchedItem struct {
 	// SanityWarnings flags implausible stored macros for the matched food, e.g.
 	// "stored calories look too low for grilled chicken".
 	SanityWarnings []string
+	// SuggestedCorrection is the model's proposed fix for the matched food's
+	// stored macros when they look clearly wrong (nil otherwise). Only matched
+	// catalog foods get this — the model does not audit its own new suggestions.
+	SuggestedCorrection *SuggestedCorrection
+}
+
+// SuggestedCorrection carries proposed macros (per the food's base quantity) for
+// a matched catalog food whose stored values look implausible.
+type SuggestedCorrection struct {
+	Calories     float64
+	ProteinGrams float64
+	CarbsGrams   float64
+	FatGrams     float64
+	FiberGrams   float64
+	Reason       string
 }
 
 // NewFoodSuggestion is a food the model could not match. CreateParams is ready

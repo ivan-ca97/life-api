@@ -35,7 +35,7 @@ var estimateSchema = json.RawMessage(`{
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["food_id", "food_name", "estimated_quantity", "unit", "confidence", "assumption", "sanity_warnings"],
+        "required": ["food_id", "food_name", "estimated_quantity", "unit", "confidence", "assumption", "sanity_warnings", "suggested_correction"],
         "properties": {
           "food_id": { "type": "string" },
           "food_name": { "type": "string" },
@@ -43,7 +43,20 @@ var estimateSchema = json.RawMessage(`{
           "unit": { "type": "string" },
           "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
           "assumption": { "type": "string" },
-          "sanity_warnings": { "type": "array", "items": { "type": "string" } }
+          "sanity_warnings": { "type": "array", "items": { "type": "string" } },
+          "suggested_correction": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["calories", "protein_grams", "carbs_grams", "fat_grams", "fiber_grams", "reason"],
+            "properties": {
+              "calories": { "type": "number" },
+              "protein_grams": { "type": "number" },
+              "carbs_grams": { "type": "number" },
+              "fat_grams": { "type": "number" },
+              "fiber_grams": { "type": "number" },
+              "reason": { "type": "string" }
+            }
+          }
         }
       }
     },
@@ -96,16 +109,28 @@ var estimateSchema = json.RawMessage(`{
   }
 }`)
 
+// suggestedCorrectionOutput is the model's proposed fix for a matched food whose
+// stored macros look implausible (per the food's base quantity).
+type suggestedCorrectionOutput struct {
+	Calories     float64 `json:"calories"`
+	ProteinGrams float64 `json:"protein_grams"`
+	CarbsGrams   float64 `json:"carbs_grams"`
+	FatGrams     float64 `json:"fat_grams"`
+	FiberGrams   float64 `json:"fiber_grams"`
+	Reason       string  `json:"reason"`
+}
+
 // modelOutput is the shape the model returns (guaranteed by estimateSchema).
 type modelOutput struct {
 	MatchedItems []struct {
-		FoodId            string   `json:"food_id"`
-		FoodName          string   `json:"food_name"`
-		EstimatedQuantity float64  `json:"estimated_quantity"`
-		Unit              string   `json:"unit"`
-		Confidence        string   `json:"confidence"`
-		Assumption        string   `json:"assumption"`
-		SanityWarnings    []string `json:"sanity_warnings"`
+		FoodId              string                     `json:"food_id"`
+		FoodName            string                     `json:"food_name"`
+		EstimatedQuantity   float64                    `json:"estimated_quantity"`
+		Unit                string                     `json:"unit"`
+		Confidence          string                     `json:"confidence"`
+		Assumption          string                     `json:"assumption"`
+		SanityWarnings      []string                   `json:"sanity_warnings"`
+		SuggestedCorrection *suggestedCorrectionOutput `json:"suggested_correction"`
 	} `json:"matched_items"`
 	NewFoodSuggestions []struct {
 		Name              string  `json:"name"`
@@ -162,6 +187,16 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
+		}
+		if m.SuggestedCorrection != nil {
+			item.SuggestedCorrection = &domain.SuggestedCorrection{
+				Calories:     m.SuggestedCorrection.Calories,
+				ProteinGrams: m.SuggestedCorrection.ProteinGrams,
+				CarbsGrams:   m.SuggestedCorrection.CarbsGrams,
+				FatGrams:     m.SuggestedCorrection.FatGrams,
+				FiberGrams:   m.SuggestedCorrection.FiberGrams,
+				Reason:       m.SuggestedCorrection.Reason,
+			}
 		}
 		estimate.MatchedItems = append(estimate.MatchedItems, item)
 	}

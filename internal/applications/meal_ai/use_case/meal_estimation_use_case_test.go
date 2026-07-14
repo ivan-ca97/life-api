@@ -32,7 +32,7 @@ func (m *mockClient) Complete(ctx context.Context, prompt llm.Prompt) (*llm.Resu
 		m.toolCalled = true
 	}
 	final := `{
-	  "matched_items": [{"food_id":"abc","food_name":"Grilled chicken","estimated_quantity":200,"unit":"g","confidence":"medium","assumption":"no oil","sanity_warnings":[]}],
+	  "matched_items": [{"food_id":"abc","food_name":"Grilled chicken","estimated_quantity":200,"unit":"g","confidence":"medium","assumption":"no oil","sanity_warnings":[],"suggested_correction":null}],
 	  "new_food_suggestions": [],
 	  "totals": {"calories":330,"protein_grams":62,"carbs_grams":0,"fat_grams":7,"fiber_grams":0},
 	  "assumptions": ["standard portions"],
