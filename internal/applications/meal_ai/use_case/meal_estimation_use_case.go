@@ -25,7 +25,7 @@ const (
 
 	operationMealEstimate = "meal_estimate"
 
-	searchFoodsDescription = "Search the user's food catalog by name. Returns matching foods with their stored macros."
+	searchFoodsDescription = "Search the user's food catalog by name. Pass several short keywords (in Spanish) for one component food; returns the deduplicated union of foods whose name contains any keyword, with their stored macros."
 )
 
 type mealEstimationUseCase struct {
@@ -201,13 +201,13 @@ func (uc *mealEstimationUseCase) fetchImages(ctx context.Context, urls []string)
 }
 
 type searchFoodsArgs struct {
-	Query string `json:"query"`
+	Queries []string `json:"queries"`
 }
 
 // searchFoodsTool is the capability the model calls to look up the user's catalog.
 func (uc *mealEstimationUseCase) searchFoodsTool(userId uuid.UUID) llm.Tool {
 	call := func(ctx context.Context, args searchFoodsArgs) ([]candidateJSON, error) {
-		candidates, err := uc.foodSearch.Search(userId, args.Query, foodSearchLimit)
+		candidates, err := uc.foodSearch.Search(userId, args.Queries, foodSearchLimit)
 		if err != nil {
 			return nil, err
 		}

@@ -12,11 +12,12 @@ const searchFoodsToolName = "search_foods"
 var searchFoodsParams = json.RawMessage(`{
   "type": "object",
   "additionalProperties": false,
-  "required": ["query"],
+  "required": ["queries"],
   "properties": {
-    "query": {
-      "type": "string",
-      "description": "A food name to search for in the user's catalog, e.g. 'grilled chicken' or 'white rice'."
+    "queries": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Several short keywords (in Spanish) for ONE component food: split its name into its individual words and add a likely synonym or broader category term. Returns the deduplicated union of foods whose name contains any keyword."
     }
   }
 }`)

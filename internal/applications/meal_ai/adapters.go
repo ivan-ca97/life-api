@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,32 +25,49 @@ type foodSearchAdapter struct {
 
 var _ ports.FoodSearch = (*foodSearchAdapter)(nil)
 
-func (a *foodSearchAdapter) Search(userId uuid.UUID, query string, limit int) ([]ports.FoodCandidate, error) {
-	q := query
-	params := foodPorts.ListParams{
-		PaginationParams: types.PaginationParams{
-			Limit:  limit,
-			Offset: 0,
-		},
-		Query: &q,
-	}
-	page, err := a.foodService.List(userId, params)
-	if err != nil {
-		return nil, err
-	}
-	candidates := make([]ports.FoodCandidate, len(page.Items))
-	for i, f := range page.Items {
-		candidates[i] = ports.FoodCandidate{
-			Id:                  f.Id,
-			Name:                f.Name,
-			DefaultCalories:     f.DefaultCalories,
-			DefaultProteinGrams: f.DefaultProteinGrams,
-			DefaultCarbsGrams:   f.DefaultCarbsGrams,
-			DefaultFatGrams:     f.DefaultFatGrams,
-			DefaultFiberGrams:   f.DefaultFiberGrams,
-			MeasurementType:     f.MeasurementType,
-			BaseQuantity:        f.BaseQuantity,
-			BaseUnit:            f.BaseUnit,
+// Search runs each keyword as a separate name match and returns the
+// deduplicated union (by food id), capped at limit. Searching "lomo" and
+// "vaca" separately both surface "Lomo de vaca"; it is returned only once.
+func (a *foodSearchAdapter) Search(userId uuid.UUID, queries []string, limit int) ([]ports.FoodCandidate, error) {
+	seen := make(map[uuid.UUID]bool)
+	candidates := make([]ports.FoodCandidate, 0, limit)
+	for _, query := range queries {
+		q := strings.TrimSpace(query)
+		if q == "" {
+			continue
+		}
+		params := foodPorts.ListParams{
+			PaginationParams: types.PaginationParams{
+				Limit:  limit,
+				Offset: 0,
+			},
+			Query: &q,
+		}
+		page, err := a.foodService.List(userId, params)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range page.Items {
+			if seen[f.Id] {
+				continue
+			}
+			seen[f.Id] = true
+			candidate := ports.FoodCandidate{
+				Id:                  f.Id,
+				Name:                f.Name,
+				DefaultCalories:     f.DefaultCalories,
+				DefaultProteinGrams: f.DefaultProteinGrams,
+				DefaultCarbsGrams:   f.DefaultCarbsGrams,
+				DefaultFatGrams:     f.DefaultFatGrams,
+				DefaultFiberGrams:   f.DefaultFiberGrams,
+				MeasurementType:     f.MeasurementType,
+				BaseQuantity:        f.BaseQuantity,
+				BaseUnit:            f.BaseUnit,
+			}
+			candidates = append(candidates, candidate)
+			if len(candidates) >= limit {
+				return candidates, nil
+			}
 		}
 	}
 	return candidates, nil

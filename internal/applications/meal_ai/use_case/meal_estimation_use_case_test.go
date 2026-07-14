@@ -25,7 +25,7 @@ func (m *mockClient) Model() string    { return "gpt-4o" }
 func (m *mockClient) Complete(ctx context.Context, prompt llm.Prompt) (*llm.Result, error) {
 	// Simulate the model calling search_foods once, then returning the final draft.
 	if len(prompt.Tools) > 0 {
-		_, err := prompt.Tools[0].Call(ctx, json.RawMessage(`{"query":"chicken"}`))
+		_, err := prompt.Tools[0].Call(ctx, json.RawMessage(`{"queries":["pollo","milanesa"]}`))
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +45,7 @@ func (m *mockClient) Complete(ctx context.Context, prompt llm.Prompt) (*llm.Resu
 
 type mockFoodSearch struct{ called bool }
 
-func (m *mockFoodSearch) Search(userId uuid.UUID, query string, limit int) ([]ports.FoodCandidate, error) {
+func (m *mockFoodSearch) Search(userId uuid.UUID, queries []string, limit int) ([]ports.FoodCandidate, error) {
 	m.called = true
 	cal := 165.0
 	return []ports.FoodCandidate{{Id: uuid.New(), Name: "Grilled chicken", DefaultCalories: &cal, MeasurementType: "mass", BaseQuantity: 100, BaseUnit: "g"}}, nil

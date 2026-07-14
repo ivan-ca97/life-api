@@ -28,9 +28,10 @@ type FoodCandidate struct {
 }
 
 // FoodSearch looks up a user's food catalog. Satisfied by an adapter over the
-// food feature's service.
+// food feature's service. Search takes several keywords and returns the
+// deduplicated union of foods whose name matches any of them, capped at limit.
 type FoodSearch interface {
-	Search(userId uuid.UUID, query string, limit int) ([]FoodCandidate, error)
+	Search(userId uuid.UUID, queries []string, limit int) ([]FoodCandidate, error)
 }
 
 // ImageFetcher downloads a stored photo (e.g. from R2) and returns it ready to
