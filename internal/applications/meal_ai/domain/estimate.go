@@ -22,8 +22,11 @@ type MatchedItem struct {
 	FoodName          string
 	EstimatedQuantity float64
 	Unit              string
-	Confidence        string
-	Assumption        string
+	// QuantitySource is "user" when the quantity came from an amount the user
+	// gave explicitly (e.g. a weighed value), or "estimated" when inferred.
+	QuantitySource string
+	Confidence     string
+	Assumption     string
 	// SanityWarnings flags implausible stored macros for the matched food, e.g.
 	// "stored calories look too low for grilled chicken".
 	SanityWarnings []string
@@ -50,6 +53,7 @@ type NewFoodSuggestion struct {
 	Name              string
 	EstimatedQuantity float64
 	Unit              string
+	QuantitySource    string
 	Confidence        string
 	Assumption        string
 	CreateParams      SuggestedFood

@@ -35,12 +35,13 @@ var estimateSchema = json.RawMessage(`{
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["food_id", "food_name", "estimated_quantity", "unit", "confidence", "assumption", "sanity_warnings", "suggested_correction"],
+        "required": ["food_id", "food_name", "estimated_quantity", "unit", "quantity_source", "confidence", "assumption", "sanity_warnings", "suggested_correction"],
         "properties": {
           "food_id": { "type": "string" },
           "food_name": { "type": "string" },
           "estimated_quantity": { "type": "number" },
           "unit": { "type": "string" },
+          "quantity_source": { "type": "string", "enum": ["user", "estimated"] },
           "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
           "assumption": { "type": "string" },
           "sanity_warnings": { "type": "array", "items": { "type": "string" } },
@@ -65,11 +66,12 @@ var estimateSchema = json.RawMessage(`{
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "estimated_quantity", "unit", "confidence", "assumption", "create_params"],
+        "required": ["name", "estimated_quantity", "unit", "quantity_source", "confidence", "assumption", "create_params"],
         "properties": {
           "name": { "type": "string" },
           "estimated_quantity": { "type": "number" },
           "unit": { "type": "string" },
+          "quantity_source": { "type": "string", "enum": ["user", "estimated"] },
           "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
           "assumption": { "type": "string" },
           "create_params": {
@@ -127,6 +129,7 @@ type modelOutput struct {
 		FoodName            string                     `json:"food_name"`
 		EstimatedQuantity   float64                    `json:"estimated_quantity"`
 		Unit                string                     `json:"unit"`
+		QuantitySource      string                     `json:"quantity_source"`
 		Confidence          string                     `json:"confidence"`
 		Assumption          string                     `json:"assumption"`
 		SanityWarnings      []string                   `json:"sanity_warnings"`
@@ -136,6 +139,7 @@ type modelOutput struct {
 		Name              string  `json:"name"`
 		EstimatedQuantity float64 `json:"estimated_quantity"`
 		Unit              string  `json:"unit"`
+		QuantitySource    string  `json:"quantity_source"`
 		Confidence        string  `json:"confidence"`
 		Assumption        string  `json:"assumption"`
 		CreateParams      struct {
@@ -184,6 +188,7 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 			FoodName:          m.FoodName,
 			EstimatedQuantity: m.EstimatedQuantity,
 			Unit:              m.Unit,
+			QuantitySource:    m.QuantitySource,
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
@@ -205,6 +210,7 @@ func (o *modelOutput) toDomain() *domain.MealEstimate {
 			Name:              s.Name,
 			EstimatedQuantity: s.EstimatedQuantity,
 			Unit:              s.Unit,
+			QuantitySource:    s.QuantitySource,
 			Confidence:        s.Confidence,
 			Assumption:        s.Assumption,
 			CreateParams: domain.SuggestedFood{

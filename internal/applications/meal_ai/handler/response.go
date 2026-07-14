@@ -16,6 +16,7 @@ type matchedItemResponse struct {
 	FoodName            string                       `json:"food_name"`
 	EstimatedQuantity   float64                      `json:"estimated_quantity"`
 	Unit                string                       `json:"unit"`
+	QuantitySource      string                       `json:"quantity_source"`
 	Confidence          string                       `json:"confidence"`
 	Assumption          string                       `json:"assumption"`
 	SanityWarnings      []string                     `json:"sanity_warnings"`
@@ -37,6 +38,7 @@ type newFoodSuggestionResponse struct {
 	Name              string                `json:"name"`
 	EstimatedQuantity float64               `json:"estimated_quantity"`
 	Unit              string                `json:"unit"`
+	QuantitySource    string                `json:"quantity_source"`
 	Confidence        string                `json:"confidence"`
 	Assumption        string                `json:"assumption"`
 	CreateParams      suggestedFoodResponse `json:"create_params"`
@@ -80,6 +82,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			FoodName:          m.FoodName,
 			EstimatedQuantity: m.EstimatedQuantity,
 			Unit:              m.Unit,
+			QuantitySource:    m.QuantitySource,
 			Confidence:        m.Confidence,
 			Assumption:        m.Assumption,
 			SanityWarnings:    m.SanityWarnings,
@@ -101,6 +104,7 @@ func estimateFromDomain(e *domain.MealEstimate) *estimateResponse {
 			Name:              s.Name,
 			EstimatedQuantity: s.EstimatedQuantity,
 			Unit:              s.Unit,
+			QuantitySource:    s.QuantitySource,
 			Confidence:        s.Confidence,
 			Assumption:        s.Assumption,
 			CreateParams: suggestedFoodResponse{
