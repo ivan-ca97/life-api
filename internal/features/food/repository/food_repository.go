@@ -101,7 +101,7 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 
 	countQuery := r.db.Model(&food{}).Where("user_id = ?", userId)
 	if params.Query != nil {
-		countQuery = countQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+		countQuery = countQuery.Where("unaccent(name) ILIKE unaccent(?)", "%"+*params.Query+"%")
 	}
 	if params.Tag != nil {
 		countQuery = countQuery.Where("id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)", *params.Tag)
@@ -113,7 +113,7 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 
 	findQuery := r.db.Preload("Tags.Tag").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("user_id = ?", userId)
 	if params.Query != nil {
-		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+		findQuery = findQuery.Where("unaccent(name) ILIKE unaccent(?)", "%"+*params.Query+"%")
 	}
 	if params.Tag != nil {
 		findQuery = findQuery.Where("id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)", *params.Tag)
@@ -304,7 +304,7 @@ func (r *foodRepository) ListCommunity(params ports.CommunityListParams) (types.
 
 	countQuery := r.db.Model(&food{}).Where("public = true")
 	if params.Query != nil {
-		countQuery = countQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+		countQuery = countQuery.Where("unaccent(name) ILIKE unaccent(?)", "%"+*params.Query+"%")
 	}
 	err := countQuery.Count(&total).Error
 	if err != nil {
@@ -313,7 +313,7 @@ func (r *foodRepository) ListCommunity(params ports.CommunityListParams) (types.
 
 	findQuery := r.db.Preload("Tags.Tag").Preload("Ingredients").Preload("Ingredients.Ingredient").Preload("Portions").Where("public = true")
 	if params.Query != nil {
-		findQuery = findQuery.Where("name ILIKE ?", "%"+*params.Query+"%")
+		findQuery = findQuery.Where("unaccent(name) ILIKE unaccent(?)", "%"+*params.Query+"%")
 	}
 	err = findQuery.
 		Limit(params.Limit).
