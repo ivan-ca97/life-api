@@ -167,7 +167,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 		})
 	})
 
-	err := seed(userFeature.Service(), seedEmail, seedPassword)
+	err := seed(userFeature.Service(), authorizationFeature.RoleRepository(), seedEmail, seedPassword)
 	if err != nil {
 		return nil, fmt.Errorf("seeding: %w", err)
 	}

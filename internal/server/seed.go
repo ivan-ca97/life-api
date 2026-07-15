@@ -3,24 +3,38 @@ package server
 import (
 	"log/slog"
 
+	authzPorts "github.com/ivan-ca97/life/internal/features/authorization/ports"
 	"github.com/ivan-ca97/life/internal/features/user/ports"
 )
 
-func seed(userService ports.UserService, email, password string) error {
+func seed(userService ports.UserService, roleRepo authzPorts.RoleRepository, email, password string) error {
 	if email == "" || password == "" {
 		return nil
 	}
 
-	_, err := userService.GetByEmail(email)
-	if err == nil {
-		return nil
+	user, err := userService.GetByEmail(email)
+	if err != nil {
+		user, err = userService.Create(email, password)
+		if err != nil {
+			return err
+		}
+		slog.Info("admin user seeded", "email", email)
 	}
 
-	_, err = userService.Create(email, password)
+	// Grant the admin role idempotently: AssignRoleByName is not a no-op on
+	// conflict, so guard it with UserHasRole so re-seeding never fails and an
+	// already-seeded user missing the role is healed.
+	hasAdmin, err := roleRepo.UserHasRole(user.Id, "admin")
 	if err != nil {
 		return err
 	}
+	if !hasAdmin {
+		err = roleRepo.AssignRoleByName(user.Id, "admin")
+		if err != nil {
+			return err
+		}
+		slog.Info("admin role granted to seed user", "email", email)
+	}
 
-	slog.Info("admin user seeded", "email", email)
 	return nil
 }
