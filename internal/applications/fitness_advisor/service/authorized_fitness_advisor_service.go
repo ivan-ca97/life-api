@@ -9,6 +9,7 @@ import (
 
 	"github.com/ivan-ca97/life/internal/applications/fitness_advisor/domain"
 	"github.com/ivan-ca97/life/internal/applications/fitness_advisor/ports"
+	"github.com/ivan-ca97/life/internal/permissions"
 )
 
 type authorizedFitnessAdvisorService struct {
@@ -27,7 +28,8 @@ func NewAuthorizedFitnessAdvisorService(base ports.FitnessAdvisorService, author
 }
 
 func (s *authorizedFitnessAdvisorService) EstimateCalories(ctx context.Context, userId uuid.UUID, request domain.EstimateRequest) (*domain.EstimateResult, error) {
-	err := s.authorizer.Authorize(ctx, userId, "read")
+	// The estimate is computed from the user's weight history.
+	err := s.authorizer.Authorize(ctx, userId, permissions.WeightRead)
 	if err != nil {
 		return nil, err
 	}
