@@ -13,10 +13,14 @@ type UploadRequest struct {
 }
 
 type UploadResult struct {
-	UploadURL string
-	PublicURL string
+	UploadUrl string
+	PublicUrl string
 }
 
 type MediaService interface {
-	GenerateUploadURL(ctx context.Context, request UploadRequest) (*UploadResult, error)
+	GenerateUploadUrl(request UploadRequest) (*UploadResult, error)
+}
+
+type AuthorizedMediaService interface {
+	GenerateUploadUrl(ctx context.Context, request UploadRequest) (*UploadResult, error)
 }

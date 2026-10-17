@@ -1,6 +1,6 @@
 package handler
 
-type uploadURLRequest struct {
+type uploadUrlRequest struct {
 	Filename    string `json:"filename"`
 	ContentType string `json:"content_type"`
 }

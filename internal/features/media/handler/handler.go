@@ -9,42 +9,45 @@ import (
 )
 
 type MediaHandler interface {
-	GenerateUploadURL(r *http.Request) (*uploadURLResponse, int, error)
+	GenerateUploadUrl(r *http.Request) (*uploadUrlResponse, int, error)
 }
 
 type mediaHandler struct {
-	service ports.MediaService
+	service ports.AuthorizedMediaService
 }
 
-func NewMediaHandler(service ports.MediaService) *mediaHandler {
+var _ MediaHandler = (*mediaHandler)(nil)
+
+func NewMediaHandler(service ports.AuthorizedMediaService) *mediaHandler {
 	return &mediaHandler{
 		service: service,
 	}
 }
 
-func (h *mediaHandler) GenerateUploadURL(r *http.Request) (*uploadURLResponse, int, error) {
+func (h *mediaHandler) GenerateUploadUrl(r *http.Request) (*uploadUrlResponse, int, error) {
 	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
 		return nil, 0, err
 	}
 
-	request, err := api.DecodeBody[uploadURLRequest](r)
+	request, err := api.DecodeBody[uploadUrlRequest](r)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	result, err := h.service.GenerateUploadURL(r.Context(), ports.UploadRequest{
+	uploadRequest := ports.UploadRequest{
 		UserId:      userId,
 		Filename:    request.Filename,
 		ContentType: request.ContentType,
-	})
+	}
+	result, err := h.service.GenerateUploadUrl(r.Context(), uploadRequest)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	response := &uploadURLResponse{
-		UploadURL: result.UploadURL,
-		PublicURL: result.PublicURL,
+	response := &uploadUrlResponse{
+		UploadUrl: result.UploadUrl,
+		PublicUrl: result.PublicUrl,
 	}
 	return response, http.StatusOK, nil
 }

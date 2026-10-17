@@ -40,4 +40,6 @@ const (
 
 	MeasurementsRead  = "measurements:read"
 	MeasurementsWrite = "measurements:write"
+
+	MediaCreate = "media:create"
 )

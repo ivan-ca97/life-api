@@ -89,7 +89,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	measurementsFeature := measurements.NewMeasurementsFeature(database, authorizer, errorHandler)
 	dataExport := dataExportApp.NewDataExportApplication(database, authorizer, errorHandler)
 	appUpdate := appUpdateApp.NewAppUpdateApplication(database, errorHandler, githubWebhookSecret, githubToken, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
-	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, errorHandler)
+	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
 	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
 	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
 

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -22,19 +21,19 @@ var allowedContentTypes = map[string]string{
 
 type mediaService struct {
 	storage   ports.ObjectStorage
-	publicURL string
+	publicUrl string
 }
 
 var _ ports.MediaService = (*mediaService)(nil)
 
-func NewMediaService(storage ports.ObjectStorage, publicURL string) *mediaService {
+func NewMediaService(storage ports.ObjectStorage, publicUrl string) *mediaService {
 	return &mediaService{
 		storage:   storage,
-		publicURL: publicURL,
+		publicUrl: publicUrl,
 	}
 }
 
-func (s *mediaService) GenerateUploadURL(ctx context.Context, request ports.UploadRequest) (*ports.UploadResult, error) {
+func (s *mediaService) GenerateUploadUrl(request ports.UploadRequest) (*ports.UploadResult, error) {
 	if strings.TrimSpace(request.Filename) == "" {
 		return nil, cerr.NewBadRequestError("filename is required")
 	}
@@ -57,16 +56,16 @@ func (s *mediaService) GenerateUploadURL(ctx context.Context, request ports.Uplo
 
 	key := fmt.Sprintf("users/%s/%s%s", request.UserId, uuid.New(), ext)
 
-	uploadURL, err := s.storage.GeneratePresignedPutURL(key, request.ContentType, 15*time.Minute)
+	uploadUrl, err := s.storage.GeneratePresignedPutUrl(key, request.ContentType, 15*time.Minute)
 	if err != nil {
 		return nil, err
 	}
 
-	publicURL := strings.TrimRight(s.publicURL, "/") + "/" + key
+	publicUrl := strings.TrimRight(s.publicUrl, "/") + "/" + key
 
 	result := &ports.UploadResult{
-		UploadURL: uploadURL,
-		PublicURL: publicURL,
+		UploadUrl: uploadUrl,
+		PublicUrl: publicUrl,
 	}
 	return result, nil
 }

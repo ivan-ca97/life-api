@@ -7,5 +7,5 @@ import (
 )
 
 func (f *mediaFeature) ProtectedRoutes(r chi.Router) {
-	r.Post("/media/upload-url", endpoint.JSON(f.errorHandler, f.mediaHandler.GenerateUploadURL))
+	r.Post("/media/upload-url", endpoint.JSON(f.errorHandler, f.mediaHandler.GenerateUploadUrl))
 }

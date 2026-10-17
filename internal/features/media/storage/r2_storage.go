@@ -36,7 +36,7 @@ func NewR2Storage(accountId, accessKeyId, secretAccessKey, bucket string) *r2Sto
 	}
 }
 
-func (s *r2Storage) GeneratePresignedPutURL(key string, contentType string, ttl time.Duration) (string, error) {
+func (s *r2Storage) GeneratePresignedPutUrl(key string, contentType string, ttl time.Duration) (string, error) {
 	input := &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(key),

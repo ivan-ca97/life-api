@@ -2,6 +2,7 @@ package media
 
 import (
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
+	"github.com/ivan-ca97/life/pkg/auth"
 
 	"github.com/ivan-ca97/life/internal/features/media/handler"
 	"github.com/ivan-ca97/life/internal/features/media/service"
@@ -18,12 +19,14 @@ func NewMediaFeature(
 	accessKeyId string,
 	secretAccessKey string,
 	bucket string,
-	publicURL string,
+	publicUrl string,
+	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *mediaFeature {
 	r2 := storage.NewR2Storage(accountId, accessKeyId, secretAccessKey, bucket)
-	mediaService := service.NewMediaService(r2, publicURL)
-	mediaHandler := handler.NewMediaHandler(mediaService)
+	mediaService := service.NewMediaService(r2, publicUrl)
+	authorizedService := service.NewAuthorizedMediaService(mediaService, authorizer)
+	mediaHandler := handler.NewMediaHandler(authorizedService)
 
 	return &mediaFeature{
 		mediaHandler: mediaHandler,
