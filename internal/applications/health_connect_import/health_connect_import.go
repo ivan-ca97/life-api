@@ -22,9 +22,7 @@ type healthConnectImportApplication struct {
 func NewHealthConnectImportApplication(
 	db *gorm.DB,
 	weightService weightPorts.WeightEntryService,
-	weightRepository weightPorts.WeightEntryRepository,
 	exerciseService exercisePorts.ExerciseService,
-	exerciseRepository exercisePorts.ExerciseRepository,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *healthConnectImportApplication {
@@ -32,9 +30,7 @@ func NewHealthConnectImportApplication(
 	syncLogs := repository.NewSyncLogRepository(db)
 	importUseCase := use_case.NewHealthConnectImportUseCase(
 		weightService,
-		weightRepository,
 		exerciseService,
-		exerciseRepository,
 		rawStore,
 		syncLogs,
 		authorizer,

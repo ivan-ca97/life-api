@@ -17,11 +17,10 @@ type hevyImportApplication struct {
 
 func NewHevyImportApplication(
 	exerciseService exercisePorts.ExerciseService,
-	exerciseRepository exercisePorts.ExerciseRepository,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *hevyImportApplication {
-	importUseCase := use_case.NewHevyImportUseCase(exerciseService, exerciseRepository, authorizer)
+	importUseCase := use_case.NewHevyImportUseCase(exerciseService, authorizer)
 	importHandler := handler.NewHevyImportHandler(importUseCase)
 
 	return &hevyImportApplication{

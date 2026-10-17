@@ -37,4 +37,6 @@ type WeightEntryService interface {
 	List(userId uuid.UUID, params ListParams) (types.Page[domain.WeightEntry], error)
 	Update(id, userId uuid.UUID, params UpdateParams) (*domain.WeightEntry, error)
 	Delete(id, userId uuid.UUID) error
+	GetLatest(userId uuid.UUID) (*domain.WeightEntry, error)
+	ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/auth"
+	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 
 	"github.com/ivan-ca97/life/internal/applications/hevy_import/ports"
@@ -53,22 +54,19 @@ type aggregatedExercise struct {
 }
 
 type hevyImportUseCase struct {
-	exerciseService    exercisePorts.ExerciseService
-	exerciseRepository exercisePorts.ExerciseRepository
-	authorizer         auth.AuthorizationService
+	exerciseService exercisePorts.ExerciseService
+	authorizer      auth.AuthorizationService
 }
 
 var _ ports.HevyImportUseCase = (*hevyImportUseCase)(nil)
 
 func NewHevyImportUseCase(
 	exerciseService exercisePorts.ExerciseService,
-	exerciseRepository exercisePorts.ExerciseRepository,
 	authorizer auth.AuthorizationService,
 ) *hevyImportUseCase {
 	return &hevyImportUseCase{
-		exerciseService:    exerciseService,
-		exerciseRepository: exerciseRepository,
-		authorizer:         authorizer,
+		exerciseService: exerciseService,
+		authorizer:      authorizer,
 	}
 }
 
@@ -80,7 +78,7 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 
 	rows, err := parseCSV(csvReader)
 	if err != nil {
-		return nil, err
+		return nil, cerr.NewBadRequestError(fmt.Sprintf("invalid Hevy CSV: %s", err))
 	}
 
 	exercises := aggregate(rows)
@@ -92,16 +90,28 @@ func (uc *hevyImportUseCase) Import(ctx context.Context, userId uuid.UUID, csvRe
 	for _, ex := range exercises {
 		dateString := ex.date.Format("2006-01-02")
 
-		exists, err := uc.exerciseRepository.ExistsByDateAndName(userId, ex.date, ex.exerciseName)
+		exists, err := uc.exerciseService.ExistsByDateAndName(userId, ex.date, ex.exerciseName)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			existing, err := uc.exerciseRepository.FindByDateAndName(userId, ex.date, ex.exerciseName)
+			existing, err := uc.exerciseService.FindByDateAndName(userId, ex.date, ex.exerciseName)
 			if err != nil {
 				return nil, err
 			}
-			_, err = uc.exerciseRepository.Update(existing.Id, userId, buildEnrichParams(ex))
+			enrichParams := buildEnrichParams(ex)
+			_, err = uc.exerciseService.Update(existing.Id, userId, enrichParams)
+			if errors.Is(err, dayclosure.ErrDayClosed) {
+				result.Blocked++
+				item := ports.ImportResultItem{
+					Date:   dateString,
+					Name:   ex.exerciseName,
+					Status: "blocked",
+					Reason: "day is closed",
+				}
+				result.Results = append(result.Results, item)
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}

@@ -66,6 +66,23 @@ func (s *weightEntryService) GetById(id, userId uuid.UUID) (*domain.WeightEntry,
 	return entry, nil
 }
 
+// GetLatest returns the user's most recent entry, or nil when there is none.
+func (s *weightEntryService) GetLatest(userId uuid.UUID) (*domain.WeightEntry, error) {
+	entry, err := s.repository.LatestByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
+func (s *weightEntryService) ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error) {
+	exists, err := s.repository.ExistsByExternalId(userId, externalId)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (s *weightEntryService) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.WeightEntry], error) {
 	page, err := s.repository.List(userId, params)
 	if err != nil {

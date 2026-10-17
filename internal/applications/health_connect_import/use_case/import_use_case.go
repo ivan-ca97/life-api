@@ -31,34 +31,28 @@ const (
 )
 
 type healthConnectImportUseCase struct {
-	weightService      weightPorts.WeightEntryService
-	weightRepository   weightPorts.WeightEntryRepository
-	exerciseService    exercisePorts.ExerciseService
-	exerciseRepository exercisePorts.ExerciseRepository
-	rawStore           ports.RawRecordStore
-	syncLogs           ports.SyncLogStore
-	authorizer         auth.AuthorizationService
+	weightService   weightPorts.WeightEntryService
+	exerciseService exercisePorts.ExerciseService
+	rawStore        ports.RawRecordStore
+	syncLogs        ports.SyncLogStore
+	authorizer      auth.AuthorizationService
 }
 
 var _ ports.HealthConnectImportUseCase = (*healthConnectImportUseCase)(nil)
 
 func NewHealthConnectImportUseCase(
 	weightService weightPorts.WeightEntryService,
-	weightRepository weightPorts.WeightEntryRepository,
 	exerciseService exercisePorts.ExerciseService,
-	exerciseRepository exercisePorts.ExerciseRepository,
 	rawStore ports.RawRecordStore,
 	syncLogs ports.SyncLogStore,
 	authorizer auth.AuthorizationService,
 ) *healthConnectImportUseCase {
 	return &healthConnectImportUseCase{
-		weightService:      weightService,
-		weightRepository:   weightRepository,
-		exerciseService:    exerciseService,
-		exerciseRepository: exerciseRepository,
-		rawStore:           rawStore,
-		syncLogs:           syncLogs,
-		authorizer:         authorizer,
+		weightService:   weightService,
+		exerciseService: exerciseService,
+		rawStore:        rawStore,
+		syncLogs:        syncLogs,
+		authorizer:      authorizer,
 	}
 }
 
@@ -137,7 +131,7 @@ func (uc *healthConnectImportUseCase) importWeight(userId uuid.UUID, records []p
 	for _, rec := range records {
 		externalId := externalIdFor("weight", rec.Id)
 		if externalId != nil {
-			exists, err := uc.weightRepository.ExistsByExternalId(userId, *externalId)
+			exists, err := uc.weightService.ExistsByExternalId(userId, *externalId)
 			if err != nil {
 				return err
 			}
@@ -197,7 +191,7 @@ func (uc *healthConnectImportUseCase) importActivity(
 
 		externalId := externalIdFor("exercise", session.Id)
 		if externalId != nil {
-			exists, err := uc.exerciseRepository.ExistsByExternalId(userId, *externalId)
+			exists, err := uc.exerciseService.ExistsByExternalId(userId, *externalId)
 			if err != nil {
 				return err
 			}
@@ -282,7 +276,7 @@ func (uc *healthConnectImportUseCase) importDailyWalk(userId uuid.UUID, stepsDai
 
 		// If a daily-walk exercise already exists for this day, update its step
 		// count. Re-syncs overwrite rather than accumulate.
-		existing, err := uc.exerciseRepository.FindByDateAndName(userId, date, dailyWalkName)
+		existing, err := uc.exerciseService.FindByDateAndName(userId, date, dailyWalkName)
 		if err != nil && !errors.Is(err, exerciseDomain.ErrExerciseNotFound) {
 			return err
 		}

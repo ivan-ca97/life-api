@@ -71,7 +71,6 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, closureChecker, errorHandler)
 	hevyImportApplication := hevyImportApp.NewHevyImportApplication(
 		exerciseFeature.ExerciseService(),
-		exerciseFeature.Repository(),
 		authorizer,
 		errorHandler,
 	)
@@ -80,9 +79,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	healthConnectImportApplication := healthConnectImportApp.NewHealthConnectImportApplication(
 		database,
 		weightFeature.WeightEntryService(),
-		weightFeature.Repository(),
 		exerciseFeature.ExerciseService(),
-		exerciseFeature.Repository(),
 		authorizer,
 		errorHandler,
 	)
@@ -90,7 +87,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	dataExport := dataExportApp.NewDataExportApplication(database, authorizer, errorHandler)
 	appUpdate := appUpdateApp.NewAppUpdateApplication(database, errorHandler, githubWebhookSecret, githubToken, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
 	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
-	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.Repository(), authorizer, errorHandler)
+	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.WeightEntryService(), authorizer, errorHandler)
 	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
 
 	// AI: usage/quota management is always available; the meal estimation

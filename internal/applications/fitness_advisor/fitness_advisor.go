@@ -18,11 +18,11 @@ type FitnessAdvisorApplication struct {
 }
 
 func NewFitnessAdvisorApplication(
-	weightRepository weightPorts.WeightEntryRepository,
+	weightService weightPorts.WeightEntryService,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *FitnessAdvisorApplication {
-	lookup := newWeightRepositoryLookup(weightRepository)
+	lookup := newWeightServiceLookup(weightService)
 	advisorService := service.NewFitnessAdvisorService(lookup)
 	authorizedService := service.NewAuthorizedFitnessAdvisorService(advisorService, authorizer)
 	advisorHandler := handler.NewFitnessAdvisorHandler(authorizedService)
@@ -34,21 +34,21 @@ func NewFitnessAdvisorApplication(
 	return application
 }
 
-type weightRepositoryLookup struct {
-	repository weightPorts.WeightEntryRepository
+type weightServiceLookup struct {
+	service weightPorts.WeightEntryService
 }
 
-var _ ports.WeightLookup = (*weightRepositoryLookup)(nil)
+var _ ports.WeightLookup = (*weightServiceLookup)(nil)
 
-func newWeightRepositoryLookup(repository weightPorts.WeightEntryRepository) *weightRepositoryLookup {
-	lookup := &weightRepositoryLookup{
-		repository: repository,
+func newWeightServiceLookup(service weightPorts.WeightEntryService) *weightServiceLookup {
+	lookup := &weightServiceLookup{
+		service: service,
 	}
 	return lookup
 }
 
-func (w *weightRepositoryLookup) LatestWeightKg(userId uuid.UUID) (*float64, error) {
-	entry, err := w.repository.LatestByUserId(userId)
+func (w *weightServiceLookup) LatestWeightKg(userId uuid.UUID) (*float64, error) {
+	entry, err := w.service.GetLatest(userId)
 	if err != nil {
 		return nil, err
 	}

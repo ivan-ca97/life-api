@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/dayclosure"
@@ -123,6 +125,30 @@ func (s *exerciseService) List(userId uuid.UUID, params ports.ListParams) (types
 		return types.Page[domain.Exercise]{}, err
 	}
 	return page, nil
+}
+
+func (s *exerciseService) ExistsByDateAndName(userId uuid.UUID, date time.Time, name string) (bool, error) {
+	exists, err := s.repository.ExistsByDateAndName(userId, date, name)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *exerciseService) FindByDateAndName(userId uuid.UUID, date time.Time, name string) (*domain.Exercise, error) {
+	exercise, err := s.repository.FindByDateAndName(userId, date, name)
+	if err != nil {
+		return nil, err
+	}
+	return exercise, nil
+}
+
+func (s *exerciseService) ExistsByExternalId(userId uuid.UUID, externalId string) (bool, error) {
+	exists, err := s.repository.ExistsByExternalId(userId, externalId)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (s *exerciseService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Exercise, error) {
