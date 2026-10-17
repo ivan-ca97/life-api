@@ -13,7 +13,7 @@ import (
 type UserHandler interface {
 	Create(r *http.Request) (*userResponse, int, error)
 	GetById(r *http.Request) (*userResponse, int, error)
-	FindByUsername(r *http.Request) (*userResponse, int, error)
+	FindByUsername(r *http.Request) (*publicUserResponse, int, error)
 	List(r *http.Request) (*userPage, int, error)
 	Update(r *http.Request) (*userResponse, int, error)
 	Deactivate(r *http.Request) (*api.NoResponse, int, error)
@@ -65,7 +65,7 @@ func (h *userHandler) List(r *http.Request) (*userPage, int, error) {
 	return newUserPage(page), http.StatusOK, nil
 }
 
-func (h *userHandler) FindByUsername(r *http.Request) (*userResponse, int, error) {
+func (h *userHandler) FindByUsername(r *http.Request) (*publicUserResponse, int, error) {
 	username := r.URL.Query().Get("username")
 	if username == "" {
 		return nil, 0, cerr.NewBadRequestError("username query parameter is required")
@@ -74,7 +74,7 @@ func (h *userHandler) FindByUsername(r *http.Request) (*userResponse, int, error
 	if err != nil {
 		return nil, 0, err
 	}
-	return userFromDomain(user), http.StatusOK, nil
+	return publicUserFromDomain(user), http.StatusOK, nil
 }
 
 func (h *userHandler) Update(r *http.Request) (*userResponse, int, error) {

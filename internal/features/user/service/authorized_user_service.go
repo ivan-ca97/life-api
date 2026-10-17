@@ -27,12 +27,9 @@ func NewAuthorizedUserService(base ports.UserService, authorizer auth.Authorizat
 	}
 }
 
+// Create is an admin operation.
 func (s *authorizedUserService) Create(ctx context.Context, email, password string) (*domain.User, error) {
-	actorId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	err = s.authorizer.Authorize(ctx, actorId, permissions.UsersCreate)
+	err := s.authorizer.AuthorizeAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +52,9 @@ func (s *authorizedUserService) GetById(ctx context.Context, ownerId uuid.UUID) 
 	return user, nil
 }
 
+// FindByUsername is open to any authenticated user, so people can find each
+// other (e.g. to share data) without knowing an email. The handler only exposes
+// a public profile.
 func (s *authorizedUserService) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
 	actorId, err := auth.ActorFromContext(ctx)
 	if err != nil {
@@ -71,12 +71,9 @@ func (s *authorizedUserService) FindByUsername(ctx context.Context, username str
 	return user, nil
 }
 
+// List exposes every account with its email, so it is admin-only.
 func (s *authorizedUserService) List(ctx context.Context, params types.PaginationParams) (types.Page[domain.User], error) {
-	actorId, err := auth.ActorFromContext(ctx)
-	if err != nil {
-		return types.Page[domain.User]{}, err
-	}
-	err = s.authorizer.Authorize(ctx, actorId, permissions.UsersRead)
+	err := s.authorizer.AuthorizeAdmin(ctx)
 	if err != nil {
 		return types.Page[domain.User]{}, err
 	}

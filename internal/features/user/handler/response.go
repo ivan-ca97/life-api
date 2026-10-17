@@ -75,6 +75,23 @@ func userFromDomain(u *domain.User) *userResponse {
 	}
 }
 
+// publicUserResponse is what any user may learn about another user: enough to
+// identify them (e.g. to share with them) without exposing their email or
+// profile data.
+type publicUserResponse struct {
+	Id       uuid.UUID `json:"id"`
+	Username *string   `json:"username,omitempty"`
+	PhotoUrl string    `json:"photo_url"`
+}
+
+func publicUserFromDomain(u *domain.User) *publicUserResponse {
+	return &publicUserResponse{
+		Id:       u.Id,
+		Username: u.Username,
+		PhotoUrl: u.PhotoUrl,
+	}
+}
+
 type userPage struct {
 	Items  []userResponse `json:"items"`
 	Total  int64          `json:"total"`
