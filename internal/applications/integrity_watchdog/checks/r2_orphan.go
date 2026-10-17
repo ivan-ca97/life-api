@@ -25,15 +25,15 @@ type R2OrphanCheck struct {
 	lister     ports.ObjectLister
 	deleter    ports.ObjectDeleter // nil = report only, non-nil = auto-delete
 	repository ports.WatchdogRepository
-	publicURL  string
+	publicUrl  string
 }
 
-func NewR2OrphanCheck(lister ports.ObjectLister, deleter ports.ObjectDeleter, repository ports.WatchdogRepository, publicURL string) *R2OrphanCheck {
+func NewR2OrphanCheck(lister ports.ObjectLister, deleter ports.ObjectDeleter, repository ports.WatchdogRepository, publicUrl string) *R2OrphanCheck {
 	return &R2OrphanCheck{
 		lister:     lister,
 		deleter:    deleter,
 		repository: repository,
-		publicURL:  publicURL,
+		publicUrl:  publicUrl,
 	}
 }
 
@@ -43,16 +43,16 @@ func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {
 		return nil, fmt.Errorf("listing R2: %w", err)
 	}
 
-	dbURLs, err := c.repository.AllPhotoURLs()
+	dbUrls, err := c.repository.AllPhotoUrls()
 	if err != nil {
 		return nil, fmt.Errorf("querying DB URLs: %w", err)
 	}
 
-	base := strings.TrimRight(c.publicURL, "/") + "/"
+	base := strings.TrimRight(c.publicUrl, "/") + "/"
 
-	dbURLSet := make(map[string]bool, len(dbURLs))
-	for _, u := range dbURLs {
-		dbURLSet[u] = true
+	dbUrlSet := make(map[string]bool, len(dbUrls))
+	for _, u := range dbUrls {
+		dbUrlSet[u] = true
 	}
 
 	r2KeySet := make(map[string]bool, len(keys))
@@ -62,13 +62,13 @@ func (c *R2OrphanCheck) Run() (*R2OrphanResult, error) {
 
 	var orphans []string
 	for _, k := range keys {
-		if !dbURLSet[base+k] {
+		if !dbUrlSet[base+k] {
 			orphans = append(orphans, k)
 		}
 	}
 
 	var broken []string
-	for _, u := range dbURLs {
+	for _, u := range dbUrls {
 		key := strings.TrimPrefix(u, base)
 		if !r2KeySet[key] {
 			broken = append(broken, u)

@@ -25,7 +25,7 @@ type WatchdogApplication struct {
 func NewWatchdogApplication(
 	db *gorm.DB,
 	period time.Duration,
-	r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL string,
+	r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl string,
 	authorizer auth.AuthorizationService,
 	errorHandler http_errors.HttpErrorHandler,
 ) *WatchdogApplication {
@@ -35,7 +35,7 @@ func NewWatchdogApplication(
 	var r2Check *checks.R2OrphanCheck
 	if r2AccountId != "" {
 		lister := storage.NewR2Lister(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket)
-		r2Check = checks.NewR2OrphanCheck(lister, lister, watchdogRepository, r2PublicURL)
+		r2Check = checks.NewR2OrphanCheck(lister, lister, watchdogRepository, r2PublicUrl)
 	}
 
 	sched := scheduler.New(period, dbCheck, r2Check)

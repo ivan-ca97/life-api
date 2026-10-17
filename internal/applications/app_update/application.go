@@ -36,7 +36,7 @@ type AppUpdateApplication struct {
 	githubToken   string
 	s3Client      *s3.Client
 	r2Bucket      string
-	r2PublicURL   string
+	r2PublicUrl   string
 }
 
 func NewAppUpdateApplication(
@@ -48,7 +48,7 @@ func NewAppUpdateApplication(
 	r2AccessKeyId string,
 	r2SecretAccessKey string,
 	r2Bucket string,
-	r2PublicURL string,
+	r2PublicUrl string,
 ) *AppUpdateApplication {
 	r2Endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", r2AccountId)
 	options := s3.Options{
@@ -64,7 +64,7 @@ func NewAppUpdateApplication(
 		githubToken:   githubToken,
 		s3Client:      s3Client,
 		r2Bucket:      r2Bucket,
-		r2PublicURL:   r2PublicURL,
+		r2PublicUrl:   r2PublicUrl,
 	}
 }
 
@@ -80,7 +80,7 @@ type appRelease struct {
 	Platform    string    `gorm:"not null"`
 	Version     string    `gorm:"not null"`
 	VersionCode int64     `gorm:"column:version_code;not null"`
-	ApkURL      string    `gorm:"column:apk_url;not null"`
+	ApkUrl      string    `gorm:"column:apk_url;not null"`
 	Notes       string    `gorm:"not null;default:''"`
 	Mandatory   bool      `gorm:"not null;default:false"`
 	CreatedAt   time.Time `gorm:"not null;autoCreateTime"`
@@ -92,7 +92,7 @@ func (appRelease) TableName() string { return "app_releases" }
 
 type latestResponse struct {
 	Version   string `json:"version"`
-	ApkURL    string `json:"apk_url"`
+	ApkUrl    string `json:"apk_url"`
 	Notes     string `json:"notes,omitempty"`
 	Mandatory bool   `json:"mandatory,omitempty"`
 }
@@ -112,7 +112,7 @@ func (a *AppUpdateApplication) latest(r *http.Request) (*latestResponse, int, er
 	}
 	response := &latestResponse{
 		Version:   rel.Version,
-		ApkURL:    rel.ApkURL,
+		ApkUrl:    rel.ApkUrl,
 		Notes:     rel.Notes,
 		Mandatory: rel.Mandatory,
 	}
@@ -130,7 +130,7 @@ type githubReleasePayload struct {
 		Prerelease bool   `json:"prerelease"`
 		Assets     []struct {
 			Name               string `json:"name"`
-			BrowserDownloadURL string `json:"browser_download_url"`
+			BrowserDownloadUrl string `json:"browser_download_url"`
 			Size               int64  `json:"size"`
 		} `json:"assets"`
 	} `json:"release"`
@@ -172,14 +172,14 @@ func (a *AppUpdateApplication) webhook(w http.ResponseWriter, r *http.Request) {
 
 	version := strings.TrimPrefix(p.Release.TagName, "build-v")
 
-	var downloadURL string
+	var downloadUrl string
 	for _, asset := range p.Release.Assets {
 		if strings.HasSuffix(strings.ToLower(asset.Name), ".apk") {
-			downloadURL = asset.BrowserDownloadURL
+			downloadUrl = asset.BrowserDownloadUrl
 			break
 		}
 	}
-	if downloadURL == "" {
+	if downloadUrl == "" {
 		http.Error(w, "no apk asset", http.StatusUnprocessableEntity)
 		return
 	}
@@ -190,28 +190,28 @@ func (a *AppUpdateApplication) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apkURL, err := a.downloadAndUpload(r.Context(), downloadURL, version)
+	apkUrl, err := a.downloadAndUpload(r.Context(), downloadUrl, version)
 	if err != nil {
 		slog.Error("app_update: download/upload failed", "version", version, "error", err)
 		http.Error(w, "failed to process APK", http.StatusInternalServerError)
 		return
 	}
 
-	err = a.upsert("android", version, versionCode, apkURL, firstLine(p.Release.Body))
+	err = a.upsert("android", version, versionCode, apkUrl, firstLine(p.Release.Body))
 	if err != nil {
 		slog.Error("app_update: upsert failed", "version", version, "error", err)
 		http.Error(w, "failed to save release", http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("app_update: release published", "version", version, "apk_url", apkURL)
+	slog.Info("app_update: release published", "version", version, "apk_url", apkUrl)
 	w.WriteHeader(http.StatusAccepted)
 }
 
 // ─── R2 upload ───────────────────────────────────────────────────────────────
 
-func (a *AppUpdateApplication) downloadAndUpload(ctx context.Context, downloadURL, version string) (string, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+func (a *AppUpdateApplication) downloadAndUpload(ctx context.Context, downloadUrl, version string) (string, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadUrl, nil)
 	if err != nil {
 		return "", fmt.Errorf("building request: %w", err)
 	}
@@ -247,17 +247,17 @@ func (a *AppUpdateApplication) downloadAndUpload(ctx context.Context, downloadUR
 		return "", fmt.Errorf("uploading to R2: %w", err)
 	}
 
-	return strings.TrimRight(a.r2PublicURL, "/") + "/" + key, nil
+	return strings.TrimRight(a.r2PublicUrl, "/") + "/" + key, nil
 }
 
 // ─── DB upsert ───────────────────────────────────────────────────────────────
 
-func (a *AppUpdateApplication) upsert(platform, version string, versionCode int64, apkURL, notes string) error {
+func (a *AppUpdateApplication) upsert(platform, version string, versionCode int64, apkUrl, notes string) error {
 	rel := appRelease{
 		Platform:    platform,
 		Version:     version,
 		VersionCode: versionCode,
-		ApkURL:      apkURL,
+		ApkUrl:      apkUrl,
 		Notes:       notes,
 	}
 	onConflict := clause.OnConflict{

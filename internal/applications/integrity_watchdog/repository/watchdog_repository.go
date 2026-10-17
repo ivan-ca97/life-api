@@ -21,7 +21,7 @@ func NewWatchdogRepository(db *gorm.DB) *watchdogRepository {
 	}
 }
 
-func (r *watchdogRepository) AllPhotoURLs() ([]string, error) {
+func (r *watchdogRepository) AllPhotoUrls() ([]string, error) {
 	var urls []string
 	err := r.db.Raw(`
 		SELECT url FROM meal_photos

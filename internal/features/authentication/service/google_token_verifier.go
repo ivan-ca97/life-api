@@ -29,8 +29,8 @@ type tokenInfoResponse struct {
 }
 
 func (v *googleTokenVerifier) Verify(idToken, clientId string) (*ports.GoogleClaims, error) {
-	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + url.QueryEscape(idToken)
-	response, err := v.httpClient.Get(tokenInfoURL)
+	tokenInfoUrl := "https://oauth2.googleapis.com/tokeninfo?id_token=" + url.QueryEscape(idToken)
+	response, err := v.httpClient.Get(tokenInfoUrl)
 	if err != nil {
 		return nil, domain.ErrInvalidGoogleToken
 	}

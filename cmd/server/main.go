@@ -46,7 +46,7 @@ func main() {
 	r2AccessKeyId := os.Getenv("R2_ACCESS_KEY_ID")
 	r2SecretAccessKey := os.Getenv("R2_SECRET_ACCESS_KEY")
 	r2Bucket := os.Getenv("R2_BUCKET")
-	r2PublicURL := os.Getenv("R2_PUBLIC_URL")
+	r2PublicUrl := os.Getenv("R2_PUBLIC_URL")
 
 	githubWebhookSecret := os.Getenv("GITHUB_WEBHOOK_SECRET")
 	githubToken := os.Getenv("GITHUB_TOKEN")
@@ -63,7 +63,7 @@ func main() {
 		}
 	}
 
-	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, githubWebhookSecret, githubToken, openaiApiKey, openaiModel, watchdogInterval)
+	s, err := server.NewServer(database, port, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl, githubWebhookSecret, githubToken, openaiApiKey, openaiModel, watchdogInterval)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}

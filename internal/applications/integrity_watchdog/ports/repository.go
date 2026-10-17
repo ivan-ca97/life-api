@@ -19,7 +19,7 @@ type InvalidFoodUnit struct {
 }
 
 type WatchdogRepository interface {
-	AllPhotoURLs() ([]string, error)
+	AllPhotoUrls() ([]string, error)
 	CrossContextPhotos() ([]CrossContextPhoto, error)
 	MealGroupsMissingPrimary() ([]uuid.UUID, error)
 	ItemGroupsMissingPrimary() ([]ItemGroup, error)

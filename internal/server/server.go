@@ -46,7 +46,7 @@ type server struct {
 	watchdog *watchdogApp.WatchdogApplication
 }
 
-func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, githubWebhookSecret, githubToken, openaiApiKey, openaiModel string, watchdogInterval time.Duration) (*server, error) {
+func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, seedPassword, googleClientId, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl, githubWebhookSecret, githubToken, openaiApiKey, openaiModel string, watchdogInterval time.Duration) (*server, error) {
 	logger := slog.Default()
 	errorHandler := http_errors.NewErrorContextBagHandler(logger)
 
@@ -85,10 +85,10 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	)
 	measurementsFeature := measurements.NewMeasurementsFeature(database, authorizer, errorHandler)
 	dataExport := dataExportApp.NewDataExportApplication(database, authorizer, errorHandler)
-	appUpdate := appUpdateApp.NewAppUpdateApplication(database, errorHandler, githubWebhookSecret, githubToken, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL)
-	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
+	appUpdate := appUpdateApp.NewAppUpdateApplication(database, errorHandler, githubWebhookSecret, githubToken, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl)
+	mediaFeature := media.NewMediaFeature(r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl, authorizer, errorHandler)
 	fitnessAdvisor := fitnessAdvisorApp.NewFitnessAdvisorApplication(weightFeature.WeightEntryService(), authorizer, errorHandler)
-	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicURL, authorizer, errorHandler)
+	watchdog := watchdogApp.NewWatchdogApplication(database, watchdogInterval, r2AccountId, r2AccessKeyId, r2SecretAccessKey, r2Bucket, r2PublicUrl, authorizer, errorHandler)
 
 	// AI: usage/quota management is always available; the meal estimation
 	// application is only wired when an OpenAI key is configured (graceful
