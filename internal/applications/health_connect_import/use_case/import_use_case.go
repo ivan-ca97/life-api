@@ -65,6 +65,12 @@ func NewHealthConnectImportUseCase(
 func (uc *healthConnectImportUseCase) Import(ctx context.Context, userId uuid.UUID, payload *ports.Payload) (*ports.ImportResult, error) {
 	result := &ports.ImportResult{}
 
+	hasActivity := len(payload.ExerciseSessions)+len(payload.StepsDaily)+len(payload.Sleep)+len(payload.HeartRate) > 0
+	// With nothing to import there is nothing to record either.
+	if len(payload.Weight) == 0 && !hasActivity {
+		return result, nil
+	}
+
 	if len(payload.Weight) > 0 {
 		err := uc.authorizer.Authorize(ctx, userId, permissions.WeightCreate)
 		if err != nil {
@@ -76,7 +82,6 @@ func (uc *healthConnectImportUseCase) Import(ctx context.Context, userId uuid.UU
 		}
 	}
 
-	hasActivity := len(payload.ExerciseSessions)+len(payload.StepsDaily)+len(payload.Sleep)+len(payload.HeartRate) > 0
 	if hasActivity {
 		err := uc.authorizer.Authorize(ctx, userId, permissions.ExercisesCreate)
 		if err != nil {
