@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
 type food struct {

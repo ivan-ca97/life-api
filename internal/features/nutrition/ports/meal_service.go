@@ -7,7 +7,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
 type ItemParam struct {
@@ -25,7 +25,7 @@ type PhotoParam struct {
 	ItemFoodId *uuid.UUID // food_id reference for new/unknown items; resolved server-side
 }
 
-type CreateParams struct {
+type CreateMealParams struct {
 	Date         time.Time
 	Type         string
 	Name         string
@@ -42,7 +42,7 @@ type CreateParams struct {
 	Notes        string
 }
 
-type UpdateParams struct {
+type UpdateMealParams struct {
 	Date          *time.Time
 	Type          *string
 	Name          *string
@@ -60,7 +60,7 @@ type UpdateParams struct {
 	Notes         *string
 }
 
-type ListParams struct {
+type ListMealParams struct {
 	types.PaginationParams
 	Date        *time.Time
 	From        *time.Time
@@ -100,10 +100,10 @@ type NutritionPreview struct {
 }
 
 type MealService interface {
-	Create(userId uuid.UUID, params CreateParams) (*domain.Meal, error)
+	Create(userId uuid.UUID, params CreateMealParams) (*domain.Meal, error)
 	GetById(id, userId uuid.UUID) (*domain.Meal, error)
-	List(userId uuid.UUID, params ListParams) (types.Page[domain.Meal], error)
-	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Meal, error)
+	List(userId uuid.UUID, params ListMealParams) (types.Page[domain.Meal], error)
+	Update(id, userId uuid.UUID, params UpdateMealParams) (*domain.Meal, error)
 	Delete(id, userId uuid.UUID) error
 	ListTypes(userId uuid.UUID, hour *int) ([]string, error)
 	PreviewNutrition(userId uuid.UUID, items []ItemParam) (*NutritionPreview, error)

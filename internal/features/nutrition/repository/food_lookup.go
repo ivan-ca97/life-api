@@ -6,7 +6,7 @@ import (
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type foodLookupModel struct {

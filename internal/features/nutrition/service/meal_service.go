@@ -10,8 +10,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/types"
 	"github.com/ivan-ca97/life/pkg/units"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 const unitPorcion = "porcion"
@@ -52,7 +52,7 @@ func NewMealService(repository ports.MealRepository, foodLookup ports.FoodLookup
 	}
 }
 
-func (s *mealService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Meal, error) {
+func (s *mealService) Create(userId uuid.UUID, params ports.CreateMealParams) (*domain.Meal, error) {
 	closed, err := s.closureChecker.IsClosed(userId, params.Date)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (s *mealService) GetById(id, userId uuid.UUID) (*domain.Meal, error) {
 	return meal, nil
 }
 
-func (s *mealService) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.Meal], error) {
+func (s *mealService) List(userId uuid.UUID, params ports.ListMealParams) (types.Page[domain.Meal], error) {
 	page, err := s.repository.List(userId, params)
 	if err != nil {
 		return types.Page[domain.Meal]{}, err
@@ -130,7 +130,7 @@ func (s *mealService) List(userId uuid.UUID, params ports.ListParams) (types.Pag
 	return page, nil
 }
 
-func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Meal, error) {
+func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateMealParams) (*domain.Meal, error) {
 	meal, err := s.repository.FindById(id, userId)
 	if err != nil {
 		return nil, err

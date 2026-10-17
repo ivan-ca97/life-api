@@ -7,7 +7,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
 type VolumeConversionParam struct {
@@ -30,7 +30,7 @@ type PortionParam struct {
 	BaseEquivalent float64
 }
 
-type CreateParams struct {
+type CreateFoodParams struct {
 	Name                string
 	PhotoUrl            string
 	DefaultCalories     *float64
@@ -47,7 +47,7 @@ type CreateParams struct {
 	Portions            []PortionParam
 }
 
-type UpdateParams struct {
+type UpdateFoodParams struct {
 	Name                *string
 	PhotoUrl            *string
 	DefaultCalories     *float64
@@ -64,7 +64,7 @@ type UpdateParams struct {
 	Portions            *[]PortionParam
 }
 
-type ListParams struct {
+type ListFoodParams struct {
 	types.PaginationParams
 	Query *string
 	Tag   *string
@@ -114,10 +114,10 @@ type ImpactResult struct {
 }
 
 type FoodService interface {
-	Create(userId uuid.UUID, params CreateParams) (*domain.Food, error)
+	Create(userId uuid.UUID, params CreateFoodParams) (*domain.Food, error)
 	GetById(id, userId uuid.UUID) (*domain.Food, error)
-	List(userId uuid.UUID, params ListParams) (types.Page[domain.Food], error)
-	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Food, error)
+	List(userId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
+	Update(id, userId uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
 	Delete(id, userId uuid.UUID) error
 	Frequency(userId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
 	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)

@@ -8,8 +8,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/auth"
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 	"github.com/ivan-ca97/life/internal/permissions"
 )
 
@@ -27,7 +27,7 @@ func NewAuthorizedFoodService(base ports.FoodService, authorizer auth.Authorizat
 	}
 }
 
-func (s *authorizedFoodService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreateParams) (*domain.Food, error) {
+func (s *authorizedFoodService) Create(ctx context.Context, ownerId uuid.UUID, params ports.CreateFoodParams) (*domain.Food, error) {
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsCreate)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (s *authorizedFoodService) GetById(ctx context.Context, ownerId uuid.UUID, 
 	return food, nil
 }
 
-func (s *authorizedFoodService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListParams) (types.Page[domain.Food], error) {
+func (s *authorizedFoodService) List(ctx context.Context, ownerId uuid.UUID, params ports.ListFoodParams) (types.Page[domain.Food], error) {
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
 	if err != nil {
 		return types.Page[domain.Food]{}, err
@@ -63,7 +63,7 @@ func (s *authorizedFoodService) List(ctx context.Context, ownerId uuid.UUID, par
 	return page, nil
 }
 
-func (s *authorizedFoodService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdateParams) (*domain.Food, error) {
+func (s *authorizedFoodService) Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params ports.UpdateFoodParams) (*domain.Food, error) {
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsUpdate)
 	if err != nil {
 		return nil, err

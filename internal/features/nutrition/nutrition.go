@@ -1,38 +1,26 @@
 package nutrition
 
 import (
-	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 	"github.com/ivan-ca97/life/pkg/auth"
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food"
-	foodPorts "github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal"
+	"github.com/ivan-ca97/life/internal/features/nutrition/handler"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/repository"
+	"github.com/ivan-ca97/life/internal/features/nutrition/service"
 )
 
-// foodModule is what the feature needs from the food catalog: its routes and
-// the service other modules use to read foods.
-type foodModule interface {
-	PublicRoutes(r chi.Router)
-	GlobalRoutes(r chi.Router)
-	ProtectedRoutes(r chi.Router)
-	FoodService() foodPorts.FoodService
-}
-
-type mealModule interface {
-	PublicRoutes(r chi.Router)
-	ProtectedRoutes(r chi.Router)
-}
-
-// nutritionFeature groups the food catalog and the meal log, which depend on
-// each other: meals are computed from foods and food statistics are measured
-// over meals. To the rest of the system it is a single feature.
+// nutritionFeature owns the food catalog and the meal log. They depend on each
+// other: meals are computed from foods, and food statistics are measured over
+// meals.
 type nutritionFeature struct {
-	foods foodModule
-	meals mealModule
+	foodService  ports.FoodService
+	foodHandler  handler.FoodHandler
+	mealHandler  handler.MealHandler
+	errorHandler http_errors.HttpErrorHandler
 }
 
 func NewNutritionFeature(
@@ -41,18 +29,28 @@ func NewNutritionFeature(
 	closureChecker dayclosure.DayClosureChecker,
 	errorHandler http_errors.HttpErrorHandler,
 ) *nutritionFeature {
-	foods := food.NewFoodFeature(db, authorizer, errorHandler)
-	meals := meal.NewMealFeature(db, authorizer, closureChecker, errorHandler)
+	foodRepository := repository.NewFoodRepository(db)
+	foodService := service.NewFoodService(foodRepository)
+	authorizedFoodService := service.NewAuthorizedFoodService(foodService, authorizer)
+	foodHandler := handler.NewFoodHandler(authorizedFoodService)
+
+	mealRepository := repository.NewMealRepository(db)
+	foodLookup := repository.NewFoodLookup(db)
+	mealService := service.NewMealService(mealRepository, foodLookup, closureChecker)
+	authorizedMealService := service.NewAuthorizedMealService(mealService, authorizer)
+	mealHandler := handler.NewMealHandler(authorizedMealService)
 
 	return &nutritionFeature{
-		foods: foods,
-		meals: meals,
+		foodService:  foodService,
+		foodHandler:  foodHandler,
+		mealHandler:  mealHandler,
+		errorHandler: errorHandler,
 	}
 }
 
 // FoodService exposes the base food service so applications (e.g. the meal AI
 // assistant) can search a user's catalog. Authorization is enforced by the
 // caller for the owning user.
-func (f *nutritionFeature) FoodService() foodPorts.FoodService {
-	return f.foods.FoodService()
+func (f *nutritionFeature) FoodService() ports.FoodService {
+	return f.foodService
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/types"
 	"github.com/ivan-ca97/life/pkg/validate"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type foodService struct {
@@ -25,7 +25,7 @@ func NewFoodService(repository ports.FoodRepository) *foodService {
 	}
 }
 
-func (s *foodService) Create(userId uuid.UUID, params ports.CreateParams) (*domain.Food, error) {
+func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*domain.Food, error) {
 	err := validate.NonEmpty(params.Name, "name")
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (s *foodService) GetById(id, userId uuid.UUID) (*domain.Food, error) {
 	return food, nil
 }
 
-func (s *foodService) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.Food], error) {
+func (s *foodService) List(userId uuid.UUID, params ports.ListFoodParams) (types.Page[domain.Food], error) {
 	page, err := s.repository.List(userId, params)
 	if err != nil {
 		return types.Page[domain.Food]{}, err
@@ -112,7 +112,7 @@ func (s *foodService) List(userId uuid.UUID, params ports.ListParams) (types.Pag
 	return page, nil
 }
 
-func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Food, error) {
+func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams) (*domain.Food, error) {
 	if params.Name != nil {
 		err := validate.NonEmpty(*params.Name, "name")
 		if err != nil {

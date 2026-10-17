@@ -11,8 +11,8 @@ import (
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type foodRepository struct {
@@ -95,7 +95,7 @@ func (r *foodRepository) FindById(id, userId uuid.UUID) (*domain.Food, error) {
 	return model.toDomain(), nil
 }
 
-func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.Food], error) {
+func (r *foodRepository) List(userId uuid.UUID, params ports.ListFoodParams) (types.Page[domain.Food], error) {
 	var models []food
 	var total int64
 
@@ -151,7 +151,7 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 	return result, nil
 }
 
-func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Food, error) {
+func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodParams) (*domain.Food, error) {
 	var count int64
 	err := r.db.Model(&food{}).Where("id = ? AND user_id = ?", id, userId).Count(&count).Error
 	if err != nil {

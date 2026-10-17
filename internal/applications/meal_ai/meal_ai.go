@@ -6,7 +6,7 @@ import (
 
 	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
-	foodPorts "github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	nutritionPorts "github.com/ivan-ca97/life/internal/features/nutrition/ports"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/handler"
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
@@ -22,7 +22,7 @@ type MealAIApplication struct {
 // provider (e.g. the openai adapter); quota, logger and pricer come from the
 // ai_usage feature.
 func NewMealAIApplication(
-	foodService foodPorts.FoodService,
+	foodService nutritionPorts.FoodService,
 	client llm.Client,
 	quota ports.QuotaGuard,
 	logger ports.InteractionLogger,

@@ -7,8 +7,8 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type ingredientResponse struct {

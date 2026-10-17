@@ -7,14 +7,14 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
 type AuthorizedFoodService interface {
-	Create(ctx context.Context, ownerId uuid.UUID, params CreateParams) (*domain.Food, error)
+	Create(ctx context.Context, ownerId uuid.UUID, params CreateFoodParams) (*domain.Food, error)
 	GetById(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) (*domain.Food, error)
-	List(ctx context.Context, ownerId uuid.UUID, params ListParams) (types.Page[domain.Food], error)
-	Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params UpdateParams) (*domain.Food, error)
+	List(ctx context.Context, ownerId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
+	Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
 	Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error
 	Frequency(ctx context.Context, ownerId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
 	IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)

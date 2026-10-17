@@ -7,8 +7,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/api"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type MealHandler interface {
@@ -72,7 +72,7 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 			ItemFoodId: p.ItemFoodId,
 		}
 	}
-	params := ports.CreateParams{
+	params := ports.CreateMealParams{
 		Date:         date,
 		Type:         request.Type,
 		Name:         request.Name,
@@ -172,7 +172,7 @@ func (h *mealHandler) List(r *http.Request) (*mealPage, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	params := ports.ListParams{
+	params := ports.ListMealParams{
 		PaginationParams: api.PaginationFromRequest(r),
 		Date:             date,
 		From:             from,
@@ -212,7 +212,7 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	params := ports.UpdateParams{
+	params := ports.UpdateMealParams{
 		Type:         request.Type,
 		Name:         request.Name,
 		Status:       request.Status,

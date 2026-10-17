@@ -7,7 +7,7 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
 type mealPhotoResponse struct {

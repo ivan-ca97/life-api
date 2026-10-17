@@ -13,14 +13,14 @@ import (
 
 	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
-	foodPorts "github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	nutritionPorts "github.com/ivan-ca97/life/internal/features/nutrition/ports"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"
 )
 
 // foodSearchAdapter implements ports.FoodSearch over the food feature's service.
 type foodSearchAdapter struct {
-	foodService foodPorts.FoodService
+	foodService nutritionPorts.FoodService
 }
 
 var _ ports.FoodSearch = (*foodSearchAdapter)(nil)
@@ -36,7 +36,7 @@ func (a *foodSearchAdapter) Search(userId uuid.UUID, queries []string, limit int
 		if q == "" {
 			continue
 		}
-		params := foodPorts.ListParams{
+		params := nutritionPorts.ListFoodParams{
 			PaginationParams: types.PaginationParams{
 				Limit:  limit,
 				Offset: 0,

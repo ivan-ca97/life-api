@@ -10,8 +10,8 @@ import (
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/meal/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type mealRepository struct {
@@ -95,7 +95,7 @@ func (r *mealRepository) FindById(id, userId uuid.UUID) (*domain.Meal, error) {
 	return model.toDomain(), nil
 }
 
-func (r *mealRepository) List(userId uuid.UUID, params ports.ListParams) (types.Page[domain.Meal], error) {
+func (r *mealRepository) List(userId uuid.UUID, params ports.ListMealParams) (types.Page[domain.Meal], error) {
 	var models []meal
 	var total int64
 
@@ -132,7 +132,7 @@ func (r *mealRepository) List(userId uuid.UUID, params ports.ListParams) (types.
 	return result, nil
 }
 
-func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateParams) (*domain.Meal, error) {
+func (r *mealRepository) Update(id, userId uuid.UUID, params ports.UpdateMealParams) (*domain.Meal, error) {
 	var count int64
 	err := r.db.Model(&meal{}).Where("id = ? AND user_id = ?", id, userId).Count(&count).Error
 	if err != nil {
@@ -348,7 +348,7 @@ func (r *mealRepository) ListDistinctTypes(userId uuid.UUID, hour *int) ([]strin
 	return types, nil
 }
 
-func applyMealFilters(q *gorm.DB, params ports.ListParams) *gorm.DB {
+func applyMealFilters(q *gorm.DB, params ports.ListMealParams) *gorm.DB {
 	if params.Date != nil {
 		q = q.Where("date = ?", *params.Date)
 	}

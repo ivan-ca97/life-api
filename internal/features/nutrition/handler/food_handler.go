@@ -6,8 +6,8 @@ import (
 	"github.com/ivan-ca97/life/pkg/api"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/domain"
-	"github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type FoodHandler interface {
@@ -61,7 +61,7 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 			BaseEquivalent: p.BaseEquivalent,
 		}
 	}
-	params := ports.CreateParams{
+	params := ports.CreateFoodParams{
 		Name:                request.Name,
 		PhotoUrl:            request.PhotoUrl,
 		DefaultCalories:     request.DefaultCalories,
@@ -120,7 +120,7 @@ func (h *foodHandler) List(r *http.Request) (*foodPage, int, error) {
 	if s != "" {
 		sort = &s
 	}
-	params := ports.ListParams{
+	params := ports.ListFoodParams{
 		PaginationParams: api.PaginationFromRequest(r),
 		Query:            query,
 		Tag:              tag,
@@ -157,7 +157,7 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		}
 		portions = &pp
 	}
-	params := ports.UpdateParams{
+	params := ports.UpdateFoodParams{
 		Name:                request.Name,
 		PhotoUrl:            request.PhotoUrl,
 		DefaultCalories:     request.DefaultCalories,
