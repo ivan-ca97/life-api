@@ -6,7 +6,7 @@ import (
 
 	"github.com/ivan-ca97/life/internal/infrastructure/llm"
 
-	foodPorts "github.com/ivan-ca97/life/internal/features/food/ports"
+	foodPorts "github.com/ivan-ca97/life/internal/features/nutrition/food/ports"
 
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/handler"
 	"github.com/ivan-ca97/life/internal/applications/meal_ai/ports"

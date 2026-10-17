@@ -29,11 +29,10 @@ import (
 	"github.com/ivan-ca97/life/internal/features/authorization"
 	"github.com/ivan-ca97/life/internal/features/daily"
 	"github.com/ivan-ca97/life/internal/features/exercise"
-	"github.com/ivan-ca97/life/internal/features/food"
 	"github.com/ivan-ca97/life/internal/features/goal"
-	"github.com/ivan-ca97/life/internal/features/meal"
 	"github.com/ivan-ca97/life/internal/features/measurements"
 	"github.com/ivan-ca97/life/internal/features/media"
+	"github.com/ivan-ca97/life/internal/features/nutrition"
 	"github.com/ivan-ca97/life/internal/features/user"
 	"github.com/ivan-ca97/life/internal/features/weight"
 
@@ -64,10 +63,9 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 		errorHandler,
 	)
 	authorizationApplication := authorizationApp.NewAuthorizationApplication(authorizationFeature.ShareRepository(), authorizer, userFeature.Service(), errorHandler)
-	foodFeature := food.NewFoodFeature(database, authorizer, errorHandler)
 	dailyFeature := daily.NewDailyFeature(database, authorizer, errorHandler)
 	closureChecker := dailyFeature.DayClosureChecker()
-	mealFeature := meal.NewMealFeature(database, authorizer, closureChecker, errorHandler)
+	nutritionFeature := nutrition.NewNutritionFeature(database, authorizer, closureChecker, errorHandler)
 	exerciseFeature := exercise.NewExerciseFeature(database, authorizer, closureChecker, errorHandler)
 	hevyImportApplication := hevyImportApp.NewHevyImportApplication(
 		exerciseFeature.ExerciseService(),
@@ -100,7 +98,7 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 	var mealAI *mealAIApp.MealAIApplication
 	if openaiApiKey != "" {
 		openaiClient := openai.NewClient(openaiApiKey, openaiModel)
-		mealAI = mealAIApp.NewMealAIApplication(foodFeature.FoodService(), openaiClient, aiUsageFeature.QuotaGuard(), aiUsageFeature.InteractionLogger(), aiUsageFeature.Service(), authorizer, errorHandler)
+		mealAI = mealAIApp.NewMealAIApplication(nutritionFeature.FoodService(), openaiClient, aiUsageFeature.QuotaGuard(), aiUsageFeature.InteractionLogger(), aiUsageFeature.Service(), authorizer, errorHandler)
 	} else {
 		slog.Warn("OPENAI_API_KEY not set; meal AI estimation endpoint disabled")
 	}
@@ -137,15 +135,14 @@ func NewServer(database *gorm.DB, port int, version, corsOrigins, seedEmail, see
 			r.Use(authenticationFeature.Middleware().Handle)
 
 			authenticationApplication.ProtectedRoutes(r)
-			foodFeature.GlobalRoutes(r)
+			nutritionFeature.GlobalRoutes(r)
 			userFeature.AdminRoutes(r)
 			watchdog.ProtectedRoutes(r)
 			aiUsageFeature.Routes(r)
 
 			r.Route("/users/{userId}", func(r chi.Router) {
 				userFeature.ProtectedRoutes(r)
-				foodFeature.ProtectedRoutes(r)
-				mealFeature.ProtectedRoutes(r)
+				nutritionFeature.ProtectedRoutes(r)
 				exerciseFeature.ProtectedRoutes(r)
 				hevyImportApplication.ProtectedRoutes(r)
 				healthConnectImportApplication.ProtectedRoutes(r)

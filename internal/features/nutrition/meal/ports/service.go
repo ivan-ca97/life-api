@@ -1,0 +1,110 @@
+package ports
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/ivan-ca97/life/pkg/types"
+
+	"github.com/ivan-ca97/life/internal/features/nutrition/meal/domain"
+)
+
+type ItemParam struct {
+	FoodId            uuid.UUID
+	Quantity          float64
+	Unit              string
+	Notes             string
+	MeasurementMethod domain.MeasurementMethod
+}
+
+type PhotoParam struct {
+	Url        string
+	IsPrimary  bool
+	MealItemId *uuid.UUID // existing item UUID (from a GET response)
+	ItemFoodId *uuid.UUID // food_id reference for new/unknown items; resolved server-side
+}
+
+type CreateParams struct {
+	Date         time.Time
+	Type         string
+	Name         string
+	Status       string
+	Photos       []PhotoParam
+	EatenAt      *time.Time
+	Calories     *float64
+	ProteinGrams *float64
+	CarbsGrams   *float64
+	FatGrams     *float64
+	FiberGrams   *float64
+	Tags         []string
+	Items        []ItemParam
+	Notes        string
+}
+
+type UpdateParams struct {
+	Date          *time.Time
+	Type          *string
+	Name          *string
+	Status        *string
+	Photos        *[]PhotoParam
+	EatenAt       *time.Time
+	Calories      *float64
+	ProteinGrams  *float64
+	CarbsGrams    *float64
+	FatGrams      *float64
+	FiberGrams    *float64
+	Tags          *[]string
+	Items         *[]ItemParam
+	ResolvedItems *[]domain.MealItem
+	Notes         *string
+}
+
+type ListParams struct {
+	types.PaginationParams
+	Date        *time.Time
+	From        *time.Time
+	To          *time.Time
+	Type        *string
+	Status      *string
+	Tag         *string
+	FoodId      *uuid.UUID
+	MinCalories *float64
+	MaxCalories *float64
+	MinProtein  *float64
+	MaxProtein  *float64
+	MinCarbs    *float64
+	MaxCarbs    *float64
+	MinFat      *float64
+	MaxFat      *float64
+	MinFiber    *float64
+	MaxFiber    *float64
+}
+
+type NutritionPreviewItem struct {
+	FoodId       uuid.UUID
+	Calories     *float64
+	ProteinGrams *float64
+	CarbsGrams   *float64
+	FatGrams     *float64
+	FiberGrams   *float64
+}
+
+type NutritionPreview struct {
+	Calories     *float64
+	ProteinGrams *float64
+	CarbsGrams   *float64
+	FatGrams     *float64
+	FiberGrams   *float64
+	Items        []NutritionPreviewItem
+}
+
+type MealService interface {
+	Create(userId uuid.UUID, params CreateParams) (*domain.Meal, error)
+	GetById(id, userId uuid.UUID) (*domain.Meal, error)
+	List(userId uuid.UUID, params ListParams) (types.Page[domain.Meal], error)
+	Update(id, userId uuid.UUID, params UpdateParams) (*domain.Meal, error)
+	Delete(id, userId uuid.UUID) error
+	ListTypes(userId uuid.UUID, hour *int) ([]string, error)
+	PreviewNutrition(userId uuid.UUID, items []ItemParam) (*NutritionPreview, error)
+}
