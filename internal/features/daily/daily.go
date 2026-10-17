@@ -13,12 +13,11 @@ import (
 )
 
 type dailyFeature struct {
-	summaryHandler    handler.SummaryHandler
-	correctionHandler handler.CorrectionHandler
-	closureHandler    handler.DayClosureHandler
-	photoHandler      handler.PhotoHandler
-	closureChecker    dayclosure.DayClosureChecker
-	errorHandler      http_errors.HttpErrorHandler
+	summaryHandler handler.SummaryHandler
+	closureHandler handler.DayClosureHandler
+	photoHandler   handler.PhotoHandler
+	closureChecker dayclosure.DayClosureChecker
+	errorHandler   http_errors.HttpErrorHandler
 }
 
 func NewDailyFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHandler http_errors.HttpErrorHandler) *dailyFeature {
@@ -32,23 +31,17 @@ func NewDailyFeature(db *gorm.DB, authorizer auth.AuthorizationService, errorHan
 	authorizedDayClosureService := service.NewAuthorizedDayClosureService(dayClosureService, authorizer)
 	closureHandler := handler.NewDayClosureHandler(authorizedDayClosureService)
 
-	correctionRepository := repository.NewCorrectionRepository(db)
-	correctionService := service.NewCorrectionService(correctionRepository, dayClosureService)
-	authorizedCorrectionService := service.NewAuthorizedCorrectionService(correctionService, authorizer)
-	correctionHandler := handler.NewCorrectionHandler(authorizedCorrectionService)
-
 	photoRepository := repository.NewDailyPhotoRepository(db)
 	photoService := service.NewDailyPhotoService(photoRepository)
 	authorizedPhotoService := service.NewAuthorizedDailyPhotoService(photoService, authorizer)
 	photoHandler := handler.NewPhotoHandler(authorizedPhotoService)
 
 	return &dailyFeature{
-		summaryHandler:    summaryHandler,
-		correctionHandler: correctionHandler,
-		closureHandler:    closureHandler,
-		photoHandler:      photoHandler,
-		closureChecker:    dayClosureService,
-		errorHandler:      errorHandler,
+		summaryHandler: summaryHandler,
+		closureHandler: closureHandler,
+		photoHandler:   photoHandler,
+		closureChecker: dayClosureService,
+		errorHandler:   errorHandler,
 	}
 }
 
