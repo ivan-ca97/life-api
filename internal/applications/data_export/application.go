@@ -98,7 +98,6 @@ type foodExport struct {
 	DefaultCarbsGrams   *float64  `json:"default_carbs_grams,omitempty"`
 	DefaultFatGrams     *float64  `json:"default_fat_grams,omitempty"`
 	DefaultFiberGrams   *float64  `json:"default_fiber_grams,omitempty"`
-	Public              bool      `json:"public"`
 	CreatedAt           time.Time `json:"created_at"`
 }
 
@@ -317,13 +316,12 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		DefaultCarbsGrams   *float64  `gorm:"column:default_carbs_grams"`
 		DefaultFatGrams     *float64  `gorm:"column:default_fat_grams"`
 		DefaultFiberGrams   *float64  `gorm:"column:default_fiber_grams"`
-		Public              bool      `gorm:"column:public"`
 		CreatedAt           time.Time `gorm:"column:created_at"`
 	}
 	err = a.db.Raw(`
 		SELECT id, name, measurement_type, base_unit, base_quantity,
 		       default_calories, default_protein_grams, default_carbs_grams,
-		       default_fat_grams, default_fiber_grams, public, created_at
+		       default_fat_grams, default_fiber_grams, created_at
 		FROM foods WHERE user_id = ? ORDER BY name
 	`, userId).Scan(&foodRows).Error
 	if err != nil {
@@ -341,7 +339,6 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 			DefaultCarbsGrams:   row.DefaultCarbsGrams,
 			DefaultFatGrams:     row.DefaultFatGrams,
 			DefaultFiberGrams:   row.DefaultFiberGrams,
-			Public:              row.Public,
 			CreatedAt:           row.CreatedAt,
 		}
 		response.Foods = append(response.Foods, item)

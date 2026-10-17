@@ -18,19 +18,18 @@ type food struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string    `gorm:"not null;default:'mass'"`
-	BaseQuantity        float64   `gorm:"not null;default:1"`
-	BaseUnit            string    `gorm:"not null;default:''"`
-	Public              bool      `gorm:"not null;default:false"`
+	MeasurementType     string  `gorm:"not null;default:'mass'"`
+	BaseQuantity        float64 `gorm:"not null;default:1"`
+	BaseUnit            string  `gorm:"not null;default:''"`
 	GramsPerMl          *float64
 	VolumeNote          *string
 	UnitBaseEquivalent  *float64
 	UnitNote            *string
-	CreatedAt           time.Time     `gorm:"not null;autoCreateTime"`
-	UpdatedAt           time.Time     `gorm:"not null;autoUpdateTime"`
-	Tags                []foodTagMap  `gorm:"foreignKey:FoodId"`
+	CreatedAt           time.Time        `gorm:"not null;autoCreateTime"`
+	UpdatedAt           time.Time        `gorm:"not null;autoUpdateTime"`
+	Tags                []foodTagMap     `gorm:"foreignKey:FoodId"`
 	Ingredients         []foodIngredient `gorm:"foreignKey:FoodId"`
-	Portions            []foodPortion `gorm:"foreignKey:FoodId"`
+	Portions            []foodPortion    `gorm:"foreignKey:FoodId"`
 }
 
 type foodTag struct {
@@ -134,7 +133,6 @@ func (f *food) toDomain() *domain.Food {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
-		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
@@ -159,7 +157,6 @@ func foodFromDomain(f *domain.Food) *food {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
-		Public:              f.Public,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}

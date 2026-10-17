@@ -41,7 +41,6 @@ type CreateParams struct {
 	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
-	Public              bool
 	Tags                []string
 	Ingredients         []string
 	Conversions         *ConversionsParam
@@ -59,7 +58,6 @@ type UpdateParams struct {
 	MeasurementType     *string
 	BaseQuantity        *float64
 	BaseUnit            *string
-	Public              *bool
 	Tags                *[]string
 	Ingredients         *[]string
 	Conversions         *ConversionsParam

@@ -55,7 +55,7 @@ func (r *foodLookup) FindByIds(userId uuid.UUID, ids []uuid.UUID) (map[uuid.UUID
 	var models []foodLookupModel
 	err := r.db.
 		Preload("Portions").
-		Where("id IN ? AND (user_id = ? OR public = true)", ids, userId).
+		Where("id IN ? AND user_id = ?", ids, userId).
 		Find(&models).Error
 	if err != nil {
 		return nil, cerr.NewInternalError("looking up foods for nutrition calculation", err)

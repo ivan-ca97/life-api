@@ -31,7 +31,6 @@ type createFoodRequest struct {
 	MeasurementType     string              `json:"measurement_type"`
 	BaseQuantity        *float64            `json:"base_quantity,omitempty"`
 	BaseUnit            string              `json:"base_unit"`
-	Public              bool                `json:"public"`
 	Tags                []string            `json:"tags"`
 	Ingredients         []string            `json:"ingredients"`
 	Conversions         *conversionsRequest `json:"conversions,omitempty"`
@@ -39,19 +38,18 @@ type createFoodRequest struct {
 }
 
 type updateFoodRequest struct {
-	Name                *string              `json:"name,omitempty"`
-	PhotoUrl            *string              `json:"photo_url,omitempty"`
-	DefaultCalories     *float64             `json:"default_calories,omitempty"`
-	DefaultProteinGrams *float64             `json:"default_protein_grams,omitempty"`
-	DefaultCarbsGrams   *float64             `json:"default_carbs_grams,omitempty"`
-	DefaultFatGrams     *float64             `json:"default_fat_grams,omitempty"`
-	DefaultFiberGrams   *float64             `json:"default_fiber_grams,omitempty"`
-	MeasurementType     *string              `json:"measurement_type,omitempty"`
-	BaseQuantity        *float64             `json:"base_quantity,omitempty"`
-	BaseUnit            *string              `json:"base_unit,omitempty"`
-	Public              *bool                `json:"public,omitempty"`
-	Tags                *[]string            `json:"tags,omitempty"`
-	Ingredients         *[]string            `json:"ingredients,omitempty"`
-	Conversions         *conversionsRequest  `json:"conversions,omitempty"`
-	Portions            *[]portionRequest    `json:"portions,omitempty"`
+	Name                *string             `json:"name,omitempty"`
+	PhotoUrl            *string             `json:"photo_url,omitempty"`
+	DefaultCalories     *float64            `json:"default_calories,omitempty"`
+	DefaultProteinGrams *float64            `json:"default_protein_grams,omitempty"`
+	DefaultCarbsGrams   *float64            `json:"default_carbs_grams,omitempty"`
+	DefaultFatGrams     *float64            `json:"default_fat_grams,omitempty"`
+	DefaultFiberGrams   *float64            `json:"default_fiber_grams,omitempty"`
+	MeasurementType     *string             `json:"measurement_type,omitempty"`
+	BaseQuantity        *float64            `json:"base_quantity,omitempty"`
+	BaseUnit            *string             `json:"base_unit,omitempty"`
+	Tags                *[]string           `json:"tags,omitempty"`
+	Ingredients         *[]string           `json:"ingredients,omitempty"`
+	Conversions         *conversionsRequest `json:"conversions,omitempty"`
+	Portions            *[]portionRequest   `json:"portions,omitempty"`
 }

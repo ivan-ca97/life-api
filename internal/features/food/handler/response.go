@@ -60,7 +60,6 @@ type foodResponse struct {
 	MeasurementType     string                    `json:"measurement_type"`
 	BaseQuantity        float64                   `json:"base_quantity"`
 	BaseUnit            string                    `json:"base_unit"`
-	Public              bool                      `json:"public"`
 	Tags                []string                  `json:"tags"`
 	Ingredients         []ingredientResponse      `json:"ingredients"`
 	VolumeConversion    *volumeConversionResponse `json:"volume_conversion,omitempty"`
@@ -119,7 +118,6 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
-		Public:              f.Public,
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
