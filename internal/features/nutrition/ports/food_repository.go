@@ -12,6 +12,7 @@ type FoodRepository interface {
 	Create(food *domain.Food) error
 	FindById(id, userId uuid.UUID) (*domain.Food, error)
 	FindByIdGlobal(id uuid.UUID) (*domain.Food, error)
+	FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]domain.Food, error)
 	List(userId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
 	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
 	Update(id, userId uuid.UUID, params UpdateFoodParams) (*domain.Food, error)

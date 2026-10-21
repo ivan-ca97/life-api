@@ -38,16 +38,16 @@ type resolvedItems struct {
 
 type mealService struct {
 	repository     ports.MealRepository
-	foodLookup     ports.FoodLookup
+	foodService    ports.FoodService
 	closureChecker dayclosure.DayClosureChecker
 }
 
 var _ ports.MealService = (*mealService)(nil)
 
-func NewMealService(repository ports.MealRepository, foodLookup ports.FoodLookup, closureChecker dayclosure.DayClosureChecker) *mealService {
+func NewMealService(repository ports.MealRepository, foodService ports.FoodService, closureChecker dayclosure.DayClosureChecker) *mealService {
 	return &mealService{
 		repository:     repository,
-		foodLookup:     foodLookup,
+		foodService:    foodService,
 		closureChecker: closureChecker,
 	}
 }
@@ -252,9 +252,13 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 		ids[i] = item.FoodId
 	}
 
-	foods, err := s.foodLookup.FindByIds(userId, ids)
+	usableFoods, err := s.foodService.FindUsableByIds(userId, ids)
 	if err != nil {
 		return nil, err
+	}
+	foods := make(map[uuid.UUID]domain.Food, len(usableFoods))
+	for _, food := range usableFoods {
+		foods[food.Id] = food
 	}
 
 	result.Items = make([]domain.MealItem, len(items))
@@ -304,7 +308,7 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 	return result, nil
 }
 
-func resolveUnit(item ports.ItemParam, food ports.FoodNutrition) (resolvedUnit, error) {
+func resolveUnit(item ports.ItemParam, food domain.Food) (resolvedUnit, error) {
 	dim := units.Dimension(food.MeasurementType)
 	standardUnit := units.StandardUnit[dim]
 

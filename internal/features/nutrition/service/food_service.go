@@ -104,6 +104,16 @@ func (s *foodService) GetById(id, userId uuid.UUID) (*domain.Food, error) {
 	return food, nil
 }
 
+// FindUsableByIds returns the foods among ids that userId can use.
+// IDs the user cannot use, or that do not exist, are left out.
+func (s *foodService) FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]domain.Food, error) {
+	foods, err := s.repository.FindUsableByIds(userId, ids)
+	if err != nil {
+		return nil, err
+	}
+	return foods, nil
+}
+
 func (s *foodService) List(userId uuid.UUID, params ports.ListFoodParams) (types.Page[domain.Food], error) {
 	page, err := s.repository.List(userId, params)
 	if err != nil {

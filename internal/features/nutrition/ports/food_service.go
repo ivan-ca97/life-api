@@ -116,6 +116,7 @@ type ImpactResult struct {
 type FoodService interface {
 	Create(userId uuid.UUID, params CreateFoodParams) (*domain.Food, error)
 	GetById(id, userId uuid.UUID) (*domain.Food, error)
+	FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]domain.Food, error)
 	List(userId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
 	Update(id, userId uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
 	Delete(id, userId uuid.UUID) error

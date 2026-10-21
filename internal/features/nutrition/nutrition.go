@@ -35,8 +35,7 @@ func NewNutritionFeature(
 	foodHandler := handler.NewFoodHandler(authorizedFoodService)
 
 	mealRepository := repository.NewMealRepository(db)
-	foodLookup := repository.NewFoodLookup(db)
-	mealService := service.NewMealService(mealRepository, foodLookup, closureChecker)
+	mealService := service.NewMealService(mealRepository, foodService, closureChecker)
 	authorizedMealService := service.NewAuthorizedMealService(mealService, authorizer)
 	mealHandler := handler.NewMealHandler(authorizedMealService)
 

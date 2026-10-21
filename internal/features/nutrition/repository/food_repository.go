@@ -276,6 +276,32 @@ func (r *foodRepository) Delete(id, userId uuid.UUID) error {
 	return nil
 }
 
+func (r *foodRepository) FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]domain.Food, error) {
+	if len(ids) == 0 {
+		foods := []domain.Food{}
+		return foods, nil
+	}
+
+	var models []food
+	err := r.db.
+		Preload("Tags.Tag").
+		Preload("Ingredients").
+		Preload("Ingredients.Ingredient").
+		Preload("Portions").
+		Where("id IN ? AND user_id = ?", ids, userId).
+		Find(&models).
+		Error
+	if err != nil {
+		return nil, cerr.NewInternalError("finding foods by ids", err)
+	}
+
+	foods := make([]domain.Food, len(models))
+	for i, m := range models {
+		foods[i] = *m.toDomain()
+	}
+	return foods, nil
+}
+
 func (r *foodRepository) FindByIdGlobal(id uuid.UUID) (*domain.Food, error) {
 	var model food
 	err := r.db.
