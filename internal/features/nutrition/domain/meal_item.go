@@ -6,10 +6,7 @@ import (
 	"github.com/ivan-ca97/life/pkg/units"
 )
 
-// unitServing is the unit that means a multiple of the food's base quantity.
-const unitServing = "porcion"
-
-// resolvedUnit is a quantity expressed in the food's standard unit, together
+// Quantity expressed in the food's standard unit, together
 // with the named portion it came from, if any.
 type resolvedUnit struct {
 	NormalizedQuantity float64
@@ -59,19 +56,6 @@ func scaleNutrient(amount *float64, ratio float64) *float64 {
 // unit of the food's dimension, a unit of the other dimension through the food's
 // density, or one of the food's named portions.
 func resolveUnit(food Food, quantity float64, unit string) (*resolvedUnit, error) {
-	// "porcion" multiplies the base serving and normalizes to the standard metric unit
-	if unit == unitServing {
-		baseInStandard, _, err := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
-		if err != nil {
-			return nil, NewInvalidBaseUnitError(food.Id, food.BaseUnit)
-		}
-		resolved := &resolvedUnit{
-			NormalizedQuantity: quantity * baseInStandard,
-			NormalizedUnit:     units.StandardUnit[units.Dimension(food.MeasurementType)],
-		}
-		return resolved, nil
-	}
-
 	resolved := resolveMetricUnit(food, quantity, unit)
 	if resolved != nil {
 		return resolved, nil
