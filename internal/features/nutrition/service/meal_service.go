@@ -8,33 +8,10 @@ import (
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/dayclosure"
 	"github.com/ivan-ca97/life/pkg/types"
-	"github.com/ivan-ca97/life/pkg/units"
 
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
-
-const unitPorcion = "porcion"
-
-type resolvedUnit struct {
-	NormalizedQty     float64
-	NormalizedUnit    string
-	PortionId         *uuid.UUID
-	PortionEquivalent *float64
-}
-
-type nutritionTotals struct {
-	Calories     *float64
-	ProteinGrams *float64
-	CarbsGrams   *float64
-	FatGrams     *float64
-	FiberGrams   *float64
-}
-
-type resolvedItems struct {
-	Items  []domain.MealItem
-	Totals nutritionTotals
-}
 
 type mealService struct {
 	repository     ports.MealRepository
@@ -73,10 +50,11 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateMealParams) (*
 		return nil, cerr.NewBadRequestError("status must be 'complete' or 'pending'")
 	}
 
-	resolved, err := s.resolveItems(userId, params.Items)
+	items, err := s.resolveItems(userId, params.Items)
 	if err != nil {
 		return nil, err
 	}
+	totals := domain.TotalNutrition(items)
 
 	photos, err := photosFromParams(params.Photos)
 	if err != nil {
@@ -92,13 +70,13 @@ func (s *mealService) Create(userId uuid.UUID, params ports.CreateMealParams) (*
 		Status:       status,
 		Photos:       photos,
 		EatenAt:      params.EatenAt,
-		Calories:     coalesce(params.Calories, resolved.Totals.Calories),
-		ProteinGrams: coalesce(params.ProteinGrams, resolved.Totals.ProteinGrams),
-		CarbsGrams:   coalesce(params.CarbsGrams, resolved.Totals.CarbsGrams),
-		FatGrams:     coalesce(params.FatGrams, resolved.Totals.FatGrams),
-		FiberGrams:   coalesce(params.FiberGrams, resolved.Totals.FiberGrams),
+		Calories:     coalesce(params.Calories, totals.Calories),
+		ProteinGrams: coalesce(params.ProteinGrams, totals.ProteinGrams),
+		CarbsGrams:   coalesce(params.CarbsGrams, totals.CarbsGrams),
+		FatGrams:     coalesce(params.FatGrams, totals.FatGrams),
+		FiberGrams:   coalesce(params.FiberGrams, totals.FiberGrams),
 		Tags:         params.Tags,
-		Items:        resolved.Items,
+		Items:        items,
 		Notes:        params.Notes,
 	}
 	err = s.repository.Create(meal)
@@ -163,16 +141,17 @@ func (s *mealService) Update(id, userId uuid.UUID, params ports.UpdateMealParams
 		}
 	}
 	if params.Items != nil {
-		resolved, err := s.resolveItems(userId, *params.Items)
+		items, err := s.resolveItems(userId, *params.Items)
 		if err != nil {
 			return nil, err
 		}
-		params.Calories = coalesce(params.Calories, resolved.Totals.Calories)
-		params.ProteinGrams = coalesce(params.ProteinGrams, resolved.Totals.ProteinGrams)
-		params.CarbsGrams = coalesce(params.CarbsGrams, resolved.Totals.CarbsGrams)
-		params.FatGrams = coalesce(params.FatGrams, resolved.Totals.FatGrams)
-		params.FiberGrams = coalesce(params.FiberGrams, resolved.Totals.FiberGrams)
-		params.ResolvedItems = &resolved.Items
+		totals := domain.TotalNutrition(items)
+		params.Calories = coalesce(params.Calories, totals.Calories)
+		params.ProteinGrams = coalesce(params.ProteinGrams, totals.ProteinGrams)
+		params.CarbsGrams = coalesce(params.CarbsGrams, totals.CarbsGrams)
+		params.FatGrams = coalesce(params.FatGrams, totals.FatGrams)
+		params.FiberGrams = coalesce(params.FiberGrams, totals.FiberGrams)
+		params.ResolvedItems = &items
 	}
 	updated, err := s.repository.Update(id, userId, params)
 	if err != nil {
@@ -191,23 +170,24 @@ func (s *mealService) PreviewNutrition(userId uuid.UUID, items []ports.ItemParam
 	if err != nil {
 		return nil, err
 	}
-	previewItems := make([]ports.NutritionPreviewItem, len(resolved.Items))
-	for i, ri := range resolved.Items {
+	totals := domain.TotalNutrition(resolved)
+	previewItems := make([]ports.NutritionPreviewItem, len(resolved))
+	for i, item := range resolved {
 		previewItems[i] = ports.NutritionPreviewItem{
-			FoodId:       ri.FoodId,
-			Calories:     ri.Calories,
-			ProteinGrams: ri.ProteinGrams,
-			CarbsGrams:   ri.CarbsGrams,
-			FatGrams:     ri.FatGrams,
-			FiberGrams:   ri.FiberGrams,
+			FoodId:       item.FoodId,
+			Calories:     item.Calories,
+			ProteinGrams: item.ProteinGrams,
+			CarbsGrams:   item.CarbsGrams,
+			FatGrams:     item.FatGrams,
+			FiberGrams:   item.FiberGrams,
 		}
 	}
 	result := &ports.NutritionPreview{
-		Calories:     resolved.Totals.Calories,
-		ProteinGrams: resolved.Totals.ProteinGrams,
-		CarbsGrams:   resolved.Totals.CarbsGrams,
-		FatGrams:     resolved.Totals.FatGrams,
-		FiberGrams:   resolved.Totals.FiberGrams,
+		Calories:     totals.Calories,
+		ProteinGrams: totals.ProteinGrams,
+		CarbsGrams:   totals.CarbsGrams,
+		FatGrams:     totals.FatGrams,
+		FiberGrams:   totals.FiberGrams,
 		Items:        previewItems,
 	}
 	return result, nil
@@ -241,10 +221,9 @@ func (s *mealService) ListTypes(userId uuid.UUID, hour *int) ([]string, error) {
 	return types, nil
 }
 
-func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*resolvedItems, error) {
-	result := &resolvedItems{}
+func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) ([]domain.MealItem, error) {
 	if len(items) == 0 {
-		return result, nil
+		return nil, nil
 	}
 
 	ids := make([]uuid.UUID, len(items))
@@ -261,120 +240,22 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) (*
 		foods[food.Id] = food
 	}
 
-	result.Items = make([]domain.MealItem, len(items))
+	resolved := make([]domain.MealItem, len(items))
 	for i, item := range items {
 		food, ok := foods[item.FoodId]
 		if !ok {
 			return nil, cerr.NewBadRequestError(fmt.Sprintf("food %s not found", item.FoodId))
 		}
 
-		ru, err := resolveUnit(item, food)
+		mealItem, err := domain.NewMealItem(food, item.Quantity, item.Unit)
 		if err != nil {
 			return nil, err
 		}
-
-		baseInStandard, _, _ := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
-		ratio := ru.NormalizedQty / baseInStandard
-
-		itemCalories := scale(food.DefaultCalories, ratio)
-		itemProtein := scale(food.DefaultProteinGrams, ratio)
-		itemCarbs := scale(food.DefaultCarbsGrams, ratio)
-		itemFat := scale(food.DefaultFatGrams, ratio)
-		itemFiber := scale(food.DefaultFiberGrams, ratio)
-
-		result.Totals.Calories = addPtr(result.Totals.Calories, itemCalories)
-		result.Totals.ProteinGrams = addPtr(result.Totals.ProteinGrams, itemProtein)
-		result.Totals.CarbsGrams = addPtr(result.Totals.CarbsGrams, itemCarbs)
-		result.Totals.FatGrams = addPtr(result.Totals.FatGrams, itemFat)
-		result.Totals.FiberGrams = addPtr(result.Totals.FiberGrams, itemFiber)
-
-		result.Items[i] = domain.MealItem{
-			FoodId:                 item.FoodId,
-			InputQuantity:          item.Quantity,
-			InputUnit:              item.Unit,
-			InputPortionId:         ru.PortionId,
-			InputPortionEquivalent: ru.PortionEquivalent,
-			NormalizedQuantity:     ru.NormalizedQty,
-			NormalizedUnit:         ru.NormalizedUnit,
-			Calories:               itemCalories,
-			ProteinGrams:           itemProtein,
-			CarbsGrams:             itemCarbs,
-			FatGrams:               itemFat,
-			FiberGrams:             itemFiber,
-			Notes:                  item.Notes,
-			MeasurementMethod:      item.MeasurementMethod,
-		}
+		mealItem.Notes = item.Notes
+		mealItem.MeasurementMethod = item.MeasurementMethod
+		resolved[i] = *mealItem
 	}
-	return result, nil
-}
-
-func resolveUnit(item ports.ItemParam, food domain.Food) (resolvedUnit, error) {
-	dim := units.Dimension(food.MeasurementType)
-	standardUnit := units.StandardUnit[dim]
-
-	// "porcion" multiplies the base serving and normalizes to the standard metric unit
-	if item.Unit == unitPorcion {
-		baseStd, _, err := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
-		if err != nil {
-			return resolvedUnit{}, cerr.NewBadRequestError(fmt.Sprintf("food %s has invalid base unit '%s'", food.Id, food.BaseUnit))
-		}
-		ru := resolvedUnit{
-			NormalizedQty:  item.Quantity * baseStd,
-			NormalizedUnit: standardUnit,
-		}
-		return ru, nil
-	}
-
-	// Metric unit of the same dimension: automatic conversion
-	unitDim, ok := units.GetDimension(item.Unit)
-	if ok && unitDim == dim {
-		qty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-		ru := resolvedUnit{
-			NormalizedQty:  qty,
-			NormalizedUnit: standardUnit,
-		}
-		return ru, nil
-	}
-
-	// Cross-dimension via density (mass food + volume unit, or volume food + mass unit)
-	if food.VolumeConversion != nil {
-		unitDim, ok := units.GetDimension(item.Unit)
-		if ok {
-			if dim == units.DimensionMass && unitDim == units.DimensionVolume {
-				mlQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				ru := resolvedUnit{
-					NormalizedQty:  mlQty * food.VolumeConversion.GramsPerMl,
-					NormalizedUnit: standardUnit,
-				}
-				return ru, nil
-			}
-			if dim == units.DimensionVolume && unitDim == units.DimensionMass {
-				gQty, _, _ := units.ConvertToStandard(item.Quantity, item.Unit)
-				ru := resolvedUnit{
-					NormalizedQty:  gQty / food.VolumeConversion.GramsPerMl,
-					NormalizedUnit: standardUnit,
-				}
-				return ru, nil
-			}
-		}
-	}
-
-	// Named portion (captures UUID for the portion snapshot)
-	for _, portion := range food.Portions {
-		if item.Unit == portion.Name {
-			portionId := portion.Id
-			portionEq := portion.BaseEquivalent
-			ru := resolvedUnit{
-				NormalizedQty:     item.Quantity * portion.BaseEquivalent,
-				NormalizedUnit:    standardUnit,
-				PortionId:         &portionId,
-				PortionEquivalent: &portionEq,
-			}
-			return ru, nil
-		}
-	}
-
-	return resolvedUnit{}, cerr.NewBadRequestError(fmt.Sprintf("unknown unit '%s' for food %s", item.Unit, food.Id))
+	return resolved, nil
 }
 
 func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []ports.ItemParam) error {
@@ -394,26 +275,6 @@ func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []p
 		seen[item.FoodId] = true
 	}
 	return nil
-}
-
-func scale(value *float64, ratio float64) *float64 {
-	if value == nil {
-		return nil
-	}
-	result := *value * ratio
-	return &result
-}
-
-func addPtr(accumulator *float64, value *float64) *float64 {
-	if value == nil {
-		return accumulator
-	}
-	if accumulator == nil {
-		v := *value
-		return &v
-	}
-	sum := *accumulator + *value
-	return &sum
 }
 
 func photosFromParams(params []ports.PhotoParam) ([]domain.MealPhoto, error) {
