@@ -15,14 +15,8 @@ type VolumeConversionParam struct {
 	Note       *string
 }
 
-type UnitConversionParam struct {
-	BaseEquivalent float64
-	Note           *string
-}
-
 type ConversionsParam struct {
 	VolumeConversion *VolumeConversionParam
-	UnitConversion   *UnitConversionParam
 }
 
 type PortionParam struct {

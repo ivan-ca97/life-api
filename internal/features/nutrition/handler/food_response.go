@@ -36,11 +36,6 @@ type volumeConversionResponse struct {
 	Note       string  `json:"note,omitempty"`
 }
 
-type unitConversionResponse struct {
-	BaseEquivalent float64 `json:"base_equivalent"`
-	Note           string  `json:"note,omitempty"`
-}
-
 type portionResponse struct {
 	Id             uuid.UUID `json:"id"`
 	Name           string    `json:"name"`
@@ -63,7 +58,6 @@ type foodResponse struct {
 	Tags                []string                  `json:"tags"`
 	Ingredients         []ingredientResponse      `json:"ingredients"`
 	VolumeConversion    *volumeConversionResponse `json:"volume_conversion,omitempty"`
-	UnitConversion      *unitConversionResponse   `json:"unit_conversion,omitempty"`
 	Portions            []portionResponse         `json:"portions"`
 	CreatedAt           time.Time                 `json:"created_at"`
 	UpdatedAt           time.Time                 `json:"updated_at"`
@@ -97,13 +91,6 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 			Note:       f.VolumeConversion.Note,
 		}
 	}
-	var unitConv *unitConversionResponse
-	if f.UnitConversion != nil {
-		unitConv = &unitConversionResponse{
-			BaseEquivalent: f.UnitConversion.BaseEquivalent,
-			Note:           f.UnitConversion.Note,
-		}
-	}
 
 	return &foodResponse{
 		Id:                  f.Id,
@@ -121,7 +108,6 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
-		UnitConversion:      unitConv,
 		Portions:            portions,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,

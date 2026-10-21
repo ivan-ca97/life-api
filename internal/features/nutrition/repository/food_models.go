@@ -23,8 +23,6 @@ type food struct {
 	BaseUnit            string  `gorm:"not null;default:''"`
 	GramsPerMl          *float64
 	VolumeNote          *string
-	UnitBaseEquivalent  *float64
-	UnitNote            *string
 	CreatedAt           time.Time        `gorm:"not null;autoCreateTime"`
 	UpdatedAt           time.Time        `gorm:"not null;autoUpdateTime"`
 	Tags                []foodTagMap     `gorm:"foreignKey:FoodId"`
@@ -108,18 +106,6 @@ func (f *food) toDomain() *domain.Food {
 		}
 	}
 
-	var unitConv *domain.UnitConversion
-	if f.UnitBaseEquivalent != nil {
-		note := ""
-		if f.UnitNote != nil {
-			note = *f.UnitNote
-		}
-		unitConv = &domain.UnitConversion{
-			BaseEquivalent: *f.UnitBaseEquivalent,
-			Note:           note,
-		}
-	}
-
 	return &domain.Food{
 		Id:                  f.Id,
 		UserId:              f.UserId,
@@ -136,7 +122,6 @@ func (f *food) toDomain() *domain.Food {
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
-		UnitConversion:      unitConv,
 		Portions:            portions,
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
@@ -164,12 +149,6 @@ func foodFromDomain(f *domain.Food) *food {
 		model.GramsPerMl = &f.VolumeConversion.GramsPerMl
 		if f.VolumeConversion.Note != "" {
 			model.VolumeNote = &f.VolumeConversion.Note
-		}
-	}
-	if f.UnitConversion != nil {
-		model.UnitBaseEquivalent = &f.UnitConversion.BaseEquivalent
-		if f.UnitConversion.Note != "" {
-			model.UnitNote = &f.UnitConversion.Note
 		}
 	}
 	return model

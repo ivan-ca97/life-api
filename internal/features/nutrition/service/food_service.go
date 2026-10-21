@@ -82,7 +82,6 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*
 		Tags:                params.Tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    buildVolumeConversion(params.Conversions),
-		UnitConversion:      buildUnitConversion(params.Conversions),
 		Portions:            portions,
 	}
 	err = s.repository.Create(food)
@@ -243,11 +242,6 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 		v := *source.VolumeConversion
 		volumeConv = &v
 	}
-	var unitConv *domain.UnitConversion
-	if source.UnitConversion != nil {
-		u := *source.UnitConversion
-		unitConv = &u
-	}
 	portions := make([]domain.Portion, len(source.Portions))
 	for i, p := range source.Portions {
 		portions[i] = domain.Portion{
@@ -280,7 +274,6 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
-		UnitConversion:      unitConv,
 		Portions:            portions,
 	}
 
@@ -346,11 +339,6 @@ func validateConversions(c *ports.ConversionsParam, dim domain.UnitDimension) er
 			return cerr.NewBadRequestError("grams_per_ml must be positive")
 		}
 	}
-	if c.UnitConversion != nil {
-		if c.UnitConversion.BaseEquivalent <= 0 {
-			return cerr.NewBadRequestError("unit conversion base_equivalent must be positive")
-		}
-	}
 	return nil
 }
 
@@ -391,19 +379,5 @@ func buildVolumeConversion(c *ports.ConversionsParam) *domain.VolumeConversion {
 	return &domain.VolumeConversion{
 		GramsPerMl: c.VolumeConversion.GramsPerMl,
 		Note:       note,
-	}
-}
-
-func buildUnitConversion(c *ports.ConversionsParam) *domain.UnitConversion {
-	if c == nil || c.UnitConversion == nil {
-		return nil
-	}
-	note := ""
-	if c.UnitConversion.Note != nil {
-		note = *c.UnitConversion.Note
-	}
-	return &domain.UnitConversion{
-		BaseEquivalent: c.UnitConversion.BaseEquivalent,
-		Note:           note,
 	}
 }

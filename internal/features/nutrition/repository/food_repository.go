@@ -196,18 +196,10 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodPar
 		c := params.Conversions
 		updates["grams_per_ml"] = nil
 		updates["volume_note"] = nil
-		updates["unit_base_equivalent"] = nil
-		updates["unit_note"] = nil
 		if c.VolumeConversion != nil {
 			updates["grams_per_ml"] = c.VolumeConversion.GramsPerMl
 			if c.VolumeConversion.Note != nil {
 				updates["volume_note"] = *c.VolumeConversion.Note
-			}
-		}
-		if c.UnitConversion != nil {
-			updates["unit_base_equivalent"] = c.UnitConversion.BaseEquivalent
-			if c.UnitConversion.Note != nil {
-				updates["unit_note"] = *c.UnitConversion.Note
 			}
 		}
 	}

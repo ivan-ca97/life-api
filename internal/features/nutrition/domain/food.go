@@ -11,11 +11,6 @@ type VolumeConversion struct {
 	Note       string
 }
 
-type UnitConversion struct {
-	BaseEquivalent float64
-	Note           string
-}
-
 type Portion struct {
 	Id             uuid.UUID
 	Name           string
@@ -38,7 +33,6 @@ type Food struct {
 	Tags                []string
 	Ingredients         []Ingredient
 	VolumeConversion    *VolumeConversion
-	UnitConversion      *UnitConversion
 	Portions            []Portion
 	CreatedAt           time.Time
 	UpdatedAt           time.Time

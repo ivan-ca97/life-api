@@ -5,14 +5,8 @@ type volumeConversionRequest struct {
 	Note       *string `json:"note,omitempty"`
 }
 
-type unitConversionRequest struct {
-	BaseEquivalent float64 `json:"base_equivalent"`
-	Note           *string `json:"note,omitempty"`
-}
-
 type conversionsRequest struct {
 	VolumeConversion *volumeConversionRequest `json:"volume_conversion,omitempty"`
-	UnitConversion   *unitConversionRequest   `json:"unit_conversion,omitempty"`
 }
 
 type portionRequest struct {

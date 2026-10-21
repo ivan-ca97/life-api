@@ -284,9 +284,6 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 			extraUnits = append(extraUnits, domain.MetricUnitsForDimension(domain.DimensionMass)...)
 		}
 	}
-	if food.UnitConversion != nil {
-		extraUnits = append(extraUnits, "u")
-	}
 	for _, p := range food.Portions {
 		extraUnits = append(extraUnits, p.Name)
 	}
@@ -306,12 +303,6 @@ func conversionsParamFromRequest(r *conversionsRequest) *ports.ConversionsParam 
 		p.VolumeConversion = &ports.VolumeConversionParam{
 			GramsPerMl: r.VolumeConversion.GramsPerMl,
 			Note:       r.VolumeConversion.Note,
-		}
-	}
-	if r.UnitConversion != nil {
-		p.UnitConversion = &ports.UnitConversionParam{
-			BaseEquivalent: r.UnitConversion.BaseEquivalent,
-			Note:           r.UnitConversion.Note,
 		}
 	}
 	return p
