@@ -13,12 +13,15 @@ type mealPhotoRequest struct {
 	ItemFoodId *uuid.UUID `json:"item_food_id,omitempty"`
 }
 
+// Measured either in a metric unit or in one of the food's portions; with a
+// portion, the quantity is how many of it.
 type mealItemRequest struct {
-	FoodId            uuid.UUID `json:"food_id"`
-	Quantity          float64   `json:"quantity"`
-	Unit              string    `json:"unit"`
-	Notes             string    `json:"notes"`
-	MeasurementMethod string    `json:"measurement_method,omitempty"`
+	FoodId            uuid.UUID  `json:"food_id"`
+	Quantity          float64    `json:"quantity"`
+	Unit              string     `json:"unit,omitempty"`
+	PortionId         *uuid.UUID `json:"portion_id,omitempty"`
+	Notes             string     `json:"notes"`
+	MeasurementMethod string     `json:"measurement_method,omitempty"`
 }
 
 type createMealRequest struct {

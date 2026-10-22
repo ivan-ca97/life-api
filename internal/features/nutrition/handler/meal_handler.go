@@ -59,6 +59,7 @@ func (h *mealHandler) Create(r *http.Request) (*mealResponse, int, error) {
 			FoodId:            item.FoodId,
 			Quantity:          item.Quantity,
 			Unit:              item.Unit,
+			PortionId:         item.PortionId,
 			Notes:             item.Notes,
 			MeasurementMethod: method,
 		}
@@ -248,6 +249,7 @@ func (h *mealHandler) Update(r *http.Request) (*mealResponse, int, error) {
 				FoodId:            item.FoodId,
 				Quantity:          item.Quantity,
 				Unit:              item.Unit,
+				PortionId:         item.PortionId,
 				Notes:             item.Notes,
 				MeasurementMethod: method,
 			}
@@ -296,9 +298,10 @@ func (h *mealHandler) PreviewNutrition(r *http.Request) (*nutritionPreviewRespon
 	items := make([]ports.ItemParam, len(request.Items))
 	for i, item := range request.Items {
 		items[i] = ports.ItemParam{
-			FoodId:   item.FoodId,
-			Quantity: item.Quantity,
-			Unit:     item.Unit,
+			FoodId:    item.FoodId,
+			Quantity:  item.Quantity,
+			Unit:      item.Unit,
+			PortionId: item.PortionId,
 		}
 	}
 	preview, err := h.service.PreviewNutrition(r.Context(), userId, items)

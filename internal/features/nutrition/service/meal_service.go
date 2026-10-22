@@ -247,7 +247,7 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) ([
 			return nil, cerr.NewBadRequestError(fmt.Sprintf("food %s not found", item.FoodId))
 		}
 
-		mealItem, err := domain.NewMealItem(food, item.Quantity, item.Unit)
+		mealItem, err := newMealItem(food, item)
 		if err != nil {
 			return nil, err
 		}
@@ -256,6 +256,24 @@ func (s *mealService) resolveItems(userId uuid.UUID, items []ports.ItemParam) ([
 		resolved[i] = *mealItem
 	}
 	return resolved, nil
+}
+
+func newMealItem(food domain.Food, item ports.ItemParam) (*domain.MealItem, error) {
+	if item.PortionId == nil {
+		mealItem, err := domain.NewMealItem(food, item.Quantity, item.Unit)
+		if err != nil {
+			return nil, err
+		}
+		return mealItem, nil
+	}
+	if item.Unit != "" {
+		return nil, domain.ErrItemUnitAndPortion
+	}
+	mealItem, err := domain.NewMealItemOfPortion(food, item.Quantity, *item.PortionId)
+	if err != nil {
+		return nil, err
+	}
+	return mealItem, nil
 }
 
 func validateMealParams(calories, protein, carbs, fat, fiber *float64, items []ports.ItemParam) error {

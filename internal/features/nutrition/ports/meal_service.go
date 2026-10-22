@@ -10,10 +10,13 @@ import (
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
+// Measured either in a metric unit or in one of the food's portions, never both;
+// with a portion, the quantity is how many of it.
 type ItemParam struct {
 	FoodId            uuid.UUID
 	Quantity          float64
 	Unit              string
+	PortionId         *uuid.UUID
 	Notes             string
 	MeasurementMethod domain.MeasurementMethod
 }

@@ -18,20 +18,21 @@ type mealPhotoResponse struct {
 }
 
 type mealItemResponse struct {
-	Id                 uuid.UUID `json:"id"`
-	FoodId             uuid.UUID `json:"food_id"`
-	FoodName           string    `json:"food_name"`
-	InputQuantity      float64   `json:"input_quantity"`
-	InputUnit          string    `json:"input_unit"`
-	NormalizedQuantity float64   `json:"normalized_quantity"`
-	NormalizedUnit     string    `json:"normalized_unit"`
-	Calories           *float64  `json:"calories,omitempty"`
-	ProteinGrams       *float64  `json:"protein_grams,omitempty"`
-	CarbsGrams         *float64  `json:"carbs_grams,omitempty"`
-	FatGrams           *float64  `json:"fat_grams,omitempty"`
-	FiberGrams         *float64  `json:"fiber_grams,omitempty"`
-	Notes              string    `json:"notes"`
-	MeasurementMethod  string    `json:"measurement_method,omitempty"`
+	Id                 uuid.UUID  `json:"id"`
+	FoodId             uuid.UUID  `json:"food_id"`
+	FoodName           string     `json:"food_name"`
+	InputQuantity      float64    `json:"input_quantity"`
+	InputUnit          string     `json:"input_unit"`
+	InputPortionId     *uuid.UUID `json:"input_portion_id,omitempty"`
+	NormalizedQuantity float64    `json:"normalized_quantity"`
+	NormalizedUnit     string     `json:"normalized_unit"`
+	Calories           *float64   `json:"calories,omitempty"`
+	ProteinGrams       *float64   `json:"protein_grams,omitempty"`
+	CarbsGrams         *float64   `json:"carbs_grams,omitempty"`
+	FatGrams           *float64   `json:"fat_grams,omitempty"`
+	FiberGrams         *float64   `json:"fiber_grams,omitempty"`
+	Notes              string     `json:"notes"`
+	MeasurementMethod  string     `json:"measurement_method,omitempty"`
 }
 
 type mealResponse struct {
@@ -76,6 +77,7 @@ func mealFromDomain(m *domain.Meal) *mealResponse {
 			FoodName:           item.FoodName,
 			InputQuantity:      item.InputQuantity,
 			InputUnit:          item.InputUnit,
+			InputPortionId:     item.InputPortionId,
 			NormalizedQuantity: item.NormalizedQuantity,
 			NormalizedUnit:     item.NormalizedUnit,
 			Calories:           item.Calories,
