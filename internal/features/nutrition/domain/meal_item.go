@@ -22,7 +22,7 @@ func NewMealItemOfPortion(food Food, count float64, portionId uuid.UUID) (*MealI
 	if err != nil {
 		return nil, err
 	}
-	item := newMealItem(food, count, portion.Name, count*portion.BaseEquivalent)
+	item := newMealItem(food, count, portion.Name, food.PortionInStandardUnit(*portion, count))
 	item.InputPortionId = &portion.Id
 	item.InputPortionEquivalent = &portion.BaseEquivalent
 	return item, nil

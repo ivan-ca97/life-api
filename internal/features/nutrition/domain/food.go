@@ -103,6 +103,12 @@ func (f Food) Portion(portionId uuid.UUID) (*Portion, error) {
 	return nil, NewUnknownPortionError(f.Id, portionId)
 }
 
+// A portion's equivalent is given in the base unit, which is not always the
+// standard unit.
+func (f Food) PortionInStandardUnit(portion Portion, count float64) float64 {
+	return f.BaseUnit.ToStandard(count * portion.BaseEquivalent)
+}
+
 // Scales the nutrients, given for the base quantity, to a quantity in the
 // standard unit. An undefined nutrient stays undefined.
 func (f Food) NutritionFor(standardQuantity float64) NutritionTotals {
