@@ -16,52 +16,115 @@ var StandardUnit = map[Dimension]string{
 	DimensionUnit:   "u",
 }
 
-type metricUnitInfo struct {
-	Dimension  Dimension
-	ToStandard float64
+// A metric unit. Values come from ParseUnit, so a Unit is always one of the
+// metric units.
+type Unit struct {
+	name       string
+	dimension  Dimension
+	toStandard float64
 }
 
-var metricUnits = map[string]metricUnitInfo{
-	"mg": {DimensionMass, 0.001},
-	"g":  {DimensionMass, 1},
-	"kg": {DimensionMass, 1000},
-	"ml": {DimensionVolume, 1},
-	"cl": {DimensionVolume, 10},
-	"dl": {DimensionVolume, 100},
-	"l":  {DimensionVolume, 1000},
-	"u":  {DimensionUnit, 1},
+var metricUnits = indexByName([]Unit{
+	{
+		name:       "mg",
+		dimension:  DimensionMass,
+		toStandard: 0.001,
+	},
+	{
+		name:       "g",
+		dimension:  DimensionMass,
+		toStandard: 1,
+	},
+	{
+		name:       "kg",
+		dimension:  DimensionMass,
+		toStandard: 1000,
+	},
+	{
+		name:       "ml",
+		dimension:  DimensionVolume,
+		toStandard: 1,
+	},
+	{
+		name:       "cl",
+		dimension:  DimensionVolume,
+		toStandard: 10,
+	},
+	{
+		name:       "dl",
+		dimension:  DimensionVolume,
+		toStandard: 100,
+	},
+	{
+		name:       "l",
+		dimension:  DimensionVolume,
+		toStandard: 1000,
+	},
+	{
+		name:       "u",
+		dimension:  DimensionUnit,
+		toStandard: 1,
+	},
+})
+
+func indexByName(all []Unit) map[string]Unit {
+	byName := make(map[string]Unit, len(all))
+	for _, unit := range all {
+		byName[unit.name] = unit
+	}
+	return byName
 }
 
-func IsMetricUnit(unit string) bool {
-	_, ok := metricUnits[unit]
+func ParseUnit(name string) (*Unit, error) {
+	unit, ok := metricUnits[name]
+	if !ok {
+		return nil, fmt.Errorf("unit '%s' is not a metric unit", name)
+	}
+	return &unit, nil
+}
+
+func (u Unit) String() string {
+	return u.name
+}
+
+func (u Unit) Dimension() Dimension {
+	return u.dimension
+}
+
+func (u Unit) ToStandard(quantity float64) float64 {
+	return quantity * u.toStandard
+}
+
+func IsMetricUnit(name string) bool {
+	_, ok := metricUnits[name]
 	return ok
 }
 
-func GetDimension(unit string) (Dimension, bool) {
-	info, ok := metricUnits[unit]
+func GetDimension(name string) (Dimension, bool) {
+	unit, ok := metricUnits[name]
 	if !ok {
 		return "", false
 	}
-	return info.Dimension, true
+	return unit.dimension, true
 }
 
-func ConvertToStandard(qty float64, unit string) (float64, string, error) {
-	info, ok := metricUnits[unit]
+func ConvertToStandard(quantity float64, name string) (float64, string, error) {
+	unit, ok := metricUnits[name]
 	if !ok {
-		return 0, "", fmt.Errorf("unit '%s' is not a metric unit", unit)
+		return 0, "", fmt.Errorf("unit '%s' is not a metric unit", name)
 	}
-	return qty * info.ToStandard, StandardUnit[info.Dimension], nil
+	return unit.ToStandard(quantity), StandardUnit[unit.dimension], nil
 }
 
-func IsValidDimension(d string) bool {
-	return d == string(DimensionMass) || d == string(DimensionVolume) || d == string(DimensionUnit)
+func IsValidDimension(dimension string) bool {
+	return dimension == string(DimensionMass) || dimension == string(DimensionVolume) || dimension == string(DimensionUnit)
 }
 
-func ForDimension(dim Dimension) []string {
+func ForDimension(dimension Dimension) []string {
 	var result []string
-	for unit, info := range metricUnits {
-		if info.Dimension == dim {
-			result = append(result, unit)
+	for name, unit := range metricUnits {
+		if unit.dimension == dimension {
+			result = append(result, name)
 		}
 	}
 	return result

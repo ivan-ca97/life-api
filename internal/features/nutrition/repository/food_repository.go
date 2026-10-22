@@ -92,7 +92,11 @@ func (r *foodRepository) FindById(id, userId uuid.UUID) (*domain.Food, error) {
 	if err != nil {
 		return nil, cerr.NewInternalError("finding food by id", err)
 	}
-	return model.toDomain(), nil
+	found, err := model.toDomain()
+	if err != nil {
+		return nil, err
+	}
+	return found, nil
 }
 
 func (r *foodRepository) List(userId uuid.UUID, params ports.ListFoodParams) (types.Page[domain.Food], error) {
@@ -139,7 +143,11 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListFoodParams) (ty
 
 	foods := make([]domain.Food, len(models))
 	for i, m := range models {
-		foods[i] = *m.toDomain()
+		found, err := m.toDomain()
+		if err != nil {
+			return types.Page[domain.Food]{}, err
+		}
+		foods[i] = *found
 	}
 
 	result := types.Page[domain.Food]{
@@ -351,7 +359,11 @@ func (r *foodRepository) FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]d
 
 	foods := make([]domain.Food, len(models))
 	for i, m := range models {
-		foods[i] = *m.toDomain()
+		found, err := m.toDomain()
+		if err != nil {
+			return nil, err
+		}
+		foods[i] = *found
 	}
 	return foods, nil
 }
@@ -372,7 +384,11 @@ func (r *foodRepository) FindByIdGlobal(id uuid.UUID) (*domain.Food, error) {
 	if err != nil {
 		return nil, cerr.NewInternalError("finding food by id (global)", err)
 	}
-	return model.toDomain(), nil
+	found, err := model.toDomain()
+	if err != nil {
+		return nil, err
+	}
+	return found, nil
 }
 
 // ListCommunity lists foods shared with everyone. Foods no longer carry a

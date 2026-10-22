@@ -47,7 +47,7 @@ func NewMealItemOfPortion(food Food, count float64, portionId uuid.UUID) (*MealI
 }
 
 func newMealItem(food Food, inputQuantity float64, inputUnit string, normalizedQuantity float64) *MealItem {
-	baseInStandard, _, _ := units.ConvertToStandard(food.BaseQuantity, food.BaseUnit)
+	baseInStandard := food.BaseUnit.ToStandard(food.BaseQuantity)
 	ratio := normalizedQuantity / baseInStandard
 
 	item := &MealItem{

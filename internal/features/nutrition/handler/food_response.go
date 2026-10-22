@@ -113,7 +113,7 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		DefaultFiberGrams:   f.DefaultFiberGrams,
 		MeasurementType:     string(f.Dimension()),
 		BaseQuantity:        f.BaseQuantity,
-		BaseUnit:            f.BaseUnit,
+		BaseUnit:            f.BaseUnit.String(),
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,

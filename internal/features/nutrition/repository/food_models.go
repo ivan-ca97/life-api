@@ -1,9 +1,13 @@
 package repository
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+
+	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/units"
 
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
@@ -72,7 +76,14 @@ func (foodPortion) TableName() string {
 	return "food_portions"
 }
 
-func (f *food) toDomain() *domain.Food {
+// Fails when the stored base unit is not a metric unit, which only corrupted data
+// can produce.
+func (f *food) toDomain() (*domain.Food, error) {
+	baseUnit, err := units.ParseUnit(f.BaseUnit)
+	if err != nil {
+		return nil, cerr.NewInternalError(fmt.Sprintf("reading food %s", f.Id), err)
+	}
+
 	tags := make([]string, len(f.Tags))
 	for i, t := range f.Tags {
 		tags[i] = t.Tag.Name
@@ -105,7 +116,7 @@ func (f *food) toDomain() *domain.Food {
 		}
 	}
 
-	return &domain.Food{
+	result := &domain.Food{
 		Id:                  f.Id,
 		UserId:              f.UserId,
 		Name:                f.Name,
@@ -116,7 +127,7 @@ func (f *food) toDomain() *domain.Food {
 		DefaultFatGrams:     f.DefaultFatGrams,
 		DefaultFiberGrams:   f.DefaultFiberGrams,
 		BaseQuantity:        f.BaseQuantity,
-		BaseUnit:            f.BaseUnit,
+		BaseUnit:            *baseUnit,
 		Tags:                tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    volumeConv,
@@ -124,6 +135,7 @@ func (f *food) toDomain() *domain.Food {
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}
+	return result, nil
 }
 
 func foodFromDomain(f *domain.Food) *food {
@@ -138,7 +150,7 @@ func foodFromDomain(f *domain.Food) *food {
 		DefaultFatGrams:     f.DefaultFatGrams,
 		DefaultFiberGrams:   f.DefaultFiberGrams,
 		BaseQuantity:        f.BaseQuantity,
-		BaseUnit:            f.BaseUnit,
+		BaseUnit:            f.BaseUnit.String(),
 		CreatedAt:           f.CreatedAt,
 		UpdatedAt:           f.UpdatedAt,
 	}

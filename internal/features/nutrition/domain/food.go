@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +31,7 @@ type Food struct {
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
 	BaseQuantity        float64
-	BaseUnit            string
+	BaseUnit            units.Unit
 	Tags                []string
 	Ingredients         []Ingredient
 	VolumeConversion    *VolumeConversion
@@ -46,8 +47,35 @@ type Ingredient struct {
 
 // Comes from the base unit, which is always a metric unit.
 func (f Food) Dimension() units.Dimension {
-	dimension, _ := units.GetDimension(f.BaseUnit)
-	return dimension
+	return f.BaseUnit.Dimension()
+}
+
+// Builds a food whose nutrients refer to baseQuantity of a metric base unit.
+func NewFood(userId uuid.UUID, name string, baseQuantity float64, baseUnit string) (*Food, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, ErrFoodNameRequired
+	}
+	unit, err := ParseBaseUnit(baseUnit)
+	if err != nil {
+		return nil, err
+	}
+	food := &Food{
+		Id:           uuid.New(),
+		UserId:       userId,
+		Name:         name,
+		BaseQuantity: baseQuantity,
+		BaseUnit:     *unit,
+	}
+	return food, nil
+}
+
+// A food's base unit is always a metric unit.
+func ParseBaseUnit(name string) (*units.Unit, error) {
+	unit, err := units.ParseUnit(name)
+	if err != nil {
+		return nil, NewInvalidBaseUnitError(name)
+	}
+	return unit, nil
 }
 
 // Builds a valid portion: the name is required and the equivalent, in the food's

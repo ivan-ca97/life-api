@@ -62,7 +62,7 @@ func (a *foodSearchAdapter) Search(userId uuid.UUID, queries []string, limit int
 				DefaultFiberGrams:   f.DefaultFiberGrams,
 				MeasurementType:     string(f.Dimension()),
 				BaseQuantity:        f.BaseQuantity,
-				BaseUnit:            f.BaseUnit,
+				BaseUnit:            f.BaseUnit.String(),
 			}
 			candidates = append(candidates, candidate)
 			if len(candidates) >= limit {
