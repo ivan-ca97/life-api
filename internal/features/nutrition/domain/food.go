@@ -50,6 +50,81 @@ func (f Food) Dimension() units.Dimension {
 	return f.BaseUnit.Dimension()
 }
 
+func (f Food) StandardUnit() string {
+	return units.StandardUnit[f.Dimension()]
+}
+
+// Converts a quantity in a metric unit to the food's standard unit: directly for
+// a unit of the food's own dimension, through its density for one of the other.
+func (f Food) InStandardUnit(quantity float64, unit string) (float64, error) {
+	metricUnit, err := units.ParseUnit(unit)
+	if err != nil {
+		return 0, NewUnknownUnitError(f.Id, unit)
+	}
+	inStandardUnit := metricUnit.ToStandard(quantity)
+
+	switch {
+	case metricUnit.Dimension() == f.Dimension():
+		return inStandardUnit, nil
+	case f.canConvertByDensity(metricUnit.Dimension()):
+		return f.convertByDensity(inStandardUnit), nil
+	default:
+		return 0, NewUnknownUnitError(f.Id, unit)
+	}
+}
+
+// Mass and volume convert into each other when the food has a density.
+func (f Food) canConvertByDensity(dimension units.Dimension) bool {
+	if f.VolumeConversion == nil {
+		return false
+	}
+	massToVolume := f.Dimension() == units.DimensionVolume && dimension == units.DimensionMass
+	volumeToMass := f.Dimension() == units.DimensionMass && dimension == units.DimensionVolume
+	return massToVolume || volumeToMass
+}
+
+// Takes a quantity of the other dimension, in its standard unit, to the food's
+// standard unit.
+func (f Food) convertByDensity(quantity float64) float64 {
+	gramsPerMl := f.VolumeConversion.GramsPerMl
+	if f.Dimension() == units.DimensionMass {
+		return quantity * gramsPerMl
+	}
+	return quantity / gramsPerMl
+}
+
+func (f Food) Portion(portionId uuid.UUID) (*Portion, error) {
+	for _, portion := range f.Portions {
+		if portion.Id == portionId {
+			found := portion
+			return &found, nil
+		}
+	}
+	return nil, NewUnknownPortionError(f.Id, portionId)
+}
+
+// Scales the nutrients, given for the base quantity, to a quantity in the
+// standard unit. An undefined nutrient stays undefined.
+func (f Food) NutritionFor(standardQuantity float64) NutritionTotals {
+	ratio := standardQuantity / f.BaseUnit.ToStandard(f.BaseQuantity)
+	nutrition := NutritionTotals{
+		Calories:     scaleNutrient(f.DefaultCalories, ratio),
+		ProteinGrams: scaleNutrient(f.DefaultProteinGrams, ratio),
+		CarbsGrams:   scaleNutrient(f.DefaultCarbsGrams, ratio),
+		FatGrams:     scaleNutrient(f.DefaultFatGrams, ratio),
+		FiberGrams:   scaleNutrient(f.DefaultFiberGrams, ratio),
+	}
+	return nutrition
+}
+
+func scaleNutrient(amount *float64, ratio float64) *float64 {
+	if amount == nil {
+		return nil
+	}
+	scaled := *amount * ratio
+	return &scaled
+}
+
 // Builds a food whose nutrients refer to baseQuantity of a metric base unit.
 func NewFood(userId uuid.UUID, name string, baseQuantity float64, baseUnit string) (*Food, error) {
 	if strings.TrimSpace(name) == "" {

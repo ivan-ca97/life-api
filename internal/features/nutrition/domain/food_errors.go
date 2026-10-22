@@ -3,6 +3,8 @@ package domain
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 )
 
@@ -22,4 +24,12 @@ func NewInvalidBaseUnitError(unit string) error {
 
 func NewInvalidPortionEquivalentError(name string) error {
 	return cerr.NewBadRequestError(fmt.Sprintf("portion '%s' base_equivalent must be positive", name))
+}
+
+func NewUnknownUnitError(foodId uuid.UUID, unit string) error {
+	return cerr.NewBadRequestError(fmt.Sprintf("unknown unit '%s' for food %s", unit, foodId))
+}
+
+func NewUnknownPortionError(foodId uuid.UUID, portionId uuid.UUID) error {
+	return cerr.NewBadRequestError(fmt.Sprintf("portion %s does not belong to food %s", portionId, foodId))
 }
