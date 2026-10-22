@@ -37,7 +37,6 @@ type CreateFoodParams struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
 	Tags                []string
@@ -54,7 +53,6 @@ type UpdateFoodParams struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     *string
 	BaseQuantity        *float64
 	BaseUnit            *string
 	Tags                *[]string

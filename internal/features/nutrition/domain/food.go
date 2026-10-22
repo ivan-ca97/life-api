@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/ivan-ca97/life/pkg/units"
 )
 
 type VolumeConversion struct {
@@ -27,7 +29,6 @@ type Food struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string
 	BaseQuantity        float64
 	BaseUnit            string
 	Tags                []string
@@ -41,6 +42,12 @@ type Food struct {
 type Ingredient struct {
 	Id   uuid.UUID
 	Name string
+}
+
+// Comes from the base unit, which is always a metric unit.
+func (f Food) Dimension() units.Dimension {
+	dimension, _ := units.GetDimension(f.BaseUnit)
+	return dimension
 }
 
 // Builds a valid portion: the name is required and the equivalent, in the food's

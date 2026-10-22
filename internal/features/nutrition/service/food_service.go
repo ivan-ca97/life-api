@@ -7,6 +7,7 @@ import (
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
+	"github.com/ivan-ca97/life/pkg/units"
 	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
@@ -34,16 +35,12 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*
 	if err != nil {
 		return nil, err
 	}
-	err = validateMeasurementType(params.MeasurementType)
+	err = validateMetricUnit(params.BaseUnit)
 	if err != nil {
 		return nil, err
 	}
-	dim := domain.UnitDimension(params.MeasurementType)
-	err = validateMetricUnitForDimension(params.BaseUnit, dim)
-	if err != nil {
-		return nil, err
-	}
-	err = validateConversions(params.Conversions, dim)
+	dimension, _ := units.GetDimension(params.BaseUnit)
+	err = validateConversions(params.Conversions, dimension)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +61,6 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*
 		DefaultCarbsGrams:   params.DefaultCarbsGrams,
 		DefaultFatGrams:     params.DefaultFatGrams,
 		DefaultFiberGrams:   params.DefaultFiberGrams,
-		MeasurementType:     params.MeasurementType,
 		BaseQuantity:        params.BaseQuantity,
 		BaseUnit:            params.BaseUnit,
 		Tags:                params.Tags,
@@ -125,40 +121,24 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams
 	if err != nil {
 		return nil, err
 	}
-	if params.MeasurementType != nil {
-		err := validateMeasurementType(*params.MeasurementType)
-		if err != nil {
-			return nil, err
-		}
-	}
 	if params.BaseUnit != nil {
-		var dim domain.UnitDimension
-		if params.MeasurementType != nil {
-			dim = domain.UnitDimension(*params.MeasurementType)
-		} else {
-			current, err := s.repository.FindById(id, userId)
-			if err != nil {
-				return nil, err
-			}
-			dim = domain.UnitDimension(current.MeasurementType)
-		}
-		err := validateMetricUnitForDimension(*params.BaseUnit, dim)
+		err := validateMetricUnit(*params.BaseUnit)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if params.Conversions != nil {
-		var dim domain.UnitDimension
-		if params.MeasurementType != nil {
-			dim = domain.UnitDimension(*params.MeasurementType)
+		var dimension units.Dimension
+		if params.BaseUnit != nil {
+			dimension, _ = units.GetDimension(*params.BaseUnit)
 		} else {
 			current, err := s.repository.FindById(id, userId)
 			if err != nil {
 				return nil, err
 			}
-			dim = domain.UnitDimension(current.MeasurementType)
+			dimension = current.Dimension()
 		}
-		err := validateConversions(params.Conversions, dim)
+		err := validateConversions(params.Conversions, dimension)
 		if err != nil {
 			return nil, err
 		}
@@ -295,7 +275,6 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 		DefaultCarbsGrams:   source.DefaultCarbsGrams,
 		DefaultFatGrams:     source.DefaultFatGrams,
 		DefaultFiberGrams:   source.DefaultFiberGrams,
-		MeasurementType:     source.MeasurementType,
 		BaseQuantity:        source.BaseQuantity,
 		BaseUnit:            source.BaseUnit,
 		Tags:                tags,
@@ -328,38 +307,19 @@ func (s *foodService) Impact(foodId, userId uuid.UUID) (*ports.ImpactResult, err
 	return impact, nil
 }
 
-func validateMeasurementType(mt string) error {
-	if !domain.IsValidMeasurementType(mt) {
-		return cerr.NewBadRequestError(fmt.Sprintf("invalid measurement_type '%s', must be 'mass', 'volume' or 'unit'", mt))
-	}
-	return nil
-}
-
 func validateMetricUnit(unit string) error {
-	if !domain.IsMetricUnit(unit) {
+	if !units.IsMetricUnit(unit) {
 		return cerr.NewBadRequestError(fmt.Sprintf("'%s' is not a valid metric unit", unit))
 	}
 	return nil
 }
 
-func validateMetricUnitForDimension(unit string, dim domain.UnitDimension) error {
-	err := validateMetricUnit(unit)
-	if err != nil {
-		return err
-	}
-	unitDim, _ := domain.GetUnitDimension(unit)
-	if unitDim != dim {
-		return cerr.NewBadRequestError(fmt.Sprintf("unit '%s' is not compatible with measurement type '%s'", unit, dim))
-	}
-	return nil
-}
-
-func validateConversions(c *ports.ConversionsParam, dim domain.UnitDimension) error {
+func validateConversions(c *ports.ConversionsParam, dimension units.Dimension) error {
 	if c == nil {
 		return nil
 	}
 	if c.VolumeConversion != nil {
-		if dim == domain.DimensionUnit {
+		if dimension == units.DimensionUnit {
 			return cerr.NewBadRequestError("volume conversion not allowed for unit-type foods")
 		}
 		if c.VolumeConversion.GramsPerMl <= 0 {

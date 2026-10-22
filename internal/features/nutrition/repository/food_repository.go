@@ -189,9 +189,6 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodPar
 	if params.BaseUnit != nil {
 		updates["base_unit"] = *params.BaseUnit
 	}
-	if params.MeasurementType != nil {
-		updates["measurement_type"] = *params.MeasurementType
-	}
 	if params.Conversions != nil {
 		c := params.Conversions
 		updates["grams_per_ml"] = nil

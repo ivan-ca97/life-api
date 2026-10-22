@@ -16,7 +16,7 @@ func NewMealItem(food Food, quantity float64, unit string) (*MealItem, error) {
 
 	var normalized float64
 	switch {
-	case unitDimension == units.Dimension(food.MeasurementType):
+	case unitDimension == food.Dimension():
 		normalized = inStandardUnit
 	case canConvertByDensity(food, unitDimension):
 		normalized = convertByDensity(food, inStandardUnit)
@@ -55,7 +55,7 @@ func newMealItem(food Food, inputQuantity float64, inputUnit string, normalizedQ
 		InputQuantity:      inputQuantity,
 		InputUnit:          inputUnit,
 		NormalizedQuantity: normalizedQuantity,
-		NormalizedUnit:     units.StandardUnit[units.Dimension(food.MeasurementType)],
+		NormalizedUnit:     units.StandardUnit[food.Dimension()],
 		Calories:           scaleNutrient(food.DefaultCalories, ratio),
 		ProteinGrams:       scaleNutrient(food.DefaultProteinGrams, ratio),
 		CarbsGrams:         scaleNutrient(food.DefaultCarbsGrams, ratio),
@@ -78,7 +78,7 @@ func canConvertByDensity(food Food, unitDimension units.Dimension) bool {
 	if food.VolumeConversion == nil {
 		return false
 	}
-	dimension := units.Dimension(food.MeasurementType)
+	dimension := food.Dimension()
 	massToVolume := dimension == units.DimensionVolume && unitDimension == units.DimensionMass
 	volumeToMass := dimension == units.DimensionMass && unitDimension == units.DimensionVolume
 	return massToVolume || volumeToMass
@@ -88,7 +88,7 @@ func canConvertByDensity(food Food, unitDimension units.Dimension) bool {
 // standard unit.
 func convertByDensity(food Food, quantity float64) float64 {
 	gramsPerMl := food.VolumeConversion.GramsPerMl
-	if units.Dimension(food.MeasurementType) == units.DimensionMass {
+	if food.Dimension() == units.DimensionMass {
 		return quantity * gramsPerMl
 	}
 	return quantity / gramsPerMl

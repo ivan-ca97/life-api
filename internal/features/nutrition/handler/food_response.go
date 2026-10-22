@@ -111,7 +111,7 @@ func foodFromDomain(f *domain.Food) *foodResponse {
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,
 		DefaultFatGrams:     f.DefaultFatGrams,
 		DefaultFiberGrams:   f.DefaultFiberGrams,
-		MeasurementType:     f.MeasurementType,
+		MeasurementType:     string(f.Dimension()),
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
 		Tags:                tags,

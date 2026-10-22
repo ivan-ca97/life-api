@@ -27,7 +27,6 @@ type createFoodRequest struct {
 	DefaultCarbsGrams   *float64               `json:"default_carbs_grams,omitempty"`
 	DefaultFatGrams     *float64               `json:"default_fat_grams,omitempty"`
 	DefaultFiberGrams   *float64               `json:"default_fiber_grams,omitempty"`
-	MeasurementType     string                 `json:"measurement_type"`
 	BaseQuantity        *float64               `json:"base_quantity,omitempty"`
 	BaseUnit            string                 `json:"base_unit"`
 	Tags                []string               `json:"tags"`
@@ -44,7 +43,6 @@ type updateFoodRequest struct {
 	DefaultCarbsGrams   *float64            `json:"default_carbs_grams,omitempty"`
 	DefaultFatGrams     *float64            `json:"default_fat_grams,omitempty"`
 	DefaultFiberGrams   *float64            `json:"default_fiber_grams,omitempty"`
-	MeasurementType     *string             `json:"measurement_type,omitempty"`
 	BaseQuantity        *float64            `json:"base_quantity,omitempty"`
 	BaseUnit            *string             `json:"base_unit,omitempty"`
 	Tags                *[]string           `json:"tags,omitempty"`

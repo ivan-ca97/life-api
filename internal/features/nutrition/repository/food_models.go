@@ -18,7 +18,6 @@ type food struct {
 	DefaultCarbsGrams   *float64
 	DefaultFatGrams     *float64
 	DefaultFiberGrams   *float64
-	MeasurementType     string  `gorm:"not null;default:'mass'"`
 	BaseQuantity        float64 `gorm:"not null;default:1"`
 	BaseUnit            string  `gorm:"not null;default:''"`
 	GramsPerMl          *float64
@@ -116,7 +115,6 @@ func (f *food) toDomain() *domain.Food {
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,
 		DefaultFatGrams:     f.DefaultFatGrams,
 		DefaultFiberGrams:   f.DefaultFiberGrams,
-		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
 		Tags:                tags,
@@ -139,7 +137,6 @@ func foodFromDomain(f *domain.Food) *food {
 		DefaultCarbsGrams:   f.DefaultCarbsGrams,
 		DefaultFatGrams:     f.DefaultFatGrams,
 		DefaultFiberGrams:   f.DefaultFiberGrams,
-		MeasurementType:     f.MeasurementType,
 		BaseQuantity:        f.BaseQuantity,
 		BaseUnit:            f.BaseUnit,
 		CreatedAt:           f.CreatedAt,

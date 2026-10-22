@@ -5,8 +5,8 @@ import (
 
 	"github.com/ivan-ca97/life/pkg/api"
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
+	"github.com/ivan-ca97/life/pkg/units"
 
-	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
@@ -72,7 +72,6 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 		DefaultCarbsGrams:   request.DefaultCarbsGrams,
 		DefaultFatGrams:     request.DefaultFatGrams,
 		DefaultFiberGrams:   request.DefaultFiberGrams,
-		MeasurementType:     request.MeasurementType,
 		BaseQuantity:        baseQuantity,
 		BaseUnit:            request.BaseUnit,
 		Tags:                request.Tags,
@@ -157,7 +156,6 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		DefaultCarbsGrams:   request.DefaultCarbsGrams,
 		DefaultFatGrams:     request.DefaultFatGrams,
 		DefaultFiberGrams:   request.DefaultFiberGrams,
-		MeasurementType:     request.MeasurementType,
 		BaseQuantity:        request.BaseQuantity,
 		BaseUnit:            request.BaseUnit,
 		Tags:                request.Tags,
@@ -246,9 +244,9 @@ func (h *foodHandler) ListIngredients(r *http.Request) (*ingredientsListResponse
 
 func (h *foodHandler) ListUnits(_ *http.Request) (*unitsListResponse, int, error) {
 	result := &unitsListResponse{
-		Mass:   domain.MetricUnitsForDimension(domain.DimensionMass),
-		Volume: domain.MetricUnitsForDimension(domain.DimensionVolume),
-		Unit:   domain.MetricUnitsForDimension(domain.DimensionUnit),
+		Mass:   units.ForDimension(units.DimensionMass),
+		Volume: units.ForDimension(units.DimensionVolume),
+		Unit:   units.ForDimension(units.DimensionUnit),
 	}
 	return result, http.StatusOK, nil
 }
@@ -266,13 +264,13 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 	if err != nil {
 		return nil, 0, err
 	}
-	metric := domain.MetricUnitsForDimension(domain.UnitDimension(food.MeasurementType))
+	metric := units.ForDimension(food.Dimension())
 	var extraUnits []string
 	if food.VolumeConversion != nil {
-		if domain.UnitDimension(food.MeasurementType) == domain.DimensionMass {
-			extraUnits = append(extraUnits, domain.MetricUnitsForDimension(domain.DimensionVolume)...)
+		if food.Dimension() == units.DimensionMass {
+			extraUnits = append(extraUnits, units.ForDimension(units.DimensionVolume)...)
 		} else {
-			extraUnits = append(extraUnits, domain.MetricUnitsForDimension(domain.DimensionMass)...)
+			extraUnits = append(extraUnits, units.ForDimension(units.DimensionMass)...)
 		}
 	}
 	for _, p := range food.Portions {

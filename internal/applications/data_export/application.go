@@ -12,6 +12,7 @@ import (
 	"github.com/ivan-ca97/life/pkg/api/endpoint"
 	"github.com/ivan-ca97/life/pkg/api/http_errors"
 	"github.com/ivan-ca97/life/pkg/auth"
+	"github.com/ivan-ca97/life/pkg/units"
 
 	"github.com/ivan-ca97/life/internal/permissions"
 )
@@ -308,7 +309,6 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 	var foodRows []struct {
 		Id                  uuid.UUID `gorm:"column:id"`
 		Name                string    `gorm:"column:name"`
-		MeasurementType     string    `gorm:"column:measurement_type"`
 		BaseUnit            string    `gorm:"column:base_unit"`
 		BaseQuantity        *float64  `gorm:"column:base_quantity"`
 		DefaultCalories     *float64  `gorm:"column:default_calories"`
@@ -319,7 +319,7 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		CreatedAt           time.Time `gorm:"column:created_at"`
 	}
 	err = a.db.Raw(`
-		SELECT id, name, measurement_type, base_unit, base_quantity,
+		SELECT id, name, base_unit, base_quantity,
 		       default_calories, default_protein_grams, default_carbs_grams,
 		       default_fat_grams, default_fiber_grams, created_at
 		FROM foods WHERE user_id = ? ORDER BY name
@@ -328,10 +328,11 @@ func (a *DataExportApplication) buildExport(userId uuid.UUID) (*exportResponse, 
 		return nil, err
 	}
 	for _, row := range foodRows {
+		dimension, _ := units.GetDimension(row.BaseUnit)
 		item := foodExport{
 			Id:                  row.Id.String(),
 			Name:                row.Name,
-			MeasurementType:     row.MeasurementType,
+			MeasurementType:     string(dimension),
 			BaseUnit:            row.BaseUnit,
 			BaseQuantity:        row.BaseQuantity,
 			DefaultCalories:     row.DefaultCalories,
