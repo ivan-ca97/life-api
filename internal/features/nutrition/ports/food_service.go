@@ -1,8 +1,6 @@
 package ports
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 
 	"github.com/ivan-ca97/life/pkg/types"
@@ -67,46 +65,9 @@ type ListFoodParams struct {
 	Sort  *string // "name" (default), "created_at", "updated_at"
 }
 
-type FrequencyParams struct {
-	From *time.Time
-	To   *time.Time
-	Tag  *string
-}
-
-type FrequencyResult struct {
-	FoodId   uuid.UUID
-	FoodName string
-	Count    int64
-	LastDate time.Time
-}
-
-type IngredientFrequencyParams struct {
-	From *time.Time
-	To   *time.Time
-}
-
-type IngredientFrequencyResult struct {
-	IngredientId   uuid.UUID
-	IngredientName string
-	Count          int64
-	LastDate       time.Time
-}
-
 type CommunityListParams struct {
 	types.PaginationParams
 	Query *string
-}
-
-type PortionImpact struct {
-	PortionId   uuid.UUID
-	PortionName string
-	ItemCount   int64
-}
-
-type ImpactResult struct {
-	TotalItems    int64
-	TotalUsers    int64
-	PortionImpact []PortionImpact
 }
 
 type FoodService interface {
@@ -119,10 +80,7 @@ type FoodService interface {
 	AddPortion(foodId, userId uuid.UUID, params PortionParam) (*domain.Portion, error)
 	UpdatePortion(foodId, portionId, userId uuid.UUID, params UpdatePortionParams) (*domain.Portion, error)
 	DeletePortion(foodId, portionId, userId uuid.UUID) error
-	Frequency(userId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
-	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error)
 	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
 	Copy(actorId, foodId uuid.UUID) (*domain.Food, error)
-	Impact(foodId, userId uuid.UUID) (*ImpactResult, error)
 }

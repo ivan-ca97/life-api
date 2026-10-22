@@ -19,6 +19,9 @@ type MealHandler interface {
 	Delete(r *http.Request) (*api.NoResponse, int, error)
 	ListTypes(r *http.Request) (*mealTypesResponse, int, error)
 	PreviewNutrition(r *http.Request) (*nutritionPreviewResponse, int, error)
+	FoodFrequency(r *http.Request) (*foodFrequencyResponse, int, error)
+	IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error)
+	FoodImpact(r *http.Request) (*foodImpactResponse, int, error)
 }
 
 type mealHandler struct {
@@ -350,4 +353,74 @@ func (h *mealHandler) ListTypes(r *http.Request) (*mealTypesResponse, int, error
 		Types: mealTypes,
 	}
 	return response, http.StatusOK, nil
+}
+
+func (h *mealHandler) FoodFrequency(r *http.Request) (*foodFrequencyResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	from, err := api.QueryParamDate(r, "from")
+	if err != nil {
+		return nil, 0, err
+	}
+	to, err := api.QueryParamDate(r, "to")
+	if err != nil {
+		return nil, 0, err
+	}
+	var tag *string
+	t := r.URL.Query().Get("tag")
+	if t != "" {
+		tag = &t
+	}
+	params := ports.FoodFrequencyParams{
+		From: from,
+		To:   to,
+		Tag:  tag,
+	}
+	results, err := h.service.FoodFrequency(r.Context(), userId, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return newFoodFrequencyResponse(results), http.StatusOK, nil
+}
+
+func (h *mealHandler) IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	from, err := api.QueryParamDate(r, "from")
+	if err != nil {
+		return nil, 0, err
+	}
+	to, err := api.QueryParamDate(r, "to")
+	if err != nil {
+		return nil, 0, err
+	}
+	params := ports.IngredientFrequencyParams{
+		From: from,
+		To:   to,
+	}
+	results, err := h.service.IngredientFrequency(r.Context(), userId, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return newIngredientFrequencyResponse(results), http.StatusOK, nil
+}
+
+func (h *mealHandler) FoodImpact(r *http.Request) (*foodImpactResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	id, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	result, err := h.service.FoodImpact(r.Context(), userId, id)
+	if err != nil {
+		return nil, 0, err
+	}
+	return newFoodImpactResponse(result), http.StatusOK, nil
 }

@@ -18,4 +18,7 @@ type AuthorizedMealService interface {
 	Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error
 	ListTypes(ctx context.Context, ownerId uuid.UUID, hour *int) ([]string, error)
 	PreviewNutrition(ctx context.Context, ownerId uuid.UUID, items []ItemParam) (*NutritionPreview, error)
+	FoodFrequency(ctx context.Context, ownerId uuid.UUID, params FoodFrequencyParams) ([]FoodFrequencyResult, error)
+	IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
+	FoodImpact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*FoodImpactResult, error)
 }

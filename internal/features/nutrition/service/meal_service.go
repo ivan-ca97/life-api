@@ -403,3 +403,31 @@ func coalesce(explicit *float64, calculated *float64) *float64 {
 	}
 	return calculated
 }
+
+func (s *mealService) FoodFrequency(userId uuid.UUID, params ports.FoodFrequencyParams) ([]ports.FoodFrequencyResult, error) {
+	results, err := s.repository.FoodFrequency(userId, params)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (s *mealService) IngredientFrequency(userId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {
+	results, err := s.repository.IngredientFrequency(userId, params)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (s *mealService) FoodImpact(foodId, userId uuid.UUID) (*ports.FoodImpactResult, error) {
+	_, err := s.foodService.GetById(foodId, userId)
+	if err != nil {
+		return nil, err
+	}
+	impact, err := s.repository.FoodImpact(foodId)
+	if err != nil {
+		return nil, err
+	}
+	return impact, nil
+}

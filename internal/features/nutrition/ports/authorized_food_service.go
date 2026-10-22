@@ -19,10 +19,7 @@ type AuthorizedFoodService interface {
 	AddPortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, params PortionParam) (*domain.Portion, error)
 	UpdatePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID, params UpdatePortionParams) (*domain.Portion, error)
 	DeletePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID) error
-	Frequency(ctx context.Context, ownerId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
-	IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(ctx context.Context, ownerId uuid.UUID, query *string) ([]domain.Ingredient, error)
 	ListCommunity(ctx context.Context, params CommunityListParams) (types.Page[domain.Food], error)
 	Copy(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*domain.Food, error)
-	Impact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*ImpactResult, error)
 }

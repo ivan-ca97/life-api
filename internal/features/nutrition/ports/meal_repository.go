@@ -14,5 +14,8 @@ type MealRepository interface {
 	List(userId uuid.UUID, params ListMealParams) (types.Page[domain.Meal], error)
 	Update(id, userId uuid.UUID, params UpdateMealParams) (*domain.Meal, error)
 	Delete(id, userId uuid.UUID) error
+	FoodFrequency(userId uuid.UUID, params FoodFrequencyParams) ([]FoodFrequencyResult, error)
+	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
+	FoodImpact(foodId uuid.UUID) (*FoodImpactResult, error)
 	ListDistinctTypes(userId uuid.UUID, hour *int) ([]string, error)
 }

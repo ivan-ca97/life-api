@@ -123,30 +123,6 @@ func (s *authorizedFoodService) DeletePortion(ctx context.Context, ownerId uuid.
 	return nil
 }
 
-func (s *authorizedFoodService) Frequency(ctx context.Context, ownerId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {
-	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
-	if err != nil {
-		return nil, err
-	}
-	results, err := s.base.Frequency(ownerId, params)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
-func (s *authorizedFoodService) IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {
-	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
-	if err != nil {
-		return nil, err
-	}
-	results, err := s.base.IngredientFrequency(ownerId, params)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
 func (s *authorizedFoodService) ListIngredients(ctx context.Context, ownerId uuid.UUID, query *string) ([]domain.Ingredient, error) {
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
 	if err != nil {
@@ -181,16 +157,4 @@ func (s *authorizedFoodService) Copy(ctx context.Context, ownerId uuid.UUID, foo
 		return nil, err
 	}
 	return food, nil
-}
-
-func (s *authorizedFoodService) Impact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*ports.ImpactResult, error) {
-	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
-	if err != nil {
-		return nil, err
-	}
-	impact, err := s.base.Impact(foodId, ownerId)
-	if err != nil {
-		return nil, err
-	}
-	return impact, nil
 }

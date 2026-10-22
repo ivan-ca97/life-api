@@ -415,36 +415,6 @@ func (r *foodRepository) IsAccessibleBy(foodId, actorId uuid.UUID) (bool, error)
 	return count > 0, nil
 }
 
-func (r *foodRepository) IngredientFrequency(userId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {
-	query := `
-		SELECT i.id AS ingredient_id, i.name AS ingredient_name, COUNT(DISTINCT m.id) AS count, MAX(m.date) AS last_date
-		FROM food_ingredients fi
-		JOIN ingredients i ON i.id = fi.ingredient_id
-		JOIN meal_items mi ON mi.food_id = fi.food_id
-		JOIN meals m ON m.id = mi.meal_id
-		WHERE m.user_id = ?
-	`
-	args := []any{userId}
-
-	if params.From != nil {
-		query += " AND m.date >= ?"
-		args = append(args, *params.From)
-	}
-	if params.To != nil {
-		query += " AND m.date <= ?"
-		args = append(args, *params.To)
-	}
-
-	query += " GROUP BY i.id, i.name ORDER BY count DESC"
-
-	var results []ports.IngredientFrequencyResult
-	err := r.db.Raw(query, args...).Scan(&results).Error
-	if err != nil {
-		return nil, cerr.NewInternalError("querying ingredient frequency", err)
-	}
-	return results, nil
-}
-
 func (r *foodRepository) ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error) {
 	sql := `
 		SELECT i.id, i.name
@@ -514,92 +484,6 @@ func (r *foodRepository) upsertIngredients(userId uuid.UUID, names []string) ([]
 		ids[i] = newIng.Id
 	}
 	return ids, nil
-}
-
-func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
-	var totalItems int64
-	err := r.db.Raw(`SELECT COUNT(*) FROM meal_items WHERE food_id = ?`, foodId).Scan(&totalItems).Error
-	if err != nil {
-		return nil, cerr.NewInternalError("counting food impact items", err)
-	}
-
-	var totalUsers int64
-	err = r.db.Raw(`
-		SELECT COUNT(DISTINCT m.user_id)
-		FROM meal_items mi
-		JOIN meals m ON m.id = mi.meal_id
-		WHERE mi.food_id = ?
-	`, foodId).Scan(&totalUsers).Error
-	if err != nil {
-		return nil, cerr.NewInternalError("counting food impact users", err)
-	}
-
-	type portionRow struct {
-		PortionId   uuid.UUID `gorm:"column:portion_id"`
-		PortionName string    `gorm:"column:portion_name"`
-		ItemCount   int64     `gorm:"column:item_count"`
-	}
-	var rows []portionRow
-	err = r.db.Raw(`
-		SELECT fp.id AS portion_id, fp.name AS portion_name, COUNT(mi.id) AS item_count
-		FROM food_portions fp
-		LEFT JOIN meal_items mi ON mi.input_portion_id = fp.id
-		WHERE fp.food_id = ?
-		GROUP BY fp.id, fp.name
-		ORDER BY item_count DESC
-	`, foodId).Scan(&rows).Error
-	if err != nil {
-		return nil, cerr.NewInternalError("querying portion impact", err)
-	}
-
-	portions := make([]ports.PortionImpact, len(rows))
-	for i, row := range rows {
-		portions[i] = ports.PortionImpact{
-			PortionId:   row.PortionId,
-			PortionName: row.PortionName,
-			ItemCount:   row.ItemCount,
-		}
-	}
-
-	result := &ports.ImpactResult{
-		TotalItems:    totalItems,
-		TotalUsers:    totalUsers,
-		PortionImpact: portions,
-	}
-	return result, nil
-}
-
-func (r *foodRepository) Frequency(userId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {
-	query := `
-		SELECT f.id AS food_id, f.name AS food_name, COUNT(*) AS count, MAX(m.date) AS last_date
-		FROM meal_items mi
-		JOIN meals m ON m.id = mi.meal_id
-		JOIN foods f ON f.id = mi.food_id
-		WHERE m.user_id = ?
-	`
-	args := []any{userId}
-
-	if params.From != nil {
-		query += " AND m.date >= ?"
-		args = append(args, *params.From)
-	}
-	if params.To != nil {
-		query += " AND m.date <= ?"
-		args = append(args, *params.To)
-	}
-	if params.Tag != nil {
-		query += " AND f.id IN (SELECT ftm.food_id FROM food_tag_map ftm JOIN food_tags ft ON ft.id = ftm.tag_id WHERE ft.name = ?)"
-		args = append(args, *params.Tag)
-	}
-
-	query += " GROUP BY f.id, f.name ORDER BY count DESC"
-
-	var results []ports.FrequencyResult
-	err := r.db.Raw(query, args...).Scan(&results).Error
-	if err != nil {
-		return nil, cerr.NewInternalError("querying food frequency", err)
-	}
-	return results, nil
 }
 
 func (r *foodRepository) upsertTags(foodId, userId uuid.UUID, names []string) error {

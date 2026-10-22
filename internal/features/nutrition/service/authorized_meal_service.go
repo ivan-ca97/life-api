@@ -110,3 +110,39 @@ func (s *authorizedMealService) PreviewNutrition(ctx context.Context, ownerId uu
 	}
 	return preview, nil
 }
+
+func (s *authorizedMealService) FoodFrequency(ctx context.Context, ownerId uuid.UUID, params ports.FoodFrequencyParams) ([]ports.FoodFrequencyResult, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
+	if err != nil {
+		return nil, err
+	}
+	results, err := s.base.FoodFrequency(ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (s *authorizedMealService) IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
+	if err != nil {
+		return nil, err
+	}
+	results, err := s.base.IngredientFrequency(ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (s *authorizedMealService) FoodImpact(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID) (*ports.FoodImpactResult, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
+	if err != nil {
+		return nil, err
+	}
+	impact, err := s.base.FoodImpact(foodId, ownerId)
+	if err != nil {
+		return nil, err
+	}
+	return impact, nil
+}

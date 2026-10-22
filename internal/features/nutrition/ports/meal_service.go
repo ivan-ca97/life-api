@@ -110,4 +110,44 @@ type MealService interface {
 	Delete(id, userId uuid.UUID) error
 	ListTypes(userId uuid.UUID, hour *int) ([]string, error)
 	PreviewNutrition(userId uuid.UUID, items []ItemParam) (*NutritionPreview, error)
+	FoodFrequency(userId uuid.UUID, params FoodFrequencyParams) ([]FoodFrequencyResult, error)
+	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
+	FoodImpact(foodId, userId uuid.UUID) (*FoodImpactResult, error)
+}
+
+type FoodFrequencyParams struct {
+	From *time.Time
+	To   *time.Time
+	Tag  *string
+}
+
+type FoodFrequencyResult struct {
+	FoodId   uuid.UUID
+	FoodName string
+	Count    int64
+	LastDate time.Time
+}
+
+type IngredientFrequencyParams struct {
+	From *time.Time
+	To   *time.Time
+}
+
+type IngredientFrequencyResult struct {
+	IngredientId   uuid.UUID
+	IngredientName string
+	Count          int64
+	LastDate       time.Time
+}
+
+type PortionImpact struct {
+	PortionId   uuid.UUID
+	PortionName string
+	ItemCount   int64
+}
+
+type FoodImpactResult struct {
+	TotalItems    int64
+	TotalUsers    int64
+	PortionImpact []PortionImpact
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ivan-ca97/life/pkg/types"
 
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
 type mealPhotoResponse struct {
@@ -149,5 +150,85 @@ func newMealPage(page types.Page[domain.Meal]) *mealPage {
 		Total:  page.Total,
 		Limit:  page.Limit,
 		Offset: page.Offset,
+	}
+}
+
+type foodFrequencyItemResponse struct {
+	FoodId   uuid.UUID `json:"food_id"`
+	FoodName string    `json:"food_name"`
+	Count    int64     `json:"count"`
+	LastDate string    `json:"last_date"`
+}
+
+type foodFrequencyResponse struct {
+	Items []foodFrequencyItemResponse `json:"items"`
+}
+
+func newFoodFrequencyResponse(results []ports.FoodFrequencyResult) *foodFrequencyResponse {
+	items := make([]foodFrequencyItemResponse, len(results))
+	for i, r := range results {
+		items[i] = foodFrequencyItemResponse{
+			FoodId:   r.FoodId,
+			FoodName: r.FoodName,
+			Count:    r.Count,
+			LastDate: r.LastDate.Format("2006-01-02"),
+		}
+	}
+	return &foodFrequencyResponse{
+		Items: items,
+	}
+}
+
+type ingredientFrequencyItemResponse struct {
+	IngredientId   uuid.UUID `json:"ingredient_id"`
+	IngredientName string    `json:"ingredient_name"`
+	Count          int64     `json:"count"`
+	LastDate       string    `json:"last_date"`
+}
+
+type ingredientFrequencyResponse struct {
+	Items []ingredientFrequencyItemResponse `json:"items"`
+}
+
+func newIngredientFrequencyResponse(results []ports.IngredientFrequencyResult) *ingredientFrequencyResponse {
+	items := make([]ingredientFrequencyItemResponse, len(results))
+	for i, r := range results {
+		items[i] = ingredientFrequencyItemResponse{
+			IngredientId:   r.IngredientId,
+			IngredientName: r.IngredientName,
+			Count:          r.Count,
+			LastDate:       r.LastDate.Format("2006-01-02"),
+		}
+	}
+	return &ingredientFrequencyResponse{
+		Items: items,
+	}
+}
+
+type portionImpactResponse struct {
+	PortionId   uuid.UUID `json:"portion_id"`
+	PortionName string    `json:"portion_name"`
+	ItemCount   int64     `json:"item_count"`
+}
+
+type foodImpactResponse struct {
+	TotalItems    int64                   `json:"total_items"`
+	TotalUsers    int64                   `json:"total_users"`
+	PortionImpact []portionImpactResponse `json:"portion_impact"`
+}
+
+func newFoodImpactResponse(r *ports.FoodImpactResult) *foodImpactResponse {
+	portions := make([]portionImpactResponse, len(r.PortionImpact))
+	for i, p := range r.PortionImpact {
+		portions[i] = portionImpactResponse{
+			PortionId:   p.PortionId,
+			PortionName: p.PortionName,
+			ItemCount:   p.ItemCount,
+		}
+	}
+	return &foodImpactResponse{
+		TotalItems:    r.TotalItems,
+		TotalUsers:    r.TotalUsers,
+		PortionImpact: portions,
 	}
 }

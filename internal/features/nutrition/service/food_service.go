@@ -186,22 +186,6 @@ func (s *foodService) DeletePortion(foodId, portionId, userId uuid.UUID) error {
 	return nil
 }
 
-func (s *foodService) Frequency(userId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {
-	results, err := s.repository.Frequency(userId, params)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
-func (s *foodService) IngredientFrequency(userId uuid.UUID, params ports.IngredientFrequencyParams) ([]ports.IngredientFrequencyResult, error) {
-	results, err := s.repository.IngredientFrequency(userId, params)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
 func (s *foodService) ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error) {
 	ingredients, err := s.repository.ListIngredients(userId, query)
 	if err != nil {
@@ -281,18 +265,6 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-func (s *foodService) Impact(foodId, userId uuid.UUID) (*ports.ImpactResult, error) {
-	_, err := s.repository.FindById(foodId, userId)
-	if err != nil {
-		return nil, err
-	}
-	impact, err := s.repository.Impact(foodId)
-	if err != nil {
-		return nil, err
-	}
-	return impact, nil
 }
 
 func validateConversions(c *ports.ConversionsParam, dimension units.Dimension) error {

@@ -19,14 +19,11 @@ type FoodHandler interface {
 	AddPortion(r *http.Request) (*portionResponse, int, error)
 	UpdatePortion(r *http.Request) (*portionResponse, int, error)
 	DeletePortion(r *http.Request) (*api.NoResponse, int, error)
-	Frequency(r *http.Request) (*frequencyResponse, int, error)
-	IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error)
 	ListIngredients(r *http.Request) (*ingredientsListResponse, int, error)
 	ListUnits(r *http.Request) (*unitsListResponse, int, error)
 	ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, error)
 	ListCommunity(r *http.Request) (*foodPage, int, error)
 	Copy(r *http.Request) (*foodResponse, int, error)
-	Impact(r *http.Request) (*impactResponse, int, error)
 }
 
 type foodHandler struct {
@@ -185,36 +182,6 @@ func (h *foodHandler) Delete(r *http.Request) (*api.NoResponse, int, error) {
 	return nil, http.StatusNoContent, nil
 }
 
-func (h *foodHandler) Frequency(r *http.Request) (*frequencyResponse, int, error) {
-	userId, err := api.PathParamUUID(r, "userId")
-	if err != nil {
-		return nil, 0, err
-	}
-	from, err := api.QueryParamDate(r, "from")
-	if err != nil {
-		return nil, 0, err
-	}
-	to, err := api.QueryParamDate(r, "to")
-	if err != nil {
-		return nil, 0, err
-	}
-	var tag *string
-	t := r.URL.Query().Get("tag")
-	if t != "" {
-		tag = &t
-	}
-	params := ports.FrequencyParams{
-		From: from,
-		To:   to,
-		Tag:  tag,
-	}
-	results, err := h.service.Frequency(r.Context(), userId, params)
-	if err != nil {
-		return nil, 0, err
-	}
-	return newFrequencyResponse(results), http.StatusOK, nil
-}
-
 func (h *foodHandler) ListIngredients(r *http.Request) (*ingredientsListResponse, int, error) {
 	userId, err := api.PathParamUUID(r, "userId")
 	if err != nil {
@@ -295,30 +262,6 @@ func conversionsParamFromRequest(r *conversionsRequest) *ports.ConversionsParam 
 		}
 	}
 	return p
-}
-
-func (h *foodHandler) IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error) {
-	userId, err := api.PathParamUUID(r, "userId")
-	if err != nil {
-		return nil, 0, err
-	}
-	from, err := api.QueryParamDate(r, "from")
-	if err != nil {
-		return nil, 0, err
-	}
-	to, err := api.QueryParamDate(r, "to")
-	if err != nil {
-		return nil, 0, err
-	}
-	params := ports.IngredientFrequencyParams{
-		From: from,
-		To:   to,
-	}
-	results, err := h.service.IngredientFrequency(r.Context(), userId, params)
-	if err != nil {
-		return nil, 0, err
-	}
-	return newIngredientFrequencyResponse(results), http.StatusOK, nil
 }
 
 func (h *foodHandler) ListCommunity(r *http.Request) (*foodPage, int, error) {
@@ -424,20 +367,4 @@ func (h *foodHandler) Copy(r *http.Request) (*foodResponse, int, error) {
 		return nil, 0, err
 	}
 	return foodFromDomain(food), http.StatusCreated, nil
-}
-
-func (h *foodHandler) Impact(r *http.Request) (*impactResponse, int, error) {
-	userId, err := api.PathParamUUID(r, "userId")
-	if err != nil {
-		return nil, 0, err
-	}
-	id, err := api.PathParamUUID(r, "id")
-	if err != nil {
-		return nil, 0, err
-	}
-	result, err := h.service.Impact(r.Context(), userId, id)
-	if err != nil {
-		return nil, 0, err
-	}
-	return newImpactResponse(result), http.StatusOK, nil
 }
