@@ -149,17 +149,6 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	var portions *[]ports.PortionParam
-	if request.Portions != nil {
-		pp := make([]ports.PortionParam, len(*request.Portions))
-		for i, p := range *request.Portions {
-			pp[i] = ports.PortionParam{
-				Name:           p.Name,
-				BaseEquivalent: p.BaseEquivalent,
-			}
-		}
-		portions = &pp
-	}
 	params := ports.UpdateFoodParams{
 		Name:                request.Name,
 		PhotoUrl:            request.PhotoUrl,
@@ -174,7 +163,6 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
 		Conversions:         conversionsParamFromRequest(request.Conversions),
-		Portions:            portions,
 	}
 	food, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {

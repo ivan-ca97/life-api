@@ -60,7 +60,6 @@ type UpdateFoodParams struct {
 	Tags                *[]string
 	Ingredients         *[]string
 	Conversions         *ConversionsParam
-	Portions            *[]PortionParam
 }
 
 type ListFoodParams struct {

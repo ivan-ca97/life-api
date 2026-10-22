@@ -163,12 +163,6 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams
 			return nil, err
 		}
 	}
-	if params.Portions != nil {
-		err := validatePortions(*params.Portions)
-		if err != nil {
-			return nil, err
-		}
-	}
 	food, err := s.repository.Update(id, userId, params)
 	if err != nil {
 		return nil, err
@@ -370,17 +364,6 @@ func validateConversions(c *ports.ConversionsParam, dim domain.UnitDimension) er
 		}
 		if c.VolumeConversion.GramsPerMl <= 0 {
 			return cerr.NewBadRequestError("grams_per_ml must be positive")
-		}
-	}
-	return nil
-}
-
-func validatePortions(portions []ports.PortionParam) error {
-	var food domain.Food
-	for _, portion := range portions {
-		_, err := food.AddPortion(portion.Name, portion.BaseEquivalent)
-		if err != nil {
-			return err
 		}
 	}
 	return nil

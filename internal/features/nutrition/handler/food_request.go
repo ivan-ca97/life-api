@@ -37,18 +37,17 @@ type createFoodRequest struct {
 }
 
 type updateFoodRequest struct {
-	Name                *string                 `json:"name,omitempty"`
-	PhotoUrl            *string                 `json:"photo_url,omitempty"`
-	DefaultCalories     *float64                `json:"default_calories,omitempty"`
-	DefaultProteinGrams *float64                `json:"default_protein_grams,omitempty"`
-	DefaultCarbsGrams   *float64                `json:"default_carbs_grams,omitempty"`
-	DefaultFatGrams     *float64                `json:"default_fat_grams,omitempty"`
-	DefaultFiberGrams   *float64                `json:"default_fiber_grams,omitempty"`
-	MeasurementType     *string                 `json:"measurement_type,omitempty"`
-	BaseQuantity        *float64                `json:"base_quantity,omitempty"`
-	BaseUnit            *string                 `json:"base_unit,omitempty"`
-	Tags                *[]string               `json:"tags,omitempty"`
-	Ingredients         *[]string               `json:"ingredients,omitempty"`
-	Conversions         *conversionsRequest     `json:"conversions,omitempty"`
-	Portions            *[]createPortionRequest `json:"portions,omitempty"`
+	Name                *string             `json:"name,omitempty"`
+	PhotoUrl            *string             `json:"photo_url,omitempty"`
+	DefaultCalories     *float64            `json:"default_calories,omitempty"`
+	DefaultProteinGrams *float64            `json:"default_protein_grams,omitempty"`
+	DefaultCarbsGrams   *float64            `json:"default_carbs_grams,omitempty"`
+	DefaultFatGrams     *float64            `json:"default_fat_grams,omitempty"`
+	DefaultFiberGrams   *float64            `json:"default_fiber_grams,omitempty"`
+	MeasurementType     *string             `json:"measurement_type,omitempty"`
+	BaseQuantity        *float64            `json:"base_quantity,omitempty"`
+	BaseUnit            *string             `json:"base_unit,omitempty"`
+	Tags                *[]string           `json:"tags,omitempty"`
+	Ingredients         *[]string           `json:"ingredients,omitempty"`
+	Conversions         *conversionsRequest `json:"conversions,omitempty"`
 }

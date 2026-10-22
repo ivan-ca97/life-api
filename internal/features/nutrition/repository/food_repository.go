@@ -244,12 +244,6 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodPar
 		}
 	}
 
-	if params.Portions != nil {
-		if err = r.upsertPortions(id, *params.Portions); err != nil {
-			return nil, err
-		}
-	}
-
 	updated, err := r.FindById(id, userId)
 	if err != nil {
 		return nil, err
@@ -507,58 +501,6 @@ func (r *foodRepository) upsertIngredients(userId uuid.UUID, names []string) ([]
 		ids[i] = newIng.Id
 	}
 	return ids, nil
-}
-
-func (r *foodRepository) upsertPortions(foodId uuid.UUID, incoming []ports.PortionParam) error {
-	var existing []foodPortion
-	err := r.db.Where("food_id = ?", foodId).Find(&existing).Error
-	if err != nil {
-		return cerr.NewInternalError("fetching food portions for upsert", err)
-	}
-
-	existingByName := make(map[string]foodPortion, len(existing))
-	for _, p := range existing {
-		existingByName[p.Name] = p
-	}
-
-	incomingNames := make(map[string]bool, len(incoming))
-	for _, p := range incoming {
-		incomingNames[p.Name] = true
-	}
-
-	for _, ex := range existing {
-		if !incomingNames[ex.Name] {
-			err := r.db.Delete(&foodPortion{}, "id = ?", ex.Id).Error
-			if err != nil {
-				return cerr.NewInternalError("deleting removed food portion", err)
-			}
-		}
-	}
-
-	for _, p := range incoming {
-		ex, ok := existingByName[p.Name]
-		if ok {
-			if ex.BaseEquivalent != p.BaseEquivalent {
-				err := r.db.Model(&foodPortion{}).Where("id = ?", ex.Id).Update("base_equivalent", p.BaseEquivalent).Error
-				if err != nil {
-					return cerr.NewInternalError("updating food portion", err)
-				}
-			}
-		} else {
-			newPortion := foodPortion{
-				Id:             uuid.New(),
-				FoodId:         foodId,
-				Name:           p.Name,
-				BaseEquivalent: p.BaseEquivalent,
-			}
-			err := r.db.Create(&newPortion).Error
-			if err != nil {
-				return cerr.NewInternalError("inserting food portion", err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func (r *foodRepository) Impact(foodId uuid.UUID) (*ports.ImpactResult, error) {
