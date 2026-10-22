@@ -16,6 +16,9 @@ type AuthorizedFoodService interface {
 	List(ctx context.Context, ownerId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
 	Update(ctx context.Context, ownerId uuid.UUID, id uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
 	Delete(ctx context.Context, ownerId uuid.UUID, id uuid.UUID) error
+	AddPortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, params PortionParam) (*domain.Portion, error)
+	UpdatePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID, params UpdatePortionParams) (*domain.Portion, error)
+	DeletePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID) error
 	Frequency(ctx context.Context, ownerId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
 	IngredientFrequency(ctx context.Context, ownerId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(ctx context.Context, ownerId uuid.UUID, query *string) ([]domain.Ingredient, error)

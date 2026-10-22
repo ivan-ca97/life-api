@@ -17,6 +17,9 @@ type FoodRepository interface {
 	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
 	Update(id, userId uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
 	Delete(id, userId uuid.UUID) error
+	AddPortion(foodId, userId uuid.UUID, portion *domain.Portion) error
+	UpdatePortion(foodId, userId uuid.UUID, portion *domain.Portion) error
+	DeletePortion(foodId, portionId, userId uuid.UUID) error
 	Frequency(userId uuid.UUID, params FrequencyParams) ([]FrequencyResult, error)
 	IngredientFrequency(userId uuid.UUID, params IngredientFrequencyParams) ([]IngredientFrequencyResult, error)
 	ListIngredients(userId uuid.UUID, query *string) ([]domain.Ingredient, error)

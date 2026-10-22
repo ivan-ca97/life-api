@@ -26,6 +26,9 @@ func (f *nutritionFeature) ProtectedRoutes(r chi.Router) {
 	r.Get("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.GetById))
 	r.Patch("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.Update))
 	r.Delete("/foods/{id}", endpoint.JSON(f.errorHandler, f.foodHandler.Delete))
+	r.Post("/foods/{id}/portions", endpoint.JSON(f.errorHandler, f.foodHandler.AddPortion))
+	r.Patch("/foods/{id}/portions/{portionId}", endpoint.JSON(f.errorHandler, f.foodHandler.UpdatePortion))
+	r.Delete("/foods/{id}/portions/{portionId}", endpoint.JSON(f.errorHandler, f.foodHandler.DeletePortion))
 
 	r.Post("/meals", endpoint.JSON(f.errorHandler, f.mealHandler.Create))
 	r.Get("/meals", endpoint.JSON(f.errorHandler, f.mealHandler.List))

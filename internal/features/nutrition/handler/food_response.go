@@ -42,6 +42,15 @@ type portionResponse struct {
 	BaseEquivalent float64   `json:"base_equivalent"`
 }
 
+func portionFromDomain(p *domain.Portion) *portionResponse {
+	response := &portionResponse{
+		Id:             p.Id,
+		Name:           p.Name,
+		BaseEquivalent: p.BaseEquivalent,
+	}
+	return response
+}
+
 type foodResponse struct {
 	Id                  uuid.UUID                 `json:"id"`
 	UserId              uuid.UUID                 `json:"user_id"`

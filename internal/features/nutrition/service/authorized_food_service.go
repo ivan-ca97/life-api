@@ -87,6 +87,42 @@ func (s *authorizedFoodService) Delete(ctx context.Context, ownerId uuid.UUID, i
 	return nil
 }
 
+func (s *authorizedFoodService) AddPortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, params ports.PortionParam) (*domain.Portion, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsUpdate)
+	if err != nil {
+		return nil, err
+	}
+	portion, err := s.base.AddPortion(foodId, ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return portion, nil
+}
+
+func (s *authorizedFoodService) UpdatePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID, params ports.UpdatePortionParams) (*domain.Portion, error) {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsUpdate)
+	if err != nil {
+		return nil, err
+	}
+	portion, err := s.base.UpdatePortion(foodId, portionId, ownerId, params)
+	if err != nil {
+		return nil, err
+	}
+	return portion, nil
+}
+
+func (s *authorizedFoodService) DeletePortion(ctx context.Context, ownerId uuid.UUID, foodId uuid.UUID, portionId uuid.UUID) error {
+	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsUpdate)
+	if err != nil {
+		return err
+	}
+	err = s.base.DeletePortion(foodId, portionId, ownerId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *authorizedFoodService) Frequency(ctx context.Context, ownerId uuid.UUID, params ports.FrequencyParams) ([]ports.FrequencyResult, error) {
 	err := s.authorizer.Authorize(ctx, ownerId, permissions.FoodsRead)
 	if err != nil {

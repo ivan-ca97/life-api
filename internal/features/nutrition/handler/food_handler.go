@@ -16,6 +16,9 @@ type FoodHandler interface {
 	List(r *http.Request) (*foodPage, int, error)
 	Update(r *http.Request) (*foodResponse, int, error)
 	Delete(r *http.Request) (*api.NoResponse, int, error)
+	AddPortion(r *http.Request) (*portionResponse, int, error)
+	UpdatePortion(r *http.Request) (*portionResponse, int, error)
+	DeletePortion(r *http.Request) (*api.NoResponse, int, error)
 	Frequency(r *http.Request) (*frequencyResponse, int, error)
 	IngredientFrequency(r *http.Request) (*ingredientFrequencyResponse, int, error)
 	ListIngredients(r *http.Request) (*ingredientsListResponse, int, error)
@@ -347,6 +350,78 @@ func (h *foodHandler) ListCommunity(r *http.Request) (*foodPage, int, error) {
 		return nil, 0, err
 	}
 	return newFoodPage(page), http.StatusOK, nil
+}
+
+func (h *foodHandler) AddPortion(r *http.Request) (*portionResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	foodId, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	request, err := api.DecodeBody[createPortionRequest](r)
+	if err != nil {
+		return nil, 0, err
+	}
+	params := ports.PortionParam{
+		Name:           request.Name,
+		BaseEquivalent: request.BaseEquivalent,
+	}
+	portion, err := h.service.AddPortion(r.Context(), userId, foodId, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return portionFromDomain(portion), http.StatusCreated, nil
+}
+
+func (h *foodHandler) UpdatePortion(r *http.Request) (*portionResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	foodId, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	portionId, err := api.PathParamUUID(r, "portionId")
+	if err != nil {
+		return nil, 0, err
+	}
+	request, err := api.DecodeBody[updatePortionRequest](r)
+	if err != nil {
+		return nil, 0, err
+	}
+	params := ports.UpdatePortionParams{
+		Name:           request.Name,
+		BaseEquivalent: request.BaseEquivalent,
+	}
+	portion, err := h.service.UpdatePortion(r.Context(), userId, foodId, portionId, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	return portionFromDomain(portion), http.StatusOK, nil
+}
+
+func (h *foodHandler) DeletePortion(r *http.Request) (*api.NoResponse, int, error) {
+	userId, err := api.PathParamUUID(r, "userId")
+	if err != nil {
+		return nil, 0, err
+	}
+	foodId, err := api.PathParamUUID(r, "id")
+	if err != nil {
+		return nil, 0, err
+	}
+	portionId, err := api.PathParamUUID(r, "portionId")
+	if err != nil {
+		return nil, 0, err
+	}
+	err = h.service.DeletePortion(r.Context(), userId, foodId, portionId)
+	if err != nil {
+		return nil, 0, err
+	}
+	return nil, http.StatusNoContent, nil
 }
 
 func (h *foodHandler) Copy(r *http.Request) (*foodResponse, int, error) {

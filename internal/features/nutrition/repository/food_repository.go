@@ -257,6 +257,77 @@ func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodPar
 	return updated, nil
 }
 
+func (r *foodRepository) AddPortion(foodId, userId uuid.UUID, portion *domain.Portion) error {
+	err := r.ensureOwned(foodId, userId)
+	if err != nil {
+		return err
+	}
+	model := foodPortion{
+		Id:             portion.Id,
+		FoodId:         foodId,
+		Name:           portion.Name,
+		BaseEquivalent: portion.BaseEquivalent,
+	}
+	err = r.db.Create(&model).Error
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return domain.ErrPortionAlreadyExists
+		}
+		return cerr.NewInternalError("inserting food portion", err)
+	}
+	return nil
+}
+
+func (r *foodRepository) UpdatePortion(foodId, userId uuid.UUID, portion *domain.Portion) error {
+	err := r.ensureOwned(foodId, userId)
+	if err != nil {
+		return err
+	}
+	updates := map[string]any{
+		"name":            portion.Name,
+		"base_equivalent": portion.BaseEquivalent,
+	}
+	result := r.db.Model(&foodPortion{}).Where("id = ? AND food_id = ?", portion.Id, foodId).Updates(updates)
+	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key") {
+			return domain.ErrPortionAlreadyExists
+		}
+		return cerr.NewInternalError("updating food portion", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return domain.ErrPortionNotFound
+	}
+	return nil
+}
+
+func (r *foodRepository) DeletePortion(foodId, portionId, userId uuid.UUID) error {
+	err := r.ensureOwned(foodId, userId)
+	if err != nil {
+		return err
+	}
+	result := r.db.Where("id = ? AND food_id = ?", portionId, foodId).Delete(&foodPortion{})
+	if result.Error != nil {
+		return cerr.NewInternalError("deleting food portion", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return domain.ErrPortionNotFound
+	}
+	return nil
+}
+
+// Fails with food not found unless the user owns the food.
+func (r *foodRepository) ensureOwned(foodId, userId uuid.UUID) error {
+	var count int64
+	err := r.db.Model(&food{}).Where("id = ? AND user_id = ?", foodId, userId).Count(&count).Error
+	if err != nil {
+		return cerr.NewInternalError("checking food existence", err)
+	}
+	if count == 0 {
+		return domain.ErrFoodNotFound
+	}
+	return nil
+}
+
 func (r *foodRepository) Delete(id, userId uuid.UUID) error {
 	result := r.db.Where("id = ? AND user_id = ?", id, userId).Delete(&food{})
 	if result.Error != nil {

@@ -47,23 +47,11 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*
 	if err != nil {
 		return nil, err
 	}
-	err = validatePortions(params.Portions)
-	if err != nil {
-		return nil, err
-	}
 
 	ingredients := make([]domain.Ingredient, len(params.Ingredients))
 	for i, name := range params.Ingredients {
 		ingredients[i] = domain.Ingredient{
 			Name: name,
-		}
-	}
-	portions := make([]domain.Portion, len(params.Portions))
-	for i, p := range params.Portions {
-		portions[i] = domain.Portion{
-			Id:             uuid.New(),
-			Name:           p.Name,
-			BaseEquivalent: p.BaseEquivalent,
 		}
 	}
 	food := &domain.Food{
@@ -82,7 +70,12 @@ func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*
 		Tags:                params.Tags,
 		Ingredients:         ingredients,
 		VolumeConversion:    buildVolumeConversion(params.Conversions),
-		Portions:            portions,
+	}
+	for _, portion := range params.Portions {
+		_, err = food.AddPortion(portion.Name, portion.BaseEquivalent)
+		if err != nil {
+			return nil, err
+		}
 	}
 	err = s.repository.Create(food)
 	if err != nil {
@@ -185,6 +178,46 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams
 
 func (s *foodService) Delete(id, userId uuid.UUID) error {
 	err := s.repository.Delete(id, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *foodService) AddPortion(foodId, userId uuid.UUID, params ports.PortionParam) (*domain.Portion, error) {
+	food, err := s.repository.FindById(foodId, userId)
+	if err != nil {
+		return nil, err
+	}
+	portion, err := food.AddPortion(params.Name, params.BaseEquivalent)
+	if err != nil {
+		return nil, err
+	}
+	err = s.repository.AddPortion(foodId, userId, portion)
+	if err != nil {
+		return nil, err
+	}
+	return portion, nil
+}
+
+func (s *foodService) UpdatePortion(foodId, portionId, userId uuid.UUID, params ports.UpdatePortionParams) (*domain.Portion, error) {
+	food, err := s.repository.FindById(foodId, userId)
+	if err != nil {
+		return nil, err
+	}
+	portion, err := food.UpdatePortion(portionId, params.Name, params.BaseEquivalent)
+	if err != nil {
+		return nil, err
+	}
+	err = s.repository.UpdatePortion(foodId, userId, portion)
+	if err != nil {
+		return nil, err
+	}
+	return portion, nil
+}
+
+func (s *foodService) DeletePortion(foodId, portionId, userId uuid.UUID) error {
+	err := s.repository.DeletePortion(foodId, portionId, userId)
 	if err != nil {
 		return err
 	}
@@ -343,18 +376,12 @@ func validateConversions(c *ports.ConversionsParam, dim domain.UnitDimension) er
 }
 
 func validatePortions(portions []ports.PortionParam) error {
-	seen := make(map[string]bool, len(portions))
-	for _, p := range portions {
-		if p.Name == "" {
-			return cerr.NewBadRequestError("portion name is required")
+	var food domain.Food
+	for _, portion := range portions {
+		_, err := food.AddPortion(portion.Name, portion.BaseEquivalent)
+		if err != nil {
+			return err
 		}
-		if p.BaseEquivalent <= 0 {
-			return cerr.NewBadRequestError(fmt.Sprintf("portion '%s' base_equivalent must be positive", p.Name))
-		}
-		if seen[p.Name] {
-			return cerr.NewBadRequestError(fmt.Sprintf("duplicate portion name '%s'", p.Name))
-		}
-		seen[p.Name] = true
 	}
 	return nil
 }
