@@ -194,13 +194,8 @@ func (f Food) Validate() error {
 			return ErrNegativeNutrient
 		}
 	}
-	if f.VolumeConversion != nil {
-		if f.Dimension() == units.DimensionUnit {
-			return ErrDensityOnUnitFood
-		}
-		if f.VolumeConversion.GramsPerMl <= 0 {
-			return ErrInvalidDensity
-		}
+	if f.VolumeConversion != nil && f.VolumeConversion.GramsPerMl <= 0 {
+		return ErrInvalidDensity
 	}
 	return nil
 }

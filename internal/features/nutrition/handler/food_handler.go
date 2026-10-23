@@ -213,7 +213,6 @@ func (h *foodHandler) ListUnits(_ *http.Request) (*unitsListResponse, int, error
 	result := &unitsListResponse{
 		Mass:   units.ForDimension(units.DimensionMass),
 		Volume: units.ForDimension(units.DimensionVolume),
-		Unit:   units.ForDimension(units.DimensionUnit),
 	}
 	return result, http.StatusOK, nil
 }

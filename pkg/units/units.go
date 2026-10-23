@@ -7,13 +7,11 @@ type Dimension string
 const (
 	DimensionMass   Dimension = "mass"
 	DimensionVolume Dimension = "volume"
-	DimensionUnit   Dimension = "unit"
 )
 
 var StandardUnit = map[Dimension]string{
 	DimensionMass:   "g",
 	DimensionVolume: "ml",
-	DimensionUnit:   "u",
 }
 
 // A metric unit. Values come from ParseUnit, so a Unit is always one of the
@@ -59,11 +57,6 @@ var metricUnits = indexByName([]Unit{
 		name:       "l",
 		dimension:  DimensionVolume,
 		toStandard: 1000,
-	},
-	{
-		name:       "u",
-		dimension:  DimensionUnit,
-		toStandard: 1,
 	},
 })
 
@@ -117,7 +110,7 @@ func ConvertToStandard(quantity float64, name string) (float64, string, error) {
 }
 
 func IsValidDimension(dimension string) bool {
-	return dimension == string(DimensionMass) || dimension == string(DimensionVolume) || dimension == string(DimensionUnit)
+	return dimension == string(DimensionMass) || dimension == string(DimensionVolume)
 }
 
 func ForDimension(dimension Dimension) []string {

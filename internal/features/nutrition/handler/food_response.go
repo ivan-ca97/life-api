@@ -22,7 +22,6 @@ type ingredientsListResponse struct {
 type unitsListResponse struct {
 	Mass   []string `json:"mass"`
 	Volume []string `json:"volume"`
-	Unit   []string `json:"unit"`
 }
 
 type foodUnitsResponse struct {

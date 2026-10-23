@@ -14,7 +14,6 @@ var (
 	ErrFoodNameRequired    = cerr.NewBadRequestError("name is required")
 	ErrInvalidBaseQuantity = cerr.NewBadRequestError("base_quantity must be positive")
 	ErrNegativeNutrient    = cerr.NewBadRequestError("nutritional values cannot be negative")
-	ErrDensityOnUnitFood   = cerr.NewBadRequestError("volume conversion not allowed for unit-type foods")
 	ErrInvalidDensity      = cerr.NewBadRequestError("grams_per_ml must be positive")
 
 	ErrPortionNotFound      = cerr.NewNotFoundError("portion")

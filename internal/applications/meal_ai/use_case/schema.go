@@ -40,7 +40,7 @@ var estimateSchema = json.RawMessage(`{
           "food_id": { "type": "string" },
           "food_name": { "type": "string" },
           "estimated_quantity": { "type": "number" },
-          "unit": { "type": "string" },
+          "unit": { "type": "string", "enum": ["g", "ml"] },
           "quantity_source": { "type": "string", "enum": ["user", "estimated"] },
           "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
           "assumption": { "type": "string" },
@@ -70,7 +70,7 @@ var estimateSchema = json.RawMessage(`{
         "properties": {
           "name": { "type": "string" },
           "estimated_quantity": { "type": "number" },
-          "unit": { "type": "string" },
+          "unit": { "type": "string", "enum": ["g", "ml"] },
           "quantity_source": { "type": "string", "enum": ["user", "estimated"] },
           "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
           "assumption": { "type": "string" },
@@ -79,8 +79,8 @@ var estimateSchema = json.RawMessage(`{
             "additionalProperties": false,
             "required": ["measurement_type", "base_unit", "base_quantity", "default_calories", "default_protein_grams", "default_carbs_grams", "default_fat_grams", "default_fiber_grams"],
             "properties": {
-              "measurement_type": { "type": "string", "enum": ["mass", "volume", "unit"] },
-              "base_unit": { "type": "string" },
+              "measurement_type": { "type": "string", "enum": ["mass", "volume"] },
+              "base_unit": { "type": "string", "enum": ["g", "ml"] },
               "base_quantity": { "type": "number" },
               "default_calories": { "type": ["number", "null"] },
               "default_protein_grams": { "type": ["number", "null"] },
