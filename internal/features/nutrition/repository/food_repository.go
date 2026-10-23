@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -159,101 +160,68 @@ func (r *foodRepository) List(userId uuid.UUID, params ports.ListFoodParams) (ty
 	return result, nil
 }
 
-func (r *foodRepository) Update(id, userId uuid.UUID, params ports.UpdateFoodParams) (*domain.Food, error) {
-	var count int64
-	err := r.db.Model(&food{}).Where("id = ? AND user_id = ?", id, userId).Count(&count).Error
+func (r *foodRepository) Update(f *domain.Food) error {
+	model := foodFromDomain(f)
+	model.UpdatedAt = time.Now()
+	result := r.db.Model(&food{}).
+		Where("id = ? AND user_id = ?", f.Id, f.UserId).
+		Select(
+			"name",
+			"photo_url",
+			"default_calories",
+			"default_protein_grams",
+			"default_carbs_grams",
+			"default_fat_grams",
+			"default_fiber_grams",
+			"base_quantity",
+			"base_unit",
+			"grams_per_ml",
+			"volume_note",
+			"updated_at",
+		).
+		Updates(model)
+	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key") {
+			return domain.ErrFoodAlreadyExists
+		}
+		return cerr.NewInternalError("updating food", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return domain.ErrFoodNotFound
+	}
+
+	err := r.db.Where("food_id = ?", f.Id).Delete(&foodTagMap{}).Error
 	if err != nil {
-		return nil, cerr.NewInternalError("checking food existence", err)
+		return cerr.NewInternalError("deleting food tag map", err)
 	}
-	if count == 0 {
-		return nil, domain.ErrFoodNotFound
-	}
-
-	updates := map[string]any{}
-	if params.Name != nil {
-		updates["name"] = *params.Name
-	}
-	if params.PhotoUrl != nil {
-		updates["photo_url"] = *params.PhotoUrl
-	}
-	if params.DefaultCalories != nil {
-		updates["default_calories"] = *params.DefaultCalories
-	}
-	if params.DefaultProteinGrams != nil {
-		updates["default_protein_grams"] = *params.DefaultProteinGrams
-	}
-	if params.DefaultCarbsGrams != nil {
-		updates["default_carbs_grams"] = *params.DefaultCarbsGrams
-	}
-	if params.DefaultFatGrams != nil {
-		updates["default_fat_grams"] = *params.DefaultFatGrams
-	}
-	if params.DefaultFiberGrams != nil {
-		updates["default_fiber_grams"] = *params.DefaultFiberGrams
-	}
-	if params.BaseQuantity != nil {
-		updates["base_quantity"] = *params.BaseQuantity
-	}
-	if params.BaseUnit != nil {
-		updates["base_unit"] = *params.BaseUnit
-	}
-	if params.Conversions != nil {
-		c := params.Conversions
-		updates["grams_per_ml"] = nil
-		updates["volume_note"] = nil
-		if c.VolumeConversion != nil {
-			updates["grams_per_ml"] = c.VolumeConversion.GramsPerMl
-			if c.VolumeConversion.Note != nil {
-				updates["volume_note"] = *c.VolumeConversion.Note
-			}
-		}
-	}
-
-	if len(updates) > 0 {
-		err = r.db.Model(&food{}).Where("id = ? AND user_id = ?", id, userId).Updates(updates).Error
+	if len(f.Tags) > 0 {
+		err = r.upsertTags(f.Id, f.UserId, f.Tags)
 		if err != nil {
-			if strings.Contains(err.Error(), "duplicate key") {
-				return nil, domain.ErrFoodAlreadyExists
-			}
-			return nil, cerr.NewInternalError("updating food", err)
+			return err
 		}
 	}
 
-	if params.Tags != nil {
-		if err = r.db.Where("food_id = ?", id).Delete(&foodTagMap{}).Error; err != nil {
-			return nil, cerr.NewInternalError("deleting food tag map", err)
-		}
-		if len(*params.Tags) > 0 {
-			if err = r.upsertTags(id, userId, *params.Tags); err != nil {
-				return nil, err
-			}
-		}
+	err = r.db.Exec("DELETE FROM food_ingredients WHERE food_id = ?", f.Id).Error
+	if err != nil {
+		return cerr.NewInternalError("deleting food ingredients", err)
 	}
-
-	if params.Ingredients != nil {
-		err = r.db.Exec("DELETE FROM food_ingredients WHERE food_id = ?", id).Error
+	if len(f.Ingredients) > 0 {
+		names := make([]string, len(f.Ingredients))
+		for i, ingredient := range f.Ingredients {
+			names[i] = ingredient.Name
+		}
+		ingredientIds, err := r.upsertIngredients(f.UserId, names)
 		if err != nil {
-			return nil, cerr.NewInternalError("deleting food ingredients", err)
+			return err
 		}
-		if len(*params.Ingredients) > 0 {
-			ingredientIds, err := r.upsertIngredients(userId, *params.Ingredients)
+		for _, ingredientId := range ingredientIds {
+			err = r.db.Exec("INSERT INTO food_ingredients (food_id, ingredient_id) VALUES (?, ?)", f.Id, ingredientId).Error
 			if err != nil {
-				return nil, err
-			}
-			for _, ingId := range ingredientIds {
-				err = r.db.Exec("INSERT INTO food_ingredients (food_id, ingredient_id) VALUES (?, ?)", id, ingId).Error
-				if err != nil {
-					return nil, cerr.NewInternalError("inserting food ingredient link", err)
-				}
+				return cerr.NewInternalError("inserting food ingredient link", err)
 			}
 		}
 	}
-
-	updated, err := r.FindById(id, userId)
-	if err != nil {
-		return nil, err
-	}
-	return updated, nil
+	return nil
 }
 
 func (r *foodRepository) AddPortion(foodId, userId uuid.UUID, portion *domain.Portion) error {

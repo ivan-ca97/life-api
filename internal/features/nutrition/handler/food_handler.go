@@ -73,7 +73,7 @@ func (h *foodHandler) Create(r *http.Request) (*foodResponse, int, error) {
 		BaseUnit:            request.BaseUnit,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
-		Conversions:         conversionsParamFromRequest(request.Conversions),
+		Density:             volumeConversionFromRequest(request.Conversions),
 		Portions:            portions,
 	}
 	food, err := h.service.Create(r.Context(), userId, params)
@@ -157,7 +157,7 @@ func (h *foodHandler) Update(r *http.Request) (*foodResponse, int, error) {
 		BaseUnit:            request.BaseUnit,
 		Tags:                request.Tags,
 		Ingredients:         request.Ingredients,
-		Conversions:         conversionsParamFromRequest(request.Conversions),
+		Density:             densityFromRequest(request.Conversions),
 	}
 	food, err := h.service.Update(r.Context(), userId, id, params)
 	if err != nil {
@@ -248,20 +248,6 @@ func (h *foodHandler) ListFoodUnits(r *http.Request) (*foodUnitsResponse, int, e
 		Conversions: extraUnits,
 	}
 	return result, http.StatusOK, nil
-}
-
-func conversionsParamFromRequest(r *conversionsRequest) *ports.ConversionsParam {
-	if r == nil {
-		return nil
-	}
-	p := &ports.ConversionsParam{}
-	if r.VolumeConversion != nil {
-		p.VolumeConversion = &ports.VolumeConversionParam{
-			GramsPerMl: r.VolumeConversion.GramsPerMl,
-			Note:       r.VolumeConversion.Note,
-		}
-	}
-	return p
 }
 
 func (h *foodHandler) ListCommunity(r *http.Request) (*foodPage, int, error) {

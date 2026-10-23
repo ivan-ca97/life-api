@@ -9,9 +9,13 @@ import (
 )
 
 var (
-	ErrFoodNotFound      = cerr.NewNotFoundError("food")
-	ErrFoodAlreadyExists = cerr.NewConflictError("a food with this name already exists")
-	ErrFoodNameRequired  = cerr.NewBadRequestError("name is required")
+	ErrFoodNotFound        = cerr.NewNotFoundError("food")
+	ErrFoodAlreadyExists   = cerr.NewConflictError("a food with this name already exists")
+	ErrFoodNameRequired    = cerr.NewBadRequestError("name is required")
+	ErrInvalidBaseQuantity = cerr.NewBadRequestError("base_quantity must be positive")
+	ErrNegativeNutrient    = cerr.NewBadRequestError("nutritional values cannot be negative")
+	ErrDensityOnUnitFood   = cerr.NewBadRequestError("volume conversion not allowed for unit-type foods")
+	ErrInvalidDensity      = cerr.NewBadRequestError("grams_per_ml must be positive")
 
 	ErrPortionNotFound      = cerr.NewNotFoundError("portion")
 	ErrPortionAlreadyExists = cerr.NewConflictError("the food already has a portion with this name")

@@ -15,7 +15,7 @@ type FoodRepository interface {
 	FindUsableByIds(userId uuid.UUID, ids []uuid.UUID) ([]domain.Food, error)
 	List(userId uuid.UUID, params ListFoodParams) (types.Page[domain.Food], error)
 	ListCommunity(params CommunityListParams) (types.Page[domain.Food], error)
-	Update(id, userId uuid.UUID, params UpdateFoodParams) (*domain.Food, error)
+	Update(food *domain.Food) error
 	Delete(id, userId uuid.UUID) error
 	AddPortion(foodId, userId uuid.UUID, portion *domain.Portion) error
 	UpdatePortion(foodId, userId uuid.UUID, portion *domain.Portion) error

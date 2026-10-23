@@ -131,11 +131,13 @@ func scaleNutrient(amount *float64, ratio float64) *float64 {
 	return &scaled
 }
 
-// Builds a food whose nutrients refer to baseQuantity of a metric base unit.
-func NewFood(userId uuid.UUID, name string, baseQuantity float64, baseUnit string) (*Food, error) {
-	if strings.TrimSpace(name) == "" {
-		return nil, ErrFoodNameRequired
-	}
+// One change to a food, built by the food_change package.
+type FoodChange func(food *Food) error
+
+// Optional data of a new food, built by the food_option package.
+type FoodOption func(food *Food) error
+
+func NewFood(userId uuid.UUID, name string, baseQuantity float64, baseUnit string, options ...FoodOption) (*Food, error) {
 	unit, err := ParseBaseUnit(baseUnit)
 	if err != nil {
 		return nil, err
@@ -147,7 +149,60 @@ func NewFood(userId uuid.UUID, name string, baseQuantity float64, baseUnit strin
 		BaseQuantity: baseQuantity,
 		BaseUnit:     *unit,
 	}
+	for _, option := range options {
+		err = option(food)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = food.Validate()
+	if err != nil {
+		return nil, err
+	}
 	return food, nil
+}
+
+// Applies the changes and keeps them only if the resulting food is valid, so the
+// order of the changes does not matter and a failed update changes nothing.
+func (f *Food) Update(changes ...FoodChange) error {
+	updated := *f
+	for _, change := range changes {
+		err := change(&updated)
+		if err != nil {
+			return err
+		}
+	}
+	err := updated.Validate()
+	if err != nil {
+		return err
+	}
+	*f = updated
+	return nil
+}
+
+// Checks the whole food.
+func (f Food) Validate() error {
+	if strings.TrimSpace(f.Name) == "" {
+		return ErrFoodNameRequired
+	}
+	if f.BaseQuantity <= 0 {
+		return ErrInvalidBaseQuantity
+	}
+	nutrients := []*float64{f.DefaultCalories, f.DefaultProteinGrams, f.DefaultCarbsGrams, f.DefaultFatGrams, f.DefaultFiberGrams}
+	for _, amount := range nutrients {
+		if amount != nil && *amount < 0 {
+			return ErrNegativeNutrient
+		}
+	}
+	if f.VolumeConversion != nil {
+		if f.Dimension() == units.DimensionUnit {
+			return ErrDensityOnUnitFood
+		}
+		if f.VolumeConversion.GramsPerMl <= 0 {
+			return ErrInvalidDensity
+		}
+	}
+	return nil
 }
 
 // A food's base unit is always a metric unit.

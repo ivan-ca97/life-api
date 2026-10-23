@@ -5,10 +5,10 @@ import (
 
 	cerr "github.com/ivan-ca97/life/pkg/custom_error"
 	"github.com/ivan-ca97/life/pkg/types"
-	"github.com/ivan-ca97/life/pkg/units"
-	"github.com/ivan-ca97/life/pkg/validate"
 
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain/food_change"
+	"github.com/ivan-ca97/life/internal/features/nutrition/domain/food_option"
 	"github.com/ivan-ca97/life/internal/features/nutrition/ports"
 )
 
@@ -25,34 +25,24 @@ func NewFoodService(repository ports.FoodRepository) *foodService {
 }
 
 func (s *foodService) Create(userId uuid.UUID, params ports.CreateFoodParams) (*domain.Food, error) {
-	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams)
+	food, err := domain.NewFood(
+		userId,
+		params.Name,
+		params.BaseQuantity,
+		params.BaseUnit,
+		food_option.Photo(&params.PhotoUrl),
+		food_option.Calories(params.DefaultCalories),
+		food_option.ProteinGrams(params.DefaultProteinGrams),
+		food_option.CarbsGrams(params.DefaultCarbsGrams),
+		food_option.FatGrams(params.DefaultFatGrams),
+		food_option.FiberGrams(params.DefaultFiberGrams),
+		food_option.Density(params.Density),
+		food_option.Tags(&params.Tags),
+		food_option.Ingredients(&params.Ingredients),
+	)
 	if err != nil {
 		return nil, err
 	}
-	food, err := domain.NewFood(userId, params.Name, params.BaseQuantity, params.BaseUnit)
-	if err != nil {
-		return nil, err
-	}
-	err = validateConversions(params.Conversions, food.Dimension())
-	if err != nil {
-		return nil, err
-	}
-
-	ingredients := make([]domain.Ingredient, len(params.Ingredients))
-	for i, name := range params.Ingredients {
-		ingredients[i] = domain.Ingredient{
-			Name: name,
-		}
-	}
-	food.PhotoUrl = params.PhotoUrl
-	food.DefaultCalories = params.DefaultCalories
-	food.DefaultProteinGrams = params.DefaultProteinGrams
-	food.DefaultCarbsGrams = params.DefaultCarbsGrams
-	food.DefaultFatGrams = params.DefaultFatGrams
-	food.DefaultFiberGrams = params.DefaultFiberGrams
-	food.Tags = params.Tags
-	food.Ingredients = ingredients
-	food.VolumeConversion = buildVolumeConversion(params.Conversions)
 	for _, portion := range params.Portions {
 		_, err = food.AddPortion(portion.Name, portion.BaseEquivalent)
 		if err != nil {
@@ -96,46 +86,40 @@ func (s *foodService) List(userId uuid.UUID, params ports.ListFoodParams) (types
 	return page, nil
 }
 
+// A field missing from the request keeps its current value.
 func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams) (*domain.Food, error) {
-	if params.Name != nil {
-		err := validate.NonEmpty(*params.Name, "name")
-		if err != nil {
-			return nil, err
-		}
-	}
-	err := validateNonNegative(params.DefaultCalories, params.DefaultProteinGrams, params.DefaultCarbsGrams, params.DefaultFatGrams, params.DefaultFiberGrams, params.BaseQuantity)
+	food, err := s.repository.FindById(id, userId)
 	if err != nil {
 		return nil, err
 	}
-	var newBaseUnit *units.Unit
-	if params.BaseUnit != nil {
-		unit, err := domain.ParseBaseUnit(*params.BaseUnit)
-		if err != nil {
-			return nil, err
-		}
-		newBaseUnit = unit
-	}
-	if params.Conversions != nil {
-		var dimension units.Dimension
-		if newBaseUnit != nil {
-			dimension = newBaseUnit.Dimension()
-		} else {
-			current, err := s.repository.FindById(id, userId)
-			if err != nil {
-				return nil, err
-			}
-			dimension = current.Dimension()
-		}
-		err := validateConversions(params.Conversions, dimension)
-		if err != nil {
-			return nil, err
-		}
-	}
-	food, err := s.repository.Update(id, userId, params)
+
+	err = food.Update(
+		food_change.Name(params.Name),
+		food_change.Photo(params.PhotoUrl),
+		food_change.Calories(params.DefaultCalories),
+		food_change.ProteinGrams(params.DefaultProteinGrams),
+		food_change.CarbsGrams(params.DefaultCarbsGrams),
+		food_change.FatGrams(params.DefaultFatGrams),
+		food_change.FiberGrams(params.DefaultFiberGrams),
+		food_change.BaseQuantity(params.BaseQuantity),
+		food_change.BaseUnit(params.BaseUnit),
+		food_change.Density(params.Density),
+		food_change.Tags(params.Tags),
+		food_change.Ingredients(params.Ingredients),
+	)
 	if err != nil {
 		return nil, err
 	}
-	return food, nil
+
+	err = s.repository.Update(food)
+	if err != nil {
+		return nil, err
+	}
+	updated, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (s *foodService) Delete(id, userId uuid.UUID) error {
@@ -265,42 +249,4 @@ func (s *foodService) Copy(actorId, foodId uuid.UUID) (*domain.Food, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-func validateConversions(c *ports.ConversionsParam, dimension units.Dimension) error {
-	if c == nil {
-		return nil
-	}
-	if c.VolumeConversion != nil {
-		if dimension == units.DimensionUnit {
-			return cerr.NewBadRequestError("volume conversion not allowed for unit-type foods")
-		}
-		if c.VolumeConversion.GramsPerMl <= 0 {
-			return cerr.NewBadRequestError("grams_per_ml must be positive")
-		}
-	}
-	return nil
-}
-
-func validateNonNegative(values ...*float64) error {
-	for _, v := range values {
-		if v != nil && *v < 0 {
-			return cerr.NewBadRequestError("nutritional values cannot be negative")
-		}
-	}
-	return nil
-}
-
-func buildVolumeConversion(c *ports.ConversionsParam) *domain.VolumeConversion {
-	if c == nil || c.VolumeConversion == nil {
-		return nil
-	}
-	note := ""
-	if c.VolumeConversion.Note != nil {
-		note = *c.VolumeConversion.Note
-	}
-	return &domain.VolumeConversion{
-		GramsPerMl: c.VolumeConversion.GramsPerMl,
-		Note:       note,
-	}
 }

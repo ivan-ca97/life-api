@@ -8,15 +8,6 @@ import (
 	"github.com/ivan-ca97/life/internal/features/nutrition/domain"
 )
 
-type VolumeConversionParam struct {
-	GramsPerMl float64
-	Note       *string
-}
-
-type ConversionsParam struct {
-	VolumeConversion *VolumeConversionParam
-}
-
 type PortionParam struct {
 	Name           string
 	BaseEquivalent float64
@@ -39,7 +30,7 @@ type CreateFoodParams struct {
 	BaseUnit            string
 	Tags                []string
 	Ingredients         []string
-	Conversions         *ConversionsParam
+	Density             *domain.VolumeConversion
 	Portions            []PortionParam
 }
 
@@ -55,7 +46,7 @@ type UpdateFoodParams struct {
 	BaseUnit            *string
 	Tags                *[]string
 	Ingredients         *[]string
-	Conversions         *ConversionsParam
+	Density             types.Optional[domain.VolumeConversion]
 }
 
 type ListFoodParams struct {
