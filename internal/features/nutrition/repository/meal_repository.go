@@ -19,6 +19,7 @@ type mealRepository struct {
 }
 
 var _ ports.MealRepository = (*mealRepository)(nil)
+var _ ports.FoodUsage = (*mealRepository)(nil)
 
 func NewMealRepository(db *gorm.DB) *mealRepository {
 	return &mealRepository{
@@ -519,6 +520,15 @@ func (r *mealRepository) IngredientFrequency(userId uuid.UUID, params ports.Ingr
 		return nil, cerr.NewInternalError("querying ingredient frequency", err)
 	}
 	return results, nil
+}
+
+func (r *mealRepository) CountMealItems(foodId uuid.UUID) (int64, error) {
+	var count int64
+	err := r.db.Model(&mealItem{}).Where("food_id = ?", foodId).Count(&count).Error
+	if err != nil {
+		return 0, cerr.NewInternalError("counting meal items of food", err)
+	}
+	return count, nil
 }
 
 func (r *mealRepository) FoodImpact(foodId uuid.UUID) (*ports.FoodImpactResult, error) {

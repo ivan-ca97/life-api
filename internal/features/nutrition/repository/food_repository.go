@@ -298,6 +298,9 @@ func (r *foodRepository) ensureOwned(foodId, userId uuid.UUID) error {
 func (r *foodRepository) Delete(id, userId uuid.UUID) error {
 	result := r.db.Where("id = ? AND user_id = ?", id, userId).Delete(&food{})
 	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), "foreign key") {
+			return domain.ErrFoodInUse
+		}
 		return cerr.NewInternalError("deleting food", result.Error)
 	}
 	if result.RowsAffected == 0 {

@@ -11,6 +11,7 @@ import (
 var (
 	ErrFoodNotFound        = cerr.NewNotFoundError("food")
 	ErrFoodAlreadyExists   = cerr.NewConflictError("a food with this name already exists")
+	ErrFoodInUse           = cerr.NewConflictError("the food is used in meals and cannot be deleted")
 	ErrFoodNameRequired    = cerr.NewBadRequestError("name is required")
 	ErrInvalidBaseQuantity = cerr.NewBadRequestError("base_quantity must be positive")
 	ErrNegativeNutrient    = cerr.NewBadRequestError("nutritional values cannot be negative")

@@ -30,11 +30,12 @@ func NewNutritionFeature(
 	errorHandler http_errors.HttpErrorHandler,
 ) *nutritionFeature {
 	foodRepository := repository.NewFoodRepository(db)
-	foodService := service.NewFoodService(foodRepository)
+	mealRepository := repository.NewMealRepository(db)
+
+	foodService := service.NewFoodService(foodRepository, mealRepository)
 	authorizedFoodService := service.NewAuthorizedFoodService(foodService, authorizer)
 	foodHandler := handler.NewFoodHandler(authorizedFoodService)
 
-	mealRepository := repository.NewMealRepository(db)
 	mealService := service.NewMealService(mealRepository, foodService, closureChecker)
 	authorizedMealService := service.NewAuthorizedMealService(mealService, authorizer)
 	mealHandler := handler.NewMealHandler(authorizedMealService)

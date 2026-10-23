@@ -14,13 +14,15 @@ import (
 
 type foodService struct {
 	repository ports.FoodRepository
+	usage      ports.FoodUsage
 }
 
 var _ ports.FoodService = (*foodService)(nil)
 
-func NewFoodService(repository ports.FoodRepository) *foodService {
+func NewFoodService(repository ports.FoodRepository, usage ports.FoodUsage) *foodService {
 	return &foodService{
 		repository: repository,
+		usage:      usage,
 	}
 }
 
@@ -122,8 +124,20 @@ func (s *foodService) Update(id, userId uuid.UUID, params ports.UpdateFoodParams
 	return updated, nil
 }
 
+// A food that meals were logged with stays, so those meals keep their food.
 func (s *foodService) Delete(id, userId uuid.UUID) error {
-	err := s.repository.Delete(id, userId)
+	_, err := s.repository.FindById(id, userId)
+	if err != nil {
+		return err
+	}
+	count, err := s.usage.CountMealItems(id)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return domain.ErrFoodInUse
+	}
+	err = s.repository.Delete(id, userId)
 	if err != nil {
 		return err
 	}
